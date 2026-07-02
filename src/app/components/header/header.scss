@@ -1,0 +1,61 @@
+@use 'variables' as *;
+
+.site-header {
+  background-color: $color-bg-main;
+  border-bottom: 1px solid $color-border;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: $header-height;
+    gap: $spacing-md;
+  }
+
+  &__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 1.375rem;
+    font-weight: $font-weight-bold;
+    color: $color-text-heading;
+    letter-spacing: -0.02em;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+
+  &__logo-icon {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    display: block;
+    color: inherit;
+    transition: color 0.3s ease;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+
+    @media (min-width: 480px) {
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 0.875rem;
+
+      @media (min-width: 480px) {
+        padding: 12px 24px;
+        font-size: 0.95rem;
+      }
+    }
+  }
+}

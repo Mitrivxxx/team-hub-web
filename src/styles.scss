@@ -1,1 +1,360 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'variables' as *;
+@use 'sass:color';
+
+// ==========================================================================
+// GLOBALNE STYLE DLA PROJEKTU (Wersja Jasna / Przejrzysta)
+// Paleta: Biel (#FFFFFF), Miętowy błękit (#5EAAA8), Ciemny szary (#333333)
+// ==========================================================================
+
+// 2. RESET & STYLE BAZOWE (Reset & Base Styles)
+// --------------------------------------------------------------------------
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: $font-size-base;
+}
+
+body {
+  font-family: $font-main;
+  background-color: $color-bg-main;
+  color: $color-text-dark;
+  line-height: 1.6;
+  font-weight: $font-weight-normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// 3. TYPOGRAFIA (Typography)
+// --------------------------------------------------------------------------
+h1, h2, h3, h4, h5, h6 {
+  color: $color-text-heading;
+  font-weight: $font-weight-bold;
+  line-height: 1.25;
+  margin-bottom: $spacing-md;
+}
+
+h1 {
+  font-size: 2.5rem;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 2rem;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+p {
+  margin-bottom: $spacing-md;
+  color: $color-text-dark;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: $transition-base;
+
+  &:hover {
+    color: $color-primary-dark;
+  }
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// 4. UKŁAD STRONY (Layout)
+// --------------------------------------------------------------------------
+.container {
+  width: 100%;
+  max-width: $container-max-width;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+}
+
+.section {
+  padding: $spacing-xl 0;
+
+  @media (min-width: 768px) {
+    padding: $spacing-xxl 0;
+  }
+
+  &--alt {
+    background-color: $color-bg-alt;
+  }
+}
+
+// 5. WSPÓLNE KOMPONENTY (Common Components)
+// --------------------------------------------------------------------------
+.btn {
+  display: inline-block;
+  padding: 12px 28px;
+  font-family: $font-main;
+  font-size: 0.95rem;
+  font-weight: $font-weight-semibold;
+  border-radius: $border-radius-round;
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: $transition-base;
+  white-space: nowrap;
+
+  &--primary {
+    background-color: $color-primary;
+    color: $color-white;
+
+    &:hover {
+      background-color: $color-primary-dark;
+      color: $color-white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba($color-primary, 0.2);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  &--outline {
+    background-color: transparent;
+    border-color: $color-primary;
+    color: $color-primary;
+
+    &:hover {
+      background-color: $color-primary;
+      color: $color-white;
+    }
+  }
+}
+
+.shadow-soft {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+// ==========================================================================
+// SEKCJA HERO
+// ==========================================================================
+.hero {
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - $header-height);
+  padding: $spacing-lg 0 $spacing-xl;
+
+  @media (min-width: 992px) {
+    padding: $spacing-xl 0;
+  }
+
+  &__wrapper {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: $spacing-lg;
+    align-items: center;
+
+    @media (min-width: 992px) {
+      flex-direction: row;
+      justify-content: space-between;
+      gap: $spacing-xl;
+    }
+  }
+
+  &__content {
+    flex: 1;
+    text-align: center;
+
+    @media (min-width: 992px) {
+      text-align: left;
+      max-width: 560px;
+    }
+  }
+
+  &__title {
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+    color: $color-text-heading;
+
+    @media (min-width: 768px) {
+      font-size: 3rem;
+    }
+
+    @media (min-width: 1200px) {
+      font-size: 3.5rem;
+    }
+  }
+
+  &__description {
+    font-size: 1.1rem;
+    color: $color-text-dark;
+    margin-bottom: $spacing-lg;
+    max-width: 540px;
+    line-height: 1.7;
+
+    @media (max-width: 991px) {
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  &__btn {
+    min-width: 160px;
+  }
+
+  &__image-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 480px;
+
+    @media (min-width: 992px) {
+      max-width: 520px;
+    }
+  }
+
+  &__image {
+    width: 100%;
+    height: auto;
+    max-height: 380px;
+    object-fit: contain;
+  }
+}
+
+// ==========================================================================
+// SEKCJA USŁUG (Services)
+// ==========================================================================
+.services {
+  text-align: center;
+
+  &__title {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 1.5rem;
+    font-weight: $font-weight-semibold;
+    color: $color-text-heading;
+    margin-bottom: $spacing-lg;
+    position: relative;
+
+    &::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 3px;
+      background-color: $color-primary;
+      margin: $spacing-sm auto 0;
+      border-radius: 2px;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-md;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: $spacing-lg;
+    }
+
+    @media (min-width: 992px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}
+
+// ==========================================================================
+// KARTA USŁUGI (Service Card)
+// ==========================================================================
+.service-card {
+  background-color: $color-white;
+  padding: $spacing-lg $spacing-md;
+  border-radius: $border-radius-base;
+  border: 1px solid rgba($color-border, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: $transition-base;
+
+  @media (min-width: 768px) {
+    padding: 40px 30px;
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
+    border-color: transparent;
+  }
+
+  &__icon-wrapper {
+    width: 56px;
+    height: 56px;
+    color: $color-primary;
+    margin-bottom: $spacing-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba($color-primary, 0.08);
+    border-radius: 50%;
+  }
+
+  &__icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    margin-bottom: $spacing-sm;
+    color: $color-text-heading;
+  }
+
+  &__text {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: $color-text-dark;
+    margin-bottom: $spacing-md;
+    flex-grow: 1;
+  }
+
+  &__link {
+    font-size: 0.9rem;
+    font-weight: $font-weight-semibold;
+    color: color.adjust($color-primary, $lightness: 5%);
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      transform: scaleX(0);
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: $color-primary;
+      transform-origin: bottom right;
+      transition: transform 0.25s ease-out;
+    }
+
+    &:hover {
+      color: $color-primary-dark;
+
+      &::after {
+        transform: scaleX(1);
+        transform-origin: bottom left;
+      }
+    }
+  }
+}
