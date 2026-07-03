@@ -4,6 +4,54 @@
     <p class="auth-card__subtitle">Create your TeamHub account to get started.</p>
 
     <form class="auth-form" [formGroup]="signupForm" (ngSubmit)="onSubmit()" novalidate>
+      <div class="auth-form__row">
+        <div class="auth-form__field">
+          <label class="auth-form__label" for="signup-first-name">First name</label>
+          <input
+            id="signup-first-name"
+            type="text"
+            class="auth-form__input"
+            formControlName="firstName"
+            autocomplete="given-name"
+            placeholder="First name"
+            [class.auth-form__input--invalid]="
+              signupForm.controls.firstName.touched && signupForm.controls.firstName.invalid
+            "
+          />
+          @if (signupForm.controls.firstName.touched && signupForm.controls.firstName.hasError('required')) {
+            <span class="auth-form__error">First name is required.</span>
+          }
+          @if (
+            signupForm.controls.firstName.touched && signupForm.controls.firstName.hasError('minlength')
+          ) {
+            <span class="auth-form__error">First name must be at least 2 characters.</span>
+          }
+        </div>
+
+        <div class="auth-form__field">
+          <label class="auth-form__label" for="signup-last-name">Last name</label>
+          <input
+            id="signup-last-name"
+            type="text"
+            class="auth-form__input"
+            formControlName="lastName"
+            autocomplete="family-name"
+            placeholder="Last name"
+            [class.auth-form__input--invalid]="
+              signupForm.controls.lastName.touched && signupForm.controls.lastName.invalid
+            "
+          />
+          @if (signupForm.controls.lastName.touched && signupForm.controls.lastName.hasError('required')) {
+            <span class="auth-form__error">Last name is required.</span>
+          }
+          @if (
+            signupForm.controls.lastName.touched && signupForm.controls.lastName.hasError('minlength')
+          ) {
+            <span class="auth-form__error">Last name must be at least 2 characters.</span>
+          }
+        </div>
+      </div>
+
       <div class="auth-form__field">
         <label class="auth-form__label" for="signup-username">Username</label>
         <input

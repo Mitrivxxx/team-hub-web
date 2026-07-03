@@ -27,6 +27,8 @@ export class Signup {
 
   readonly signupForm = this.formBuilder.nonNullable.group(
     {
+      firstName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
       username: ['', [Validators.required, Validators.minLength(3)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
@@ -48,8 +50,8 @@ export class Signup {
       return;
     }
 
-    const { username, password } = this.signupForm.getRawValue();
+    const { firstName, lastName, username, password } = this.signupForm.getRawValue();
     // TODO: podłączyć do API rejestracji
-    console.log('Signup attempt:', { username, password });
+    console.log('Signup attempt:', { firstName, lastName, username, password });
   }
 }

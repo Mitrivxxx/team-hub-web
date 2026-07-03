@@ -70,6 +70,16 @@ $auth-input-radius: 16px;
   flex-direction: column;
   gap: $spacing-md;
 
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-md;
+
+    @media (min-width: 480px) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
   &__field {
     display: flex;
     flex-direction: column;
