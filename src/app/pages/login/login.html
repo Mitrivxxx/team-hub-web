@@ -1,0 +1,101 @@
+<main class="auth-page">
+  <div class="auth-card shadow-soft">
+    <div class="auth-card__brand">
+      <svg
+        class="auth-card__logo"
+        viewBox="0 0 128 128"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          fill="currentColor"
+          stroke="currentColor"
+          stroke-width="28"
+          stroke-linejoin="round"
+          transform="translate(0,128) scale(0.1,-0.1)"
+          d="M577 1270 c-48 -15 -98 -61 -119 -108 -17 -37 -19 -58 -15 -109 l6 -63 -144 0 c-132 0 -145 -2 -155 -19 -16 -30 -14 -932 3 -954 11 -16 50 -17 492 -15 l480 3 3 188 c3 212 3 213 -69 177 -102 -53 -211 13 -211 127 0 106 121 177 210 123 40 -25 58 -25 71 -2 13 24 13 330 0 354 -9 16 -24 18 -154 18 l-144 0 5 68 c5 58 3 73 -18 112 -34 63 -90 100 -159 105 -29 3 -67 0 -82 -5z m129 -66 c71 -34 97 -139 53 -211 -36 -58 -22 -63 162 -63 l159 0 0 -125 0 -125 -27 7 c-86 24 -184 -9 -230 -79 -24 -36 -28 -52 -28 -114 0 -64 3 -77 30 -115 50 -71 140 -101 228 -76 l27 7 0 -125 0 -125 -440 0 -440 0 0 435 0 435 159 0 c185 0 198 5 161 65 -78 127 52 273 186 209z"
+        />
+      </svg>
+      <h1 class="auth-card__title">Log in to TeamHub</h1>
+    </div>
+    <p class="auth-card__subtitle">Enter your credentials to access your account.</p>
+
+    <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+      <div class="auth-form__field">
+        <label class="auth-form__label" for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          class="auth-form__input"
+          formControlName="username"
+          autocomplete="username"
+          placeholder="Enter your username"
+          [class.auth-form__input--invalid]="
+            loginForm.controls.username.touched && loginForm.controls.username.invalid
+          "
+        />
+        @if (loginForm.controls.username.touched && loginForm.controls.username.hasError('required')) {
+          <span class="auth-form__error">Username is required.</span>
+        }
+        @if (
+          loginForm.controls.username.touched && loginForm.controls.username.hasError('minlength')
+        ) {
+          <span class="auth-form__error">Username must be at least 3 characters.</span>
+        }
+      </div>
+
+      <div class="auth-form__field">
+        <label class="auth-form__label" for="password">Password</label>
+        <div class="auth-form__password-wrapper">
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            class="auth-form__input auth-form__input--password"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            [class.auth-form__input--invalid]="
+              loginForm.controls.password.touched && loginForm.controls.password.invalid
+            "
+          />
+          <button
+            type="button"
+            class="auth-form__toggle-password"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            [attr.aria-pressed]="showPassword"
+          >
+            @if (showPassword) {
+              <svg class="auth-form__toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                <path d="M1 1l22 22" />
+                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+              </svg>
+            } @else {
+              <svg class="auth-form__toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            }
+          </button>
+        </div>
+        @if (loginForm.controls.password.touched && loginForm.controls.password.hasError('required')) {
+          <span class="auth-form__error">Password is required.</span>
+        }
+        @if (
+          loginForm.controls.password.touched && loginForm.controls.password.hasError('minlength')
+        ) {
+          <span class="auth-form__error">Password must be at least 6 characters.</span>
+        }
+      </div>
+
+      <button type="submit" class="btn btn--primary auth-form__submit">Log in</button>
+    </form>
+
+    <p class="auth-card__footer">
+      Don't have an account?
+      <a routerLink="/signup" class="auth-card__link">Sign up</a>
+    </p>
+  </div>
+</main>

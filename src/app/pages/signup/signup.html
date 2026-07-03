@@ -1,0 +1,133 @@
+<main class="auth-page">
+  <div class="auth-card shadow-soft">
+    <h1 class="auth-card__title">Sign up</h1>
+    <p class="auth-card__subtitle">Create your TeamHub account to get started.</p>
+
+    <form class="auth-form" [formGroup]="signupForm" (ngSubmit)="onSubmit()" novalidate>
+      <div class="auth-form__field">
+        <label class="auth-form__label" for="signup-username">Username</label>
+        <input
+          id="signup-username"
+          type="text"
+          class="auth-form__input"
+          formControlName="username"
+          autocomplete="username"
+          placeholder="Choose a username"
+          [class.auth-form__input--invalid]="
+            signupForm.controls.username.touched && signupForm.controls.username.invalid
+          "
+        />
+        @if (signupForm.controls.username.touched && signupForm.controls.username.hasError('required')) {
+          <span class="auth-form__error">Username is required.</span>
+        }
+        @if (
+          signupForm.controls.username.touched && signupForm.controls.username.hasError('minlength')
+        ) {
+          <span class="auth-form__error">Username must be at least 3 characters.</span>
+        }
+      </div>
+
+      <div class="auth-form__field">
+        <label class="auth-form__label" for="signup-password">Password</label>
+        <div class="auth-form__password-wrapper">
+          <input
+            id="signup-password"
+            [type]="showPassword ? 'text' : 'password'"
+            class="auth-form__input auth-form__input--password"
+            formControlName="password"
+            autocomplete="new-password"
+            placeholder="Create a password"
+            [class.auth-form__input--invalid]="
+              signupForm.controls.password.touched && signupForm.controls.password.invalid
+            "
+          />
+          <button
+            type="button"
+            class="auth-form__toggle-password"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            [attr.aria-pressed]="showPassword"
+          >
+            @if (showPassword) {
+              <svg class="auth-form__toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                <path d="M1 1l22 22" />
+                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+              </svg>
+            } @else {
+              <svg class="auth-form__toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            }
+          </button>
+        </div>
+        @if (signupForm.controls.password.touched && signupForm.controls.password.hasError('required')) {
+          <span class="auth-form__error">Password is required.</span>
+        }
+        @if (
+          signupForm.controls.password.touched && signupForm.controls.password.hasError('minlength')
+        ) {
+          <span class="auth-form__error">Password must be at least 6 characters.</span>
+        }
+      </div>
+
+      <div class="auth-form__field">
+        <label class="auth-form__label" for="signup-confirm-password">Confirm password</label>
+        <div class="auth-form__password-wrapper">
+          <input
+            id="signup-confirm-password"
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            class="auth-form__input auth-form__input--password"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+            placeholder="Repeat your password"
+            [class.auth-form__input--invalid]="
+              signupForm.controls.confirmPassword.touched &&
+              (signupForm.controls.confirmPassword.invalid || signupForm.hasError('passwordMismatch'))
+            "
+          />
+          <button
+            type="button"
+            class="auth-form__toggle-password"
+            (click)="toggleConfirmPasswordVisibility()"
+            [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'"
+            [attr.aria-pressed]="showConfirmPassword"
+          >
+            @if (showConfirmPassword) {
+              <svg class="auth-form__toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                <path d="M1 1l22 22" />
+                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+              </svg>
+            } @else {
+              <svg class="auth-form__toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            }
+          </button>
+        </div>
+        @if (signupForm.controls.confirmPassword.touched && signupForm.controls.confirmPassword.hasError('required')) {
+          <span class="auth-form__error">Please confirm your password.</span>
+        }
+        @if (
+          signupForm.controls.confirmPassword.touched &&
+          !signupForm.controls.confirmPassword.hasError('required') &&
+          signupForm.hasError('passwordMismatch')
+        ) {
+          <span class="auth-form__error">Passwords do not match.</span>
+        }
+      </div>
+
+      <button type="submit" class="btn btn--primary auth-form__submit">Sign up</button>
+    </form>
+
+    <p class="auth-card__footer">
+      Already have an account?
+      <a routerLink="/login" class="auth-card__link">Log in</a>
+    </p>
+  </div>
+</main>

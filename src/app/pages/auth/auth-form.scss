@@ -1,0 +1,163 @@
+@use 'variables' as *;
+
+$auth-card-radius: 24px;
+$auth-input-radius: 16px;
+
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: $spacing-lg $spacing-md;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background-color: $color-white;
+  border-radius: $auth-card-radius;
+  border: 1px solid rgba($color-border, 0.6);
+  padding: $spacing-xl $spacing-lg;
+  margin: 0 auto;
+
+  @media (min-width: 480px) {
+    padding: 48px 40px;
+  }
+
+  &__brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: $spacing-xs;
+  }
+
+  &__logo {
+    width: 48px;
+    height: 48px;
+    margin-bottom: $spacing-sm;
+    color: $color-primary;
+  }
+
+  &__title {
+    font-size: 1.75rem;
+    margin-bottom: 0;
+    color: $color-text-heading;
+    text-align: center;
+  }
+
+  &__subtitle {
+    font-size: 0.95rem;
+    color: $color-text-muted;
+    margin-bottom: $spacing-lg;
+    text-align: center;
+  }
+
+  &__footer {
+    margin-top: $spacing-lg;
+    font-size: 0.9rem;
+    color: $color-text-muted;
+    text-align: center;
+  }
+
+  &__link {
+    font-weight: $font-weight-semibold;
+    margin-left: 4px;
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: $font-weight-semibold;
+    color: $color-text-heading;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 12px 16px;
+    font-family: $font-main;
+    font-size: 0.95rem;
+    color: $color-text-dark;
+    background-color: $color-bg-main;
+    border: 1px solid $color-border;
+    border-radius: $auth-input-radius;
+    transition: $transition-base;
+
+    &::placeholder {
+      color: $color-text-muted;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.15);
+    }
+
+    &--invalid {
+      border-color: #e53e3e;
+
+      &:focus {
+        box-shadow: 0 0 0 3px rgba(#e53e3e, 0.15);
+      }
+    }
+  }
+
+  &__password-wrapper {
+    position: relative;
+  }
+
+  &__input--password {
+    padding-right: 48px;
+  }
+
+  &__toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: $color-text-muted;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: $transition-base;
+
+    &:hover {
+      color: $color-primary;
+      background-color: rgba($color-primary, 0.08);
+    }
+  }
+
+  &__toggle-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  &__error {
+    font-size: 0.8rem;
+    color: #e53e3e;
+  }
+
+  &__submit {
+    width: 100%;
+    margin-top: $spacing-sm;
+    padding: 14px 28px;
+    border-radius: $auth-input-radius;
+  }
+}
