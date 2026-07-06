@@ -2,6 +2,8 @@ import { Component, inject } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { AuthService } from '../../../core/auth/auth.service';
+
 function passwordsMatch(control: AbstractControl): { passwordMismatch: true } | null {
   const password = control.get('password')?.value;
   const confirmPassword = control.get('confirmPassword')?.value;
@@ -21,6 +23,7 @@ function passwordsMatch(control: AbstractControl): { passwordMismatch: true } | 
 })
 export class Signup {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
 
   showPassword = false;
   showConfirmPassword = false;
@@ -51,7 +54,11 @@ export class Signup {
     }
 
     const { firstName, lastName, username, password } = this.signupForm.getRawValue();
-    // TODO: podłączyć do API rejestracji
-    console.log('Signup attempt:', { firstName, lastName, username, password });
+    this.authService.register({
+      username,
+      name: firstName,
+      surname: lastName,
+      password,
+    }).subscribe();
   }
 }

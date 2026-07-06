@@ -2,10 +2,9 @@ import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
-import { Footer } from './components/footer/footer';
-import { Header } from './components/header/header';
-
-const AUTH_ROUTES = ['/login', '/signup'];
+import { Footer } from './public/components/footer/footer';
+import { Header } from './public/components/header/header';
+import { PUBLIC_AUTH_ROUTES } from './public/public.constants';
 
 @Component({
   selector: 'app-root',
@@ -26,6 +25,6 @@ export class App {
   );
 
   private isAuthRoute(): boolean {
-    return AUTH_ROUTES.some((route) => this.router.url.startsWith(route));
+    return PUBLIC_AUTH_ROUTES.some((route) => this.router.url.startsWith(route));
   }
 }
