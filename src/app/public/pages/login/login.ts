@@ -20,10 +20,15 @@ export class Login {
   readonly loginForm = this.formBuilder.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     password: ['', [Validators.required, Validators.minLength(6)]],
+    rememberMe: [false],
   });
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  preventFocusLoss(event: MouseEvent): void {
+    event.preventDefault();
   }
 
   onSubmit(): void {
@@ -32,7 +37,7 @@ export class Login {
       return;
     }
 
-    const { username, password } = this.loginForm.getRawValue();
+    const { username, password, rememberMe } = this.loginForm.getRawValue();
     const normalizedUsername = username.trim();
     if (!normalizedUsername) {
       this.loginForm.controls.username.setErrors({ required: true });
@@ -40,7 +45,7 @@ export class Login {
       return;
     }
 
-    this.authService.login(normalizedUsername, password).subscribe({
+    this.authService.login(normalizedUsername, password, rememberMe).subscribe({
       next: () => {
         void this.router.navigate(['/app']);
       },

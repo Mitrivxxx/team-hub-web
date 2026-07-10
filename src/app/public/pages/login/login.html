@@ -61,6 +61,7 @@
           <button
             type="button"
             class="auth-form__toggle-password"
+            (mousedown)="preventFocusLoss($event)"
             (click)="togglePasswordVisibility()"
             [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
             [attr.aria-pressed]="showPassword"
@@ -88,6 +89,13 @@
         ) {
           <span class="auth-form__error">Password must be at least 6 characters.</span>
         }
+      </div>
+
+      <div class="auth-form__field auth-form__field--checkbox">
+        <label class="auth-form__checkbox-label">
+          <input type="checkbox" class="auth-form__checkbox" formControlName="rememberMe" />
+          <span>Remember me</span>
+        </label>
       </div>
 
       <button type="submit" class="btn btn--primary auth-form__submit">Log in</button>

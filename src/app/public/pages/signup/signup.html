@@ -21,10 +21,13 @@
           @if (signupForm.controls.firstName.touched && signupForm.controls.firstName.hasError('required')) {
             <span class="auth-form__error">First name is required.</span>
           }
-          @if (
-            signupForm.controls.firstName.touched && signupForm.controls.firstName.hasError('minlength')
-          ) {
-            <span class="auth-form__error">First name must be at least 2 characters.</span>
+          @if (signupForm.controls.firstName.touched && signupForm.controls.firstName.hasError('humanName')) {
+            <span class="auth-form__error">
+              First name must be 2-50 characters and contain only letters, spaces, apostrophes, or hyphens.
+            </span>
+          }
+          @if (signupForm.controls.firstName.touched && signupForm.controls.firstName.hasError('server')) {
+            <span class="auth-form__error">{{ signupForm.controls.firstName.getError('server') }}</span>
           }
         </div>
 
@@ -44,10 +47,13 @@
           @if (signupForm.controls.lastName.touched && signupForm.controls.lastName.hasError('required')) {
             <span class="auth-form__error">Last name is required.</span>
           }
-          @if (
-            signupForm.controls.lastName.touched && signupForm.controls.lastName.hasError('minlength')
-          ) {
-            <span class="auth-form__error">Last name must be at least 2 characters.</span>
+          @if (signupForm.controls.lastName.touched && signupForm.controls.lastName.hasError('humanName')) {
+            <span class="auth-form__error">
+              Last name must be 2-80 characters and contain only letters, spaces, apostrophes, or hyphens.
+            </span>
+          }
+          @if (signupForm.controls.lastName.touched && signupForm.controls.lastName.hasError('server')) {
+            <span class="auth-form__error">{{ signupForm.controls.lastName.getError('server') }}</span>
           }
         </div>
       </div>
@@ -68,10 +74,13 @@
         @if (signupForm.controls.username.touched && signupForm.controls.username.hasError('required')) {
           <span class="auth-form__error">Username is required.</span>
         }
-        @if (
-          signupForm.controls.username.touched && signupForm.controls.username.hasError('minlength')
-        ) {
-          <span class="auth-form__error">Username must be at least 3 characters.</span>
+        @if (signupForm.controls.username.touched && signupForm.controls.username.hasError('usernameFormat')) {
+          <span class="auth-form__error">
+            Username must be 3-30 characters and contain only letters, digits, dot, underscore, or hyphen.
+          </span>
+        }
+        @if (signupForm.controls.username.touched && signupForm.controls.username.hasError('server')) {
+          <span class="auth-form__error">{{ signupForm.controls.username.getError('server') }}</span>
         }
       </div>
 
@@ -92,6 +101,7 @@
           <button
             type="button"
             class="auth-form__toggle-password"
+            (mousedown)="preventFocusLoss($event)"
             (click)="togglePasswordVisibility()"
             [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
             [attr.aria-pressed]="showPassword"
@@ -115,9 +125,13 @@
           <span class="auth-form__error">Password is required.</span>
         }
         @if (
-          signupForm.controls.password.touched && signupForm.controls.password.hasError('minlength')
+          signupForm.controls.password.touched &&
+          (signupForm.controls.password.hasError('minlength') || signupForm.controls.password.hasError('maxlength'))
         ) {
-          <span class="auth-form__error">Password must be at least 6 characters.</span>
+          <span class="auth-form__error">Password must be 12-128 characters long.</span>
+        }
+        @if (signupForm.controls.password.touched && signupForm.controls.password.hasError('server')) {
+          <span class="auth-form__error">{{ signupForm.controls.password.getError('server') }}</span>
         }
       </div>
 
@@ -139,6 +153,7 @@
           <button
             type="button"
             class="auth-form__toggle-password"
+            (mousedown)="preventFocusLoss($event)"
             (click)="toggleConfirmPasswordVisibility()"
             [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'"
             [attr.aria-pressed]="showConfirmPassword"
@@ -170,7 +185,13 @@
         }
       </div>
 
-      <button type="submit" class="btn btn--primary auth-form__submit">Sign up</button>
+      @if (submitError) {
+        <p class="auth-form__error">{{ submitError }}</p>
+      }
+
+      <button type="submit" class="btn btn--primary auth-form__submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Creating account...' : 'Sign up' }}
+      </button>
     </form>
 
     <p class="auth-card__footer">

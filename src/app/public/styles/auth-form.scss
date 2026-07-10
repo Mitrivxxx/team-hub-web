@@ -86,6 +86,12 @@ $auth-input-radius: 16px;
     gap: $spacing-xs;
   }
 
+  &__field--checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+  }
+
   &__label {
     font-size: 0.875rem;
     font-weight: $font-weight-semibold;
@@ -162,6 +168,23 @@ $auth-input-radius: 16px;
   &__error {
     font-size: 0.8rem;
     color: #e53e3e;
+  }
+
+  &__checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: $color-text-heading;
+    font-size: 0.9rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &__checkbox {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: $color-primary;
   }
 
   &__submit {
