@@ -20,8 +20,12 @@
     </a>
 
     <nav class="site-header__actions" aria-label="Account">
-      <a routerLink="/login" class="btn btn--outline">Log in</a>
-      <a routerLink="/signup" class="btn btn--primary">Sign up</a>
+      @if (authService.isAuthenticated()) {
+        <button type="button" class="btn btn--outline" (click)="onLogout()">Log out</button>
+      } @else {
+        <a routerLink="/login" class="btn btn--outline">Log in</a>
+        <a routerLink="/signup" class="btn btn--primary">Sign up</a>
+      }
     </nav>
   </div>
 </header>

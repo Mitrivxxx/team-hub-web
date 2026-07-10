@@ -1,36 +1,15 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from './private/pages/dashboard/dashboard';
-import { ServicePlaceholder } from './private/pages/service-placeholder/service-placeholder';
-import { publicRoutes } from './public/public.routes';
+
+import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
-  ...publicRoutes,
+  {
+    path: '',
+    loadChildren: () => import('./public/public.routes').then((m) => m.publicRoutes),
+  },
   {
     path: 'app',
-    component: Dashboard,
-  },
-  {
-    path: 'app/chat',
-    component: ServicePlaceholder,
-    data: {
-      title: 'Team Chat',
-      description: 'Tutaj pojawi sie komunikator zespolowy z rozmowami prywatnymi i kanalami.',
-    },
-  },
-  {
-    path: 'app/documents',
-    component: ServicePlaceholder,
-    data: {
-      title: 'Dokumenty',
-      description: 'Tutaj pojawi sie edytor oraz zapisywanie dokumentow i wspolna praca zespolowa.',
-    },
-  },
-  {
-    path: 'app/meetings',
-    component: ServicePlaceholder,
-    data: {
-      title: 'Team Meetings',
-      description: 'Tutaj pojawia sie wideospotkania, harmonogram i szybkie dolaczanie do pokoju.',
-    },
+    canActivate: [authGuard],
+    loadChildren: () => import('./private/private.routes').then((m) => m.privateRoutes),
   },
 ];
