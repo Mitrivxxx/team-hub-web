@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthService, AuthValidationError } from '../../../core/auth/auth.service';
@@ -33,6 +33,7 @@ const registerFieldToFormControl = {
 export class Signup {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   showPassword = false;
   showConfirmPassword = false;
@@ -87,6 +88,9 @@ export class Signup {
       })
       .pipe(finalize(() => (this.isSubmitting = false)))
       .subscribe({
+        next: () => {
+          void this.router.navigate(['/app']);
+        },
         error: (error: unknown) => {
           if (error instanceof AuthValidationError) {
             this.applyServerErrors(error);

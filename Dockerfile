@@ -12,7 +12,8 @@ RUN apk add --no-cache openssl bash
 
 COPY scripts/generate-certs.sh /generate-certs.sh
 COPY frontend/team-hub-web/docker-entrypoint.sh /docker-entrypoint.sh
-COPY frontend/team-hub-web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/team-hub-web/nginx.conf /etc/nginx/conf.d/team-hub-web.conf
+RUN rm -f /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/team-hub-web/browser /usr/share/nginx/html
 RUN chmod +x /generate-certs.sh /docker-entrypoint.sh
 

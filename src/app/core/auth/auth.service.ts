@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, finalize, map, Observable, of, tap, throwError } from 'rxjs';
+import { catchError, finalize, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { AuthValidationError, FieldValidationErrors, parseApiFieldErrors } from './auth.errors';
@@ -54,7 +54,7 @@ export class AuthService {
       .pipe(tap((response) => this._currentUser.set(response.user)));
   }
 
-  register(data: { username: string; name: string; surname: string; password: string }): Observable<UserResponse> {
+  register(data: { username: string; name: string; surname: string; password: string }): Observable<AuthResponse> {
     const payload = {
       username: data.username.trim(),
       name: data.name.trim(),
@@ -80,6 +80,7 @@ export class AuthService {
 
         return throwError(() => error);
       }),
+      switchMap(() => this.login(payload.username, payload.password, false)),
     );
   }
 
