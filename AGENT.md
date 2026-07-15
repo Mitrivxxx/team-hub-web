@@ -18,6 +18,11 @@
   - `password`: length 12-128.
 - In dev, keep proxy `/api` on `https://localhost:8080` (infrastructure nginx HTTPS).
 - In docker (Production), serve frontend on `https://localhost:4200` (`team-hub-web-prod`); frontend nginx proxies `/api` to `http://nginx:80`.
+- Set `X-Correlation-ID` on every API request via `src/app/core/http/correlation-id.interceptor.ts` (new UUID per request).
+- Set `X-Session-ID` on every API request via `src/app/core/http/session-id.interceptor.ts` (one ID per visit in `sessionStorage`).
+- Sync `X-Session-ID` from response header when auth returns a fallback value (`SessionContextService.syncFromResponse`).
+- For register flow (`register` + auto-login), reuse one ID via `CorrelationContextService.beginFlow()` / `endFlow()` in `AuthService.register()`.
+- Register interceptors in `app.config.ts` with `withInterceptors([sessionIdInterceptor, correlationIdInterceptor])`.
 - Update this file after routing, auth flow, env, or proxy changes.
 
 ## Routing and auth

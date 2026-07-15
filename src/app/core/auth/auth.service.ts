@@ -3,6 +3,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, finalize, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { CorrelationContextService } from '../http/correlation-context.service';
 import { AuthValidationError, FieldValidationErrors, parseApiFieldErrors } from './auth.errors';
 
 export interface AuthResponse {
@@ -28,6 +29,7 @@ export class AuthService {
   private static readonly usernameRegex = /^[a-zA-Z0-9._-]{3,30}$/;
 
   private readonly http = inject(HttpClient);
+  private readonly correlationContext = inject(CorrelationContextService);
   private readonly baseUrl = environment.apiUrl;
   private readonly _currentUser = signal<UserResponse | null>(null);
   private readonly _sessionReady = signal(false);
@@ -67,6 +69,8 @@ export class AuthService {
       return throwError(() => new AuthValidationError('Registration validation failed.', fieldErrors, 400));
     }
 
+    this.correlationContext.beginFlow();
+
     return this.http.post<UserResponse>(`${this.baseUrl}/register`, payload).pipe(
       catchError((error: unknown) => {
         if (error instanceof HttpErrorResponse) {
@@ -81,6 +85,7 @@ export class AuthService {
         return throwError(() => error);
       }),
       switchMap(() => this.login(payload.username, payload.password, false)),
+      finalize(() => this.correlationContext.endFlow()),
     );
   }
 
