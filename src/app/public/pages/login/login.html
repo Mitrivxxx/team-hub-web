@@ -26,6 +26,10 @@
     </div>
     <p class="auth-card__subtitle">Enter your credentials to access your account.</p>
 
+    @if (submitError) {
+      <p class="auth-form__error">{{ submitError }}</p>
+    }
+
     <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
       <div class="auth-form__field">
         <label class="auth-form__label" for="username">Username</label>

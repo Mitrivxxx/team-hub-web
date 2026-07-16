@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../../core/auth/auth.service';
@@ -18,6 +19,9 @@ export class Login {
 
   showPassword = false;
   isSubmitting = false;
+  submitError: string | null = null;
+  remainingAttempts: number | null = null;
+  lockoutSeconds: number | null = null;
 
   readonly loginForm = this.formBuilder.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
@@ -48,6 +52,10 @@ export class Login {
       return;
     }
 
+    this.submitError = null;
+    this.remainingAttempts = null;
+    this.lockoutSeconds = null;
+
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
@@ -68,6 +76,43 @@ export class Login {
         next: () => {
           void this.router.navigate(['/app']);
         },
+        error: (error: unknown) => {
+          this.applyServerError(error);
+        },
       });
+  }
+
+  private applyServerError(error: unknown): void {
+    if (error instanceof HttpErrorResponse) {
+      const status = error.status;
+      const body = error.error as unknown;
+      if (body && typeof body === 'object') {
+        const payload = body as { remainingAttempts?: unknown; lockoutSeconds?: unknown; code?: unknown };
+        const remaining = payload.remainingAttempts;
+        const lockout = payload.lockoutSeconds;
+
+        if (status === 401) {
+          if (typeof remaining === 'number') {
+            this.remainingAttempts = remaining;
+            this.submitError = `Invalid username or password. Remaining login attempts: ${remaining}.`;
+            return;
+          }
+          this.submitError = 'Invalid username or password.';
+          return;
+        }
+
+        if (status === 423) {
+          if (typeof lockout === 'number') {
+            this.lockoutSeconds = lockout;
+            this.submitError = `Account is locked due to too many failed login attempts. Try again in ${lockout} seconds.`;
+            return;
+          }
+          this.submitError = 'Account is locked due to too many failed login attempts.';
+          return;
+        }
+      }
+    }
+
+    this.submitError = 'Login failed. Please try again.';
   }
 }
