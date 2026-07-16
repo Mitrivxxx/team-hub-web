@@ -194,3 +194,16 @@ $auth-input-radius: 16px;
     border-radius: $auth-input-radius;
   }
 }
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}

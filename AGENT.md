@@ -29,7 +29,7 @@
 - `app.routes.ts` lazy-loads `public.routes` and `private.routes`.
 - `AuthService.initialize()` checks session via `/refresh` on app start.
 - Until `sessionReady`, show `AppLoader`.
-- `authGuard` protects `/app/*`; `guestGuard` redirects logged-in users from `/login` and `/signup`.
+- `authGuard` protects `/app/*`; `guestGuard` redirects logged-in users from `/login`, `/signup`, and `/forgot-password`.
 
 ## Don't
 - Do not point frontend directly at gateway or auth service URL when traffic should go through infrastructure nginx.

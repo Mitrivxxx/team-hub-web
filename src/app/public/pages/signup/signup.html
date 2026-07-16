@@ -1,4 +1,10 @@
 <main class="auth-page">
+  <a routerLink="/" class="btn btn--secondary" style="position: absolute; top: 1.5rem; left: 1.5rem; display: flex; align-items: center; gap: 0.5rem; z-index: 10;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    Back to main menu
+  </a>
   <div class="auth-card shadow-soft">
     <h1 class="auth-card__title">Sign up</h1>
     <p class="auth-card__subtitle">Create your TeamHub account to get started.</p>
@@ -14,6 +20,7 @@
             formControlName="firstName"
             autocomplete="given-name"
             placeholder="First name"
+            (blur)="capitalizeFirstLetter('firstName')"
             [class.auth-form__input--invalid]="
               signupForm.controls.firstName.touched && signupForm.controls.firstName.invalid
             "
@@ -40,6 +47,7 @@
             formControlName="lastName"
             autocomplete="family-name"
             placeholder="Last name"
+            (blur)="capitalizeFirstLetter('lastName')"
             [class.auth-form__input--invalid]="
               signupForm.controls.lastName.touched && signupForm.controls.lastName.invalid
             "
@@ -189,7 +197,13 @@
         <p class="auth-form__error">{{ submitError }}</p>
       }
 
-      <button type="submit" class="btn btn--primary auth-form__submit" [disabled]="isSubmitting">
+      <button type="submit" class="btn btn--primary auth-form__submit" [disabled]="isSubmitting" style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+        @if (isSubmitting) {
+          <svg class="spinner" viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-dasharray="32" stroke-linecap="round" stroke-opacity="0.3"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path>
+          </svg>
+        }
         {{ isSubmitting ? 'Creating account...' : 'Sign up' }}
       </button>
     </form>

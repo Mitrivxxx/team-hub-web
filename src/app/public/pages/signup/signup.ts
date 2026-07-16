@@ -63,6 +63,15 @@ export class Signup {
     event.preventDefault();
   }
 
+  capitalizeFirstLetter(controlName: 'firstName' | 'lastName'): void {
+    const control = this.signupForm.get(controlName);
+    if (control && control.value) {
+      const value = control.value;
+      const capitalized = value.charAt(0).toUpperCase() + value.slice(1);
+      control.setValue(capitalized, { emitEvent: false });
+    }
+  }
+
   onSubmit(): void {
     if (this.isSubmitting) {
       return;

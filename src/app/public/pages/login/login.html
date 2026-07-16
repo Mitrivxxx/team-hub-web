@@ -1,4 +1,10 @@
 <main class="auth-page">
+  <a routerLink="/" class="btn btn--secondary" style="position: absolute; top: 1.5rem; left: 1.5rem; display: flex; align-items: center; gap: 0.5rem; z-index: 10;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+    Back to main menu
+  </a>
   <div class="auth-card shadow-soft">
     <div class="auth-card__brand">
       <svg
@@ -91,14 +97,25 @@
         }
       </div>
 
-      <div class="auth-form__field auth-form__field--checkbox">
+      <div class="auth-form__field auth-form__field--checkbox" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
         <label class="auth-form__checkbox-label">
           <input type="checkbox" class="auth-form__checkbox" formControlName="rememberMe" />
           <span>Remember me</span>
         </label>
+        <button type="button" style="background: none; border: none; padding: 0; font-size: 0.875rem; font-weight: 600; color: #2563eb; cursor: pointer; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" (click)="goToForgotPassword()">
+          Forgot password?
+        </button>
       </div>
 
-      <button type="submit" class="btn btn--primary auth-form__submit">Log in</button>
+      <button type="submit" class="btn btn--primary auth-form__submit" [disabled]="isSubmitting" style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+        @if (isSubmitting) {
+          <svg class="spinner" viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-dasharray="32" stroke-linecap="round" stroke-opacity="0.3"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path>
+          </svg>
+        }
+        {{ isSubmitting ? 'Logging in...' : 'Log in' }}
+      </button>
     </form>
 
     <p class="auth-card__footer">
