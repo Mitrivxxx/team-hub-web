@@ -8,7 +8,7 @@
 
 ## Do
 - Use API through infrastructure nginx and gateway (`/api/...`) with `withCredentials` when required.
-- Keep login/register flow aligned with auth API.
+- Keep login/register/change-password flow aligned with auth API.
 - After successful register, call login and redirect to `/app`.
 - Keep login payload aligned with auth contract, including `rememberMe`.
 - Keep register client-side validation aligned with auth:

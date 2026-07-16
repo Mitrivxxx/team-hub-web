@@ -99,7 +99,65 @@ export class AuthService {
       .pipe(tap(() => this._currentUser.set(null)));
   }
 
+  changePassword(data: {
+    username: string;
+    name: string;
+    surname: string;
+    password: string;
+  }): Observable<void> {
+    const payload = {
+      username: data.username.trim(),
+      name: data.name.trim(),
+      surname: data.surname.trim(),
+      password: data.password,
+    };
+
+    const fieldErrors = this.validateChangePasswordPayload(payload);
+    if (fieldErrors) {
+      return throwError(() => new AuthValidationError('Password change validation failed.', fieldErrors, 400));
+    }
+
+    return this.http.post<void>(`${this.baseUrl}/change-password`, payload).pipe(
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse) {
+          const apiFieldErrors = parseApiFieldErrors(error);
+          if (apiFieldErrors) {
+            return throwError(
+              () => new AuthValidationError('Password change validation failed.', apiFieldErrors, error.status),
+            );
+          }
+        }
+
+        return throwError(() => error);
+      }),
+    );
+  }
+
   private validateRegisterPayload(
+    data: { username: string; name: string; surname: string; password: string },
+  ): FieldValidationErrors | null {
+    const fieldErrors: FieldValidationErrors = {};
+
+    if (data.name.length < 2 || data.name.length > 50 || !AuthService.humanNameRegex.test(data.name)) {
+      fieldErrors['name'] = ['First name is invalid.'];
+    }
+
+    if (data.surname.length < 2 || data.surname.length > 80 || !AuthService.humanNameRegex.test(data.surname)) {
+      fieldErrors['surname'] = ['Last name is invalid.'];
+    }
+
+    if (!AuthService.usernameRegex.test(data.username)) {
+      fieldErrors['username'] = ['Username is invalid.'];
+    }
+
+    if (data.password.length < 12 || data.password.length > 128) {
+      fieldErrors['password'] = ['Password must be 12-128 characters long.'];
+    }
+
+    return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
+  }
+
+  private validateChangePasswordPayload(
     data: { username: string; name: string; surname: string; password: string },
   ): FieldValidationErrors | null {
     const fieldErrors: FieldValidationErrors = {};
