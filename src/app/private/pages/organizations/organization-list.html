@@ -1,0 +1,51 @@
+<main class="org-list section">
+  <div class="container">
+    <header class="org-list__header">
+      <p class="org-list__eyebrow">TeamHub App</p>
+      <h1 class="org-list__title">Your organizations</h1>
+      <p class="org-list__description">Choose an organization to work with.</p>
+    </header>
+
+    @if (isLoading()) {
+      <p class="org-list__status" aria-live="polite">Loading organizations...</p>
+    } @else if (loadError()) {
+      <div class="org-list__status org-list__status--error">
+        <p>{{ loadError() }}</p>
+        <button type="button" class="btn btn--outline" (click)="retryLoad()">Try again</button>
+      </div>
+    } @else {
+      <section class="org-list__grid" aria-label="Organizations">
+        @for (org of organizations(); track org.id) {
+          <a
+            [routerLink]="['/app/organizations', org.slug]"
+            class="org-card org-card--interactive shadow-soft"
+          >
+            <div class="org-card__icon" aria-hidden="true">
+              @if (org.avatarUrl) {
+                <img [src]="org.avatarUrl" [alt]="" class="org-card__avatar" />
+              } @else {
+                <svg class="org-card__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />
+                </svg>
+              }
+            </div>
+            <h2 class="org-card__title">{{ org.name }}</h2>
+            <span class="org-card__link">Open</span>
+          </a>
+        }
+
+        <button type="button" class="org-card org-card--add" (click)="openCreateModal()">
+          <span class="org-card__add-icon" aria-hidden="true">+</span>
+          <span class="org-card__add-label">Add new organization</span>
+        </button>
+      </section>
+    }
+  </div>
+</main>
+
+@if (createModalOpen()) {
+  <app-create-organization-modal
+    (closed)="closeCreateModal()"
+    (created)="onOrganizationCreated($event)"
+  />
+}

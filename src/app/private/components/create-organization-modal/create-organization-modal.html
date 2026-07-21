@@ -1,0 +1,92 @@
+<div
+  class="create-org-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="create-org-title"
+  (click)="onBackdropClick($event)"
+>
+  <div class="create-org-modal__panel shadow-soft">
+    <h2 id="create-org-title" class="create-org-modal__title">New organization</h2>
+    <p class="create-org-modal__subtitle">Set up a new organization for your team.</p>
+
+    @if (submitError) {
+      <p class="create-org-modal__error">{{ submitError }}</p>
+    }
+
+    <form class="create-org-modal__form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="create-org-modal__field">
+        <label class="create-org-modal__label" for="org-name">Organization name</label>
+        <input
+          id="org-name"
+          type="text"
+          class="create-org-modal__input"
+          formControlName="name"
+          autocomplete="organization"
+          placeholder="e.g. InnovaTech Solutions"
+          [class.create-org-modal__input--invalid]="
+            form.controls.name.touched && form.controls.name.invalid
+          "
+        />
+        @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+          <span class="create-org-modal__field-error">Organization name is required.</span>
+        }
+        @if (form.controls.name.touched && form.controls.name.hasError('maxlength')) {
+          <span class="create-org-modal__field-error">Name must be at most 100 characters.</span>
+        }
+      </div>
+
+      <div class="create-org-modal__field">
+        <label class="create-org-modal__label" for="org-description">Description</label>
+        <textarea
+          id="org-description"
+          class="create-org-modal__textarea"
+          formControlName="description"
+          rows="3"
+          placeholder="What does this organization do?"
+          [class.create-org-modal__input--invalid]="
+            form.controls.description.touched && form.controls.description.invalid
+          "
+        ></textarea>
+        @if (form.controls.description.touched && form.controls.description.hasError('maxlength')) {
+          <span class="create-org-modal__field-error">Description must be at most 500 characters.</span>
+        }
+      </div>
+
+      <div class="create-org-modal__field">
+        <span class="create-org-modal__label">Organization photo</span>
+        <div class="create-org-modal__photo">
+          @if (avatarPreviewUrl) {
+            <img [src]="avatarPreviewUrl" alt="Selected organization photo preview" class="create-org-modal__photo-preview" />
+            <button type="button" class="create-org-modal__photo-remove" (click)="removeAvatar()">
+              Remove photo
+            </button>
+          } @else {
+            <label class="create-org-modal__photo-upload">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="create-org-modal__photo-input"
+                (change)="onAvatarSelected($event)"
+              />
+              <span class="create-org-modal__photo-upload-icon" aria-hidden="true">+</span>
+              <span class="create-org-modal__photo-upload-text">Add photo</span>
+            </label>
+          }
+        </div>
+        <p class="create-org-modal__hint">JPEG, PNG, or WebP. Max 2 MB.</p>
+        @if (avatarError) {
+          <span class="create-org-modal__field-error">{{ avatarError }}</span>
+        }
+      </div>
+
+      <div class="create-org-modal__actions">
+        <button type="button" class="btn btn--outline" [disabled]="isSubmitting" (click)="close()">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Creating...' : 'Create' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

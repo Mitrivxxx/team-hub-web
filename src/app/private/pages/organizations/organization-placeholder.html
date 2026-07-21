@@ -1,0 +1,21 @@
+<main class="org-placeholder section">
+  <div class="container">
+    <div class="org-placeholder__card shadow-soft">
+      @if (isLoading()) {
+        <p class="org-placeholder__eyebrow">Loading...</p>
+      } @else if (loadError()) {
+        <p class="org-placeholder__eyebrow">Error</p>
+        <h1 class="org-placeholder__title">{{ loadError() }}</h1>
+      } @else {
+        <p class="org-placeholder__eyebrow">Organization</p>
+        <h1 class="org-placeholder__title">{{ displayName() }}</h1>
+        @if (organization()?.description) {
+          <p class="org-placeholder__description">{{ organization()?.description }}</p>
+        } @else {
+          <p class="org-placeholder__description">Organization view coming soon.</p>
+        }
+      }
+      <a routerLink="/app" class="btn btn--outline">Back to organizations</a>
+    </div>
+  </div>
+</main>

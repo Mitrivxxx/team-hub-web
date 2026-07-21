@@ -1,0 +1,171 @@
+@use 'variables' as *;
+
+.create-org-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md;
+  background-color: rgba($color-text-heading, 0.45);
+
+  &__panel {
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background-color: $color-white;
+    border: 1px solid rgba($color-border, 0.6);
+    border-radius: $border-radius-base;
+    padding: $spacing-lg;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    margin-bottom: $spacing-xs;
+  }
+
+  &__subtitle {
+    color: $color-text-muted;
+    font-size: 0.95rem;
+    margin-bottom: $spacing-md;
+  }
+
+  &__error {
+    color: #dc2626;
+    font-size: 0.9rem;
+    margin-bottom: $spacing-md;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__label {
+    font-size: 0.9rem;
+    font-weight: $font-weight-semibold;
+    color: $color-text-heading;
+  }
+
+  &__input,
+  &__textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid rgba($color-border, 0.8);
+    border-radius: $border-radius-base;
+    font: inherit;
+    color: $color-text-dark;
+    background-color: $color-white;
+    transition: $transition-base;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.15);
+    }
+
+    &--invalid {
+      border-color: #dc2626;
+    }
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 96px;
+  }
+
+  &__hint {
+    font-size: 0.85rem;
+    color: $color-text-muted;
+    margin: 0;
+  }
+
+  &__field-error {
+    color: #dc2626;
+    font-size: 0.85rem;
+  }
+
+  &__photo {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+  }
+
+  &__photo-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: $border-radius-base;
+    object-fit: cover;
+    border: 1px solid rgba($color-border, 0.8);
+  }
+
+  &__photo-remove {
+    border: none;
+    background: none;
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+      color: $color-primary-dark;
+      text-decoration: underline;
+    }
+  }
+
+  &__photo-upload {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: 10px 14px;
+    border: 1px dashed rgba($color-border, 0.9);
+    border-radius: $border-radius-base;
+    cursor: pointer;
+    transition: $transition-base;
+
+    &:hover {
+      border-color: $color-primary;
+      background-color: rgba($color-primary, 0.04);
+    }
+  }
+
+  &__photo-input {
+    display: none;
+  }
+
+  &__photo-upload-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: $color-primary;
+    color: $color-white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  &__photo-upload-text {
+    font-weight: $font-weight-semibold;
+    color: $color-primary;
+    font-size: 0.9rem;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+    margin-top: $spacing-sm;
+  }
+}

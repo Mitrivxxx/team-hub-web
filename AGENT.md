@@ -31,6 +31,17 @@
 - `AuthService.initialize()` checks session via `/refresh` on app start.
 - Until `sessionReady`, show `AppLoader`.
 - `authGuard` protects `/app/*`; `guestGuard` redirects logged-in users from `/login`, `/signup`, and `/forgot-password`.
+- `/app` shows organization list for the logged-in user (`OrganizationList`).
+- `/app/organizations/:slug` shows organization placeholder (`OrganizationPlaceholder`).
+- Organization API base: `environment.organizationsApiUrl` (`/api/organizations`).
+
+## Organizations
+- `OrganizationService` (`src/app/core/organizations/organization.service.ts`):
+  - `GET /api/organizations` — list current user organizations
+  - `GET /api/organizations/by-slug/{slug}` — organization details
+  - `POST /api/organizations` — create organization (`{ name }`)
+- Create modal: `CreateOrganizationModal` — fields: name, description, photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`).
+- JWT Bearer token is attached by `authInterceptor` on all HTTP calls.
 
 ## Don't
 - Do not point frontend directly at gateway or auth service URL when traffic should go through infrastructure nginx.

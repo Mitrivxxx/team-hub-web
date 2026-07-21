@@ -3,7 +3,13 @@ import { Routes } from '@angular/router';
 export const privateRoutes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+    loadComponent: () =>
+      import('./pages/organizations/organization-list').then((m) => m.OrganizationList),
+  },
+  {
+    path: 'organizations/:slug',
+    loadComponent: () =>
+      import('./pages/organizations/organization-placeholder').then((m) => m.OrganizationPlaceholder),
   },
   {
     path: 'chat',
