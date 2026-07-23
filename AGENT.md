@@ -32,14 +32,15 @@
 - Until `sessionReady`, show `AppLoader`.
 - `authGuard` protects `/app/*`; `guestGuard` redirects logged-in users from `/login`, `/signup`, and `/forgot-password`.
 - `/app` shows organization list for the logged-in user (`OrganizationList`).
-- `/app/organizations/:slug` shows organization placeholder (`OrganizationPlaceholder`).
-- Organization API base: `environment.organizationsApiUrl` (`/api/organizations`).
+- `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
+- `/app/organizations/:slug/manage` shows organization management placeholder (`OrganizationManage`).
+- Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v0.1.0`).
 
 ## Organizations
 - `OrganizationService` (`src/app/core/organizations/organization.service.ts`):
-  - `GET /api/organizations` — list current user organizations
-  - `GET /api/organizations/by-slug/{slug}` — organization details
-  - `POST /api/organizations` — create organization (`{ name }`)
+  - `GET /api/organizations/v0.1.0` — list current user organizations
+  - `GET /api/organizations/v0.1.0/by-slug/{slug}` — organization details
+  - `POST /api/organizations/v0.1.0` — create organization (`{ name }`)
 - Create modal: `CreateOrganizationModal` — fields: name, description, photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`).
 - JWT Bearer token is attached by `authInterceptor` on all HTTP calls.
 

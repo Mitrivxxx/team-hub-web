@@ -14,7 +14,7 @@
         <button type="button" class="btn btn--outline" (click)="retryLoad()">Try again</button>
       </div>
     } @else {
-      <section class="org-list__grid" aria-label="Organizations">
+      <section class="org-grid" aria-label="Organizations">
         @for (org of organizations(); track org.id) {
           <a
             [routerLink]="['/app/organizations', org.slug]"

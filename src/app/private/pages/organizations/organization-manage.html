@@ -1,0 +1,26 @@
+<main class="org-manage section">
+  <div class="container">
+    @if (isLoading()) {
+      <p class="org-manage__status" aria-live="polite">Loading...</p>
+    } @else if (loadError()) {
+      <div class="org-manage__status org-manage__status--error">
+        <p>{{ loadError() }}</p>
+        <a routerLink="/app" class="btn btn--outline">Back to organizations</a>
+      </div>
+    } @else {
+      <header class="org-manage__header">
+        <p class="org-manage__eyebrow">Organization settings</p>
+        <h1 class="org-manage__title">Manage organization</h1>
+        <p class="org-manage__subtitle">{{ displayName() }}</p>
+      </header>
+
+      <div class="org-manage__placeholder shadow-soft">
+        <p>Full organization management will be available here soon.</p>
+      </div>
+
+      <div class="org-manage__footer">
+        <a [routerLink]="['/app/organizations', slug]" class="btn btn--outline">Back to organization</a>
+      </div>
+    }
+  </div>
+</main>

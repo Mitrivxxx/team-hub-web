@@ -1,7 +1,6 @@
 @use 'variables' as *;
-@use 'org-card';
 
-.org-hub {
+.org-manage {
   &__status {
     text-align: center;
     color: $color-text-muted;
@@ -19,51 +18,31 @@
     margin-bottom: $spacing-lg;
   }
 
-  &__brand {
-    display: flex;
-    align-items: center;
-    gap: $spacing-md;
-    flex-wrap: wrap;
-  }
-
-  &__avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: $border-radius-base;
-    object-fit: cover;
-    flex-shrink: 0;
-
-    &--placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: $color-bg-alt;
-    }
-  }
-
-  &__avatar-icon {
-    width: 28px;
-    height: 28px;
-    color: $color-text-muted;
-  }
-
   &__eyebrow {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-size: 0.8rem;
     font-weight: $font-weight-semibold;
     color: $color-primary;
-    margin-bottom: $spacing-xs;
+    margin-bottom: $spacing-sm;
   }
 
   &__title {
     margin-bottom: $spacing-xs;
   }
 
-  &__description {
+  &__subtitle {
     color: $color-text-muted;
-    max-width: 640px;
     margin: 0;
+  }
+
+  &__placeholder {
+    max-width: 720px;
+    background-color: $color-white;
+    border: 1px solid rgba($color-border, 0.6);
+    border-radius: $border-radius-base;
+    padding: $spacing-xl $spacing-lg;
+    color: $color-text-muted;
   }
 
   &__footer {

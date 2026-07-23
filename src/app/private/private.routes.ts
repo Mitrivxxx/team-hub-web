@@ -7,6 +7,11 @@ export const privateRoutes: Routes = [
       import('./pages/organizations/organization-list').then((m) => m.OrganizationList),
   },
   {
+    path: 'organizations/:slug/manage',
+    loadComponent: () =>
+      import('./pages/organizations/organization-manage').then((m) => m.OrganizationManage),
+  },
+  {
     path: 'organizations/:slug',
     loadComponent: () =>
       import('./pages/organizations/organization-placeholder').then((m) => m.OrganizationPlaceholder),

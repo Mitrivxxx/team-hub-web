@@ -31,7 +31,21 @@ export class App {
     { initialValue: !this.isAuthRoute() },
   );
 
+  readonly showFooter = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map(() => this.isHomeRoute()),
+      startWith(this.isHomeRoute()),
+    ),
+    { initialValue: this.isHomeRoute() },
+  );
+
   private isAuthRoute(): boolean {
     return PUBLIC_AUTH_ROUTES.some((route) => this.router.url.startsWith(route));
+  }
+
+  private isHomeRoute(): boolean {
+    const path = this.router.url.split('?')[0].split('#')[0];
+    return path === '/' || path === '';
   }
 }

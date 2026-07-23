@@ -1,21 +1,57 @@
-<main class="org-placeholder section">
+<main class="org-hub section">
   <div class="container">
-    <div class="org-placeholder__card shadow-soft">
-      @if (isLoading()) {
-        <p class="org-placeholder__eyebrow">Loading...</p>
-      } @else if (loadError()) {
-        <p class="org-placeholder__eyebrow">Error</p>
-        <h1 class="org-placeholder__title">{{ loadError() }}</h1>
-      } @else {
-        <p class="org-placeholder__eyebrow">Organization</p>
-        <h1 class="org-placeholder__title">{{ displayName() }}</h1>
-        @if (organization()?.description) {
-          <p class="org-placeholder__description">{{ organization()?.description }}</p>
-        } @else {
-          <p class="org-placeholder__description">Organization view coming soon.</p>
-        }
-      }
-      <a routerLink="/app" class="btn btn--outline">Back to organizations</a>
-    </div>
+    @if (isLoading()) {
+      <p class="org-hub__status" aria-live="polite">Loading organization...</p>
+    } @else if (loadError()) {
+      <div class="org-hub__status org-hub__status--error">
+        <p>{{ loadError() }}</p>
+        <a routerLink="/app" class="btn btn--outline">Back to organizations</a>
+      </div>
+    } @else {
+      <header class="org-hub__header">
+        <div class="org-hub__brand">
+          @if (organization()?.avatarUrl) {
+            <img
+              [src]="organization()!.avatarUrl!"
+              [alt]="displayName()"
+              class="org-hub__avatar"
+            />
+          } @else {
+            <div class="org-hub__avatar org-hub__avatar--placeholder" aria-hidden="true">
+              <svg class="org-hub__avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />
+              </svg>
+            </div>
+          }
+          <div>
+            <p class="org-hub__eyebrow">Organization</p>
+            <h1 class="org-hub__title">{{ displayName() }}</h1>
+            @if (organization()?.description) {
+              <p class="org-hub__description">{{ organization()?.description }}</p>
+            }
+          </div>
+        </div>
+      </header>
+
+      <section class="org-grid" aria-label="Organization actions">
+        <a
+          [routerLink]="['/app/organizations', slug, 'manage']"
+          class="org-card org-card--interactive shadow-soft"
+        >
+          <div class="org-card__icon" aria-hidden="true">
+            <svg class="org-card__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+            </svg>
+          </div>
+          <h2 class="org-card__title">Manage organization</h2>
+          <span class="org-card__link">Open</span>
+        </a>
+      </section>
+
+      <div class="org-hub__footer">
+        <a routerLink="/app" class="btn btn--outline">Back to organizations</a>
+      </div>
+    }
   </div>
 </main>
