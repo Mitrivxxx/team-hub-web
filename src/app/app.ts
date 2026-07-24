@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { AuthService } from './core/auth/auth.service';
 import { AppLoader } from './core/components/app-loader/app-loader';
+import { OrgManageLayoutService } from './core/layout/org-manage-layout.service';
 import { Footer } from './public/components/footer/footer';
 import { Header } from './public/components/header/header';
 import { PUBLIC_AUTH_ROUTES } from './public/public.constants';
@@ -17,6 +18,7 @@ import { PUBLIC_AUTH_ROUTES } from './public/public.constants';
 export class App {
   private readonly router = inject(Router);
   protected readonly authService = inject(AuthService);
+  protected readonly orgManageLayout = inject(OrgManageLayoutService);
 
   constructor() {
     this.authService.initialize().subscribe();

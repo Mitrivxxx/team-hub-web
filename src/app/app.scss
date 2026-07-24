@@ -14,6 +14,10 @@
     min-height: 100vh;
   }
 
+  &--org-manage {
+    --org-manage-sidebar-width: #{$sidebar-collapsed-width};
+  }
+
   &__content {
     flex: 1;
   }

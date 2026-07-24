@@ -31,9 +31,11 @@
 - `AuthService.initialize()` checks session via `/refresh` on app start.
 - Until `sessionReady`, show `AppLoader`.
 - `authGuard` protects `/app/*`; `guestGuard` redirects logged-in users from `/login`, `/signup`, and `/forgot-password`.
+- Site header logo: `/app` when authenticated, `/` when guest. On manage route, logo is hidden; puzzle logo lives in the sidebar and links to `/app`.
+- Authenticated header uses avatar initials menu with Log out (Escape / outside click closes).
 - `/app` shows organization list for the logged-in user (`OrganizationList`).
 - `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
-- `/app/organizations/:slug/manage` shows organization management placeholder (`OrganizationManage`).
+- `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page chrome (title + description + optional primary action). `OrgManageLayoutService` syncs shell offset and org context. Tab content panels not built yet.
 - Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v0.1.0`).
 
 ## Organizations
@@ -42,6 +44,8 @@
   - `GET /api/organizations/v0.1.0/by-slug/{slug}` — organization details
   - `POST /api/organizations/v0.1.0` — create organization (`{ name }`)
 - Create modal: `CreateOrganizationModal` — fields: name, description, photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`).
+- Reusable `Sidebar` (`src/app/shared/sidebar/`): tree `items` + `activeId` + `collapsed`; `itemSelect` + `collapsedChange`; collapsed CSS tooltips; chevron row toggles; `aria-current` / `aria-expanded` / `:focus-visible`.
+- Manage nav: Members (Member list, Add member), Organization, Role/Permission (Teams, Role), Statistic, Audit Log.
 - JWT Bearer token is attached by `authInterceptor` on all HTTP calls.
 
 ## Don't

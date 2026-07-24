@@ -1,7 +1,12 @@
 @if (!authService.sessionReady()) {
   <app-loader />
 } @else {
-  <div class="app-layout" [class.app-layout--auth]="!showLayout()">
+  <div
+    class="app-layout"
+    [class.app-layout--auth]="!showLayout()"
+    [class.app-layout--org-manage]="orgManageLayout.active()"
+    [style.--org-manage-sidebar-width.px]="orgManageLayout.sidebarWidthPx()"
+  >
     @if (showLayout()) {
       <app-header />
     }

@@ -139,6 +139,19 @@ img {
       color: $color-white;
     }
   }
+
+  &--ghost {
+    background-color: transparent;
+    border-color: transparent;
+    color: $color-text-muted;
+    padding: 8px 12px;
+    font-weight: $font-weight-medium;
+
+    &:hover {
+      color: $color-primary-dark;
+      background-color: rgba($color-primary, 0.08);
+    }
+  }
 }
 
 .shadow-soft {
