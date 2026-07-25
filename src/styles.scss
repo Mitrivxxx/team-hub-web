@@ -4,7 +4,15 @@
 // ==========================================================================
 // GLOBALNE STYLE DLA PROJEKTU (Wersja Jasna / Przejrzysta)
 // Paleta: Biel (#FFFFFF), Miętowy błękit (#5EAAA8), Ciemny szary (#333333)
+// Manage organization: cyan (#22B8D4) via --color-primary* on .app-layout--org-manage
 // ==========================================================================
+
+:root {
+  --color-primary: #{$color-primary};
+  --color-primary-dark: #{$color-primary-dark};
+  --color-primary-rgb: #{$color-primary-rgb};
+  --color-primary-dark-rgb: #{$color-primary-dark-rgb};
+}
 
 // 2. RESET & STYLE BAZOWE (Reset & Base Styles)
 // --------------------------------------------------------------------------
@@ -62,12 +70,12 @@ p {
 }
 
 a {
-  color: $color-primary;
+  color: var(--color-primary);
   text-decoration: none;
   transition: $transition-base;
 
   &:hover {
-    color: $color-primary-dark;
+    color: var(--color-primary-dark);
   }
 }
 
@@ -114,14 +122,14 @@ img {
   white-space: nowrap;
 
   &--primary {
-    background-color: $color-primary;
+    background-color: var(--color-primary);
     color: $color-white;
 
     &:hover {
-      background-color: $color-primary-dark;
+      background-color: var(--color-primary-dark);
       color: $color-white;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba($color-primary, 0.2);
+      box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.2);
     }
 
     &:active {
@@ -131,11 +139,11 @@ img {
 
   &--outline {
     background-color: transparent;
-    border-color: $color-primary;
-    color: $color-primary;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 
     &:hover {
-      background-color: $color-primary;
+      background-color: var(--color-primary);
       color: $color-white;
     }
   }
@@ -148,8 +156,8 @@ img {
     font-weight: $font-weight-medium;
 
     &:hover {
-      color: $color-primary-dark;
-      background-color: rgba($color-primary, 0.08);
+      color: var(--color-primary-dark);
+      background-color: rgba(var(--color-primary-rgb), 0.08);
     }
   }
 }
@@ -266,7 +274,7 @@ img {
       display: block;
       width: 40px;
       height: 3px;
-      background-color: $color-primary;
+      background-color: var(--color-primary);
       margin: $spacing-sm auto 0;
       border-radius: 2px;
     }
@@ -314,12 +322,12 @@ img {
   &__icon-wrapper {
     width: 56px;
     height: 56px;
-    color: $color-primary;
+    color: var(--color-primary);
     margin-bottom: $spacing-md;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba($color-primary, 0.08);
+    background-color: rgba(var(--color-primary-rgb), 0.08);
     border-radius: 50%;
   }
 
@@ -356,13 +364,13 @@ img {
       height: 2px;
       bottom: -2px;
       left: 0;
-      background-color: $color-primary;
+      background-color: var(--color-primary);
       transform-origin: bottom right;
       transition: transform 0.25s ease-out;
     }
 
     &:hover {
-      color: $color-primary-dark;
+      color: var(--color-primary-dark);
 
       &::after {
         transform: scaleX(1);

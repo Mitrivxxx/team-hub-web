@@ -1,0 +1,78 @@
+@if (error()) {
+  <p class="manage-panel__error">{{ error() }}</p>
+}
+@if (success()) {
+  <p class="manage-panel__success">{{ success() }}</p>
+}
+
+<form class="manage-panel__form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <div class="manage-panel__field">
+    <label class="manage-panel__label" for="org-settings-name">Name</label>
+    <input
+      id="org-settings-name"
+      type="text"
+      class="manage-panel__input"
+      formControlName="name"
+      [readonly]="!canManage()"
+    />
+  </div>
+
+  <div class="manage-panel__field">
+    <label class="manage-panel__label" for="org-settings-description">Description</label>
+    <textarea
+      id="org-settings-description"
+      class="manage-panel__textarea"
+      formControlName="description"
+      rows="4"
+      [readonly]="!canManage()"
+    ></textarea>
+  </div>
+
+  @if (canManage()) {
+    <div class="manage-panel__actions">
+      <button type="submit" class="btn btn--primary" [disabled]="isSaving()">
+        {{ isSaving() ? 'Saving...' : 'Save changes' }}
+      </button>
+    </div>
+  }
+</form>
+
+<section class="manage-panel__card">
+  <h3 class="manage-panel__card-title">Organization photo</h3>
+  @if (organization().avatarUrl) {
+    <img [src]="organization().avatarUrl!" alt="" class="org-settings__avatar" />
+  } @else {
+    <p class="manage-panel__status">No photo uploaded.</p>
+  }
+
+  @if (canManage()) {
+    <div class="manage-panel__actions">
+      <label class="btn btn--outline">
+        Upload photo
+        <input type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="onAvatarSelected($event)" />
+      </label>
+      @if (organization().avatarUrl) {
+        <button type="button" class="btn btn--ghost" (click)="removeAvatar()">Remove photo</button>
+      }
+    </div>
+    <p class="manage-panel__hint">JPEG, PNG, or WebP. Max 2 MB.</p>
+    @if (avatarError()) {
+      <p class="manage-panel__error">{{ avatarError() }}</p>
+    }
+  }
+</section>
+
+<div class="manage-panel__danger-zone">
+  <h3 class="manage-panel__card-title">Membership</h3>
+  <p class="manage-panel__card-meta">Leave this organization or delete it if you are the owner.</p>
+  <div class="manage-panel__actions">
+    <button type="button" class="btn btn--outline" [disabled]="isLeaving()" (click)="leaveOrganization()">
+      {{ isLeaving() ? 'Leaving...' : 'Leave organization' }}
+    </button>
+    @if (canDelete()) {
+      <button type="button" class="btn btn--ghost" [disabled]="isDeleting()" (click)="deleteOrganization()">
+        {{ isDeleting() ? 'Deleting...' : 'Delete organization' }}
+      </button>
+    }
+  </div>
+</div>

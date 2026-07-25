@@ -38,11 +38,11 @@
     transition: color 0.3s ease;
 
     &:hover {
-      color: $color-primary;
+      color: var(--color-primary);
     }
 
     &:focus-visible {
-      outline: 2px solid $color-primary;
+      outline: 2px solid var(--color-primary);
       outline-offset: 2px;
       border-radius: 4px;
     }
@@ -75,11 +75,11 @@
     white-space: nowrap;
 
     &:hover {
-      color: $color-primary-dark;
+      color: var(--color-primary-dark);
     }
 
     &:focus-visible {
-      outline: 2px solid $color-primary;
+      outline: 2px solid var(--color-primary);
       outline-offset: 2px;
       border-radius: 4px;
     }
@@ -133,8 +133,8 @@
     height: 36px;
     border: 1px solid $color-border;
     border-radius: 50%;
-    background: rgba($color-primary, 0.12);
-    color: $color-primary-dark;
+    background: rgba(var(--color-primary-rgb), 0.12);
+    color: var(--color-primary-dark);
     font: inherit;
     font-size: 0.75rem;
     font-weight: $font-weight-semibold;
@@ -142,11 +142,11 @@
     cursor: pointer;
 
     &:hover {
-      background: rgba($color-primary, 0.2);
+      background: rgba(var(--color-primary-rgb), 0.2);
     }
 
     &:focus-visible {
-      outline: 2px solid $color-primary;
+      outline: 2px solid var(--color-primary);
       outline-offset: 2px;
     }
   }
@@ -193,12 +193,12 @@
     cursor: pointer;
 
     &:hover {
-      background: rgba($color-primary, 0.08);
-      color: $color-primary-dark;
+      background: rgba(var(--color-primary-rgb), 0.08);
+      color: var(--color-primary-dark);
     }
 
     &:focus-visible {
-      outline: 2px solid $color-primary;
+      outline: 2px solid var(--color-primary);
       outline-offset: 1px;
     }
   }

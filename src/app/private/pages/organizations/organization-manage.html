@@ -20,22 +20,50 @@
           <p>{{ loadError() }}</p>
           <a routerLink="/app" class="btn btn--outline">Back to organizations</a>
         </div>
-      } @else {
-        <header class="org-manage__page-header">
-          <div class="org-manage__page-intro">
-            <h1 class="org-manage__page-title">{{ pageChrome().title }}</h1>
-            <p class="org-manage__page-description">{{ pageChrome().description }}</p>
-          </div>
-          @if (pageChrome().primaryAction; as action) {
-            <button type="button" class="btn btn--primary org-manage__page-action" (click)="onPrimaryAction()">
-              {{ action.label }}
-            </button>
-          }
-        </header>
+      } @else if (organization(); as org) {
+        @if (me(); as membership) {
+          <header class="org-manage__page-header">
+            <div class="org-manage__page-intro">
+              <h1 class="org-manage__page-title">{{ pageChrome().title }}</h1>
+              <p class="org-manage__page-description">{{ pageChrome().description }}</p>
+            </div>
+            @if (pageChrome().primaryAction; as action) {
+              <button type="button" class="btn btn--primary org-manage__page-action" (click)="onPrimaryAction()">
+                {{ action.label }}
+              </button>
+            }
+          </header>
 
-        <div class="org-manage__page-body">
-          <p>Content for this section will be added later.</p>
-        </div>
+          <div class="org-manage__page-body">
+            @switch (activeTab()) {
+              @case ('all-members') {
+                <app-org-member-list-panel [organization]="org" [me]="membership" />
+              }
+              @case ('invitations') {
+                <app-org-add-member-panel [organization]="org" [me]="membership" />
+              }
+              @case ('organization') {
+                <app-org-settings-panel
+                  [organization]="org"
+                  [me]="membership"
+                  (organizationUpdated)="onOrganizationUpdated($event)"
+                />
+              }
+              @case ('teams') {
+                <app-org-teams-panel [organization]="org" [me]="membership" />
+              }
+              @case ('member-roles') {
+                <app-org-roles-panel [organization]="org" [me]="membership" />
+              }
+              @case ('role') {
+                <app-org-roles-panel [organization]="org" [me]="membership" />
+              }
+              @default {
+                <p>Content for this section will be added later.</p>
+              }
+            }
+          </div>
+        }
       }
     </div>
   </div>

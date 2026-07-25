@@ -1,0 +1,66 @@
+@if (!canManage()) {
+  <p class="manage-panel__status">You need member management permission to invite people.</p>
+} @else {
+  @if (error()) {
+    <p class="manage-panel__error">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="manage-panel__success">{{ success() }}</p>
+  }
+
+  <form class="manage-panel__form" [formGroup]="inviteForm" (ngSubmit)="submitInvite()" novalidate>
+    <div class="manage-panel__field">
+      <label class="manage-panel__label" for="invite-email">Email</label>
+      <input id="invite-email" type="email" class="manage-panel__input" formControlName="email" />
+    </div>
+
+    <div class="manage-panel__field">
+      <label class="manage-panel__label" for="invite-role">Organization role</label>
+      <select id="invite-role" class="manage-panel__select" formControlName="orgRoleId">
+        @for (role of orgRoles(); track role.id) {
+          <option [value]="role.id">{{ role.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="manage-panel__actions">
+      <button type="submit" class="btn btn--primary" [disabled]="isSubmitting()">
+        {{ isSubmitting() ? 'Sending...' : 'Send invitation' }}
+      </button>
+    </div>
+  </form>
+
+  <section class="manage-panel__card">
+    <h3 class="manage-panel__card-title">Pending invitations</h3>
+    @if (isLoading()) {
+      <p class="manage-panel__status">Loading invitations...</p>
+    } @else if (invitations().length === 0) {
+      <p class="manage-panel__status">No pending invitations.</p>
+    } @else {
+      <div class="manage-panel__table-wrap">
+        <table class="manage-panel__table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Expires</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (invitation of invitations(); track invitation.id) {
+              <tr>
+                <td>{{ invitation.email }}</td>
+                <td>{{ invitation.expiresAt | date: 'medium' }}</td>
+                <td>
+                  <button type="button" class="btn btn--ghost" (click)="cancelInvitation(invitation)">
+                    Cancel
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

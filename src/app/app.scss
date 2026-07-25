@@ -16,6 +16,10 @@
 
   &--org-manage {
     --org-manage-sidebar-width: #{$sidebar-collapsed-width};
+    --color-primary: #{$color-org-primary};
+    --color-primary-dark: #{$color-org-primary-dark};
+    --color-primary-rgb: #{$color-org-primary-rgb};
+    --color-primary-dark-rgb: #{$color-org-primary-dark-rgb};
   }
 
   &__content {

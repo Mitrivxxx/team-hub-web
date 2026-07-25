@@ -1,0 +1,10 @@
+@use 'variables' as *;
+@use 'manage-panel';
+
+.org-settings__avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: $border-radius-base;
+  object-fit: cover;
+  margin-bottom: 12px;
+}

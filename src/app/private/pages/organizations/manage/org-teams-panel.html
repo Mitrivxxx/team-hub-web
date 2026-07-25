@@ -1,0 +1,119 @@
+@if (error()) {
+  <p class="manage-panel__error">{{ error() }}</p>
+}
+
+<div class="org-teams__layout">
+  <section class="manage-panel__card org-teams__list">
+    <h3 class="manage-panel__card-title">Teams</h3>
+    @if (isLoading()) {
+      <p class="manage-panel__status">Loading teams...</p>
+    } @else if (teams().length === 0) {
+      <p class="manage-panel__status">No teams yet.</p>
+    } @else {
+      <ul class="org-teams__items">
+        @for (team of teams(); track team.id) {
+          <li>
+            <button
+              type="button"
+              class="org-teams__item"
+              [class.org-teams__item--active]="selectedTeamId() === team.id"
+              (click)="selectTeam(team.id)"
+            >
+              <span>{{ team.name }}</span>
+              <span class="org-teams__item-meta">{{ team.memberCount }} members</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (canManage()) {
+      <form class="manage-panel__form org-teams__create" [formGroup]="createForm" (ngSubmit)="createTeam()" novalidate>
+        <div class="manage-panel__field">
+          <label class="manage-panel__label" for="team-name">New team name</label>
+          <input id="team-name" type="text" class="manage-panel__input" formControlName="name" />
+        </div>
+        <div class="manage-panel__field">
+          <label class="manage-panel__label" for="team-description">Description</label>
+          <textarea id="team-description" class="manage-panel__textarea" formControlName="description" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary" [disabled]="isCreating()">
+          {{ isCreating() ? 'Creating...' : 'Create team' }}
+        </button>
+      </form>
+    }
+  </section>
+
+  <section class="manage-panel__card org-teams__detail">
+    @if (selectedTeam(); as team) {
+      <div class="org-teams__detail-header">
+        <div>
+          <h3 class="manage-panel__card-title">{{ team.name }}</h3>
+          @if (team.description) {
+            <p class="manage-panel__card-meta">{{ team.description }}</p>
+          }
+        </div>
+        @if (canManage()) {
+          <button type="button" class="btn btn--ghost" (click)="deleteTeam(team)">Delete team</button>
+        }
+      </div>
+
+      <div class="manage-panel__table-wrap">
+        <table class="manage-panel__table">
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Role</th>
+              <th>Job title</th>
+              @if (canManage()) {
+                <th>Actions</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (member of members(); track member.userId) {
+              <tr>
+                <td class="manage-panel__mono">{{ member.userId }}</td>
+                <td>{{ member.roleName }}</td>
+                <td>{{ member.jobTitle || '—' }}</td>
+                @if (canManage()) {
+                  <td>
+                    <button type="button" class="btn btn--ghost" (click)="removeTeamMember(member)">Remove</button>
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="canManage() ? 4 : 3">No team members yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (canManage()) {
+        <form class="manage-panel__form" [formGroup]="addMemberForm" (ngSubmit)="addTeamMember()" novalidate>
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="team-member-user">User ID</label>
+            <input id="team-member-user" type="text" class="manage-panel__input" formControlName="userId" />
+          </div>
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="team-member-role">Team role</label>
+            <select id="team-member-role" class="manage-panel__select" formControlName="roleId">
+              @for (role of teamRoles(); track role.id) {
+                <option [value]="role.id">{{ role.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="team-member-title">Job title</label>
+            <input id="team-member-title" type="text" class="manage-panel__input" formControlName="jobTitle" />
+          </div>
+          <button type="submit" class="btn btn--outline">Add to team</button>
+        </form>
+      }
+    } @else {
+      <p class="manage-panel__status">Select a team to view members.</p>
+    }
+  </section>
+</div>

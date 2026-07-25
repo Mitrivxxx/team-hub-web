@@ -1,0 +1,69 @@
+@if (isLoading()) {
+  <p class="manage-panel__status">Loading roles...</p>
+} @else if (error()) {
+  <p class="manage-panel__error">{{ error() }}</p>
+} @else {
+  <section class="manage-panel__card">
+    <h3 class="manage-panel__card-title">Organization roles</h3>
+    <div class="manage-panel__table-wrap">
+      <table class="manage-panel__table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Permissions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of orgRoles(); track role.id) {
+            <tr>
+              <td>{{ role.name }}</td>
+              <td>{{ role.isSystem ? 'System' : 'Custom' }}</td>
+              <td>
+                <div class="manage-panel__tags">
+                  @for (code of role.permissionCodes; track code) {
+                    <span class="manage-panel__tag">{{ code }}</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="manage-panel__card">
+    <h3 class="manage-panel__card-title">Team roles</h3>
+    <div class="manage-panel__table-wrap">
+      <table class="manage-panel__table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Permissions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of teamRoles(); track role.id) {
+            <tr>
+              <td>{{ role.name }}</td>
+              <td>{{ role.isSystem ? 'System' : 'Custom' }}</td>
+              <td>
+                <div class="manage-panel__tags">
+                  @for (code of role.permissionCodes; track code) {
+                    <span class="manage-panel__tag">{{ code }}</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  @if (!canManage()) {
+    <p class="manage-panel__hint">Role editing requires organization role management permission.</p>
+  }
+}

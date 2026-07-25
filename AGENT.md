@@ -35,17 +35,26 @@
 - Authenticated header uses avatar initials menu with Log out (Escape / outside click closes).
 - `/app` shows organization list for the logged-in user (`OrganizationList`).
 - `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
-- `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page chrome (title + description + optional primary action). `OrgManageLayoutService` syncs shell offset and org context. Tab content panels not built yet.
+- `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page chrome (title + description + optional primary action). `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`. Tab content panels not built yet.
 - Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v0.1.0`).
 
 ## Organizations
 - `OrganizationService` (`src/app/core/organizations/organization.service.ts`):
-  - `GET /api/organizations/v0.1.0` — list current user organizations
-  - `GET /api/organizations/v0.1.0/by-slug/{slug}` — organization details
-  - `POST /api/organizations/v0.1.0` — create organization (`{ name }`)
+  - Organization: list, getBySlug, create, update, delete, transferOwnership, leave, uploadAvatar, deleteAvatar, createWithDetails
+  - Me: getMe, listMyInvitations
+  - Members: listMembers, getMember, addMember, updateMember, removeMember, listMemberTeams
+  - Teams: listTeams, getTeam, createTeam, updateTeam, deleteTeam, uploadTeamAvatar, deleteTeamAvatar, listTeamMembers, addTeamMember, updateTeamMember, removeTeamMember
+  - Roles: listPermissions, listRoles, getRole, createRole, updateRole, deleteRole, replaceRolePermissions, addRolePermissions, removeRolePermission
+  - Invitations: listInvitations, getInvitation, createInvitation, cancelInvitation, resendInvitation, getInvitationByToken, acceptInvitation, rejectInvitation
+- Manage UI panels (`src/app/private/pages/organizations/manage/`):
+  - `OrgMemberListPanel` — All Members: list (`?roleId`/`?teamId`), add, update role, remove, details (`getMember` + `listMemberTeams`); only AllMembers controller APIs
+  - `OrgAddMemberPanel` — email invitations + pending list
+  - `OrgSettingsPanel` — name/description, avatar, leave, delete
+  - `OrgTeamsPanel` — team list/create/delete + team members
+  - `OrgRolesPanel` — org/team roles with permission codes
 - Create modal: `CreateOrganizationModal` — fields: name, description, photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`).
 - Reusable `Sidebar` (`src/app/shared/sidebar/`): tree `items` + `activeId` + `collapsed`; `itemSelect` + `collapsedChange`; collapsed CSS tooltips; chevron row toggles; `aria-current` / `aria-expanded` / `:focus-visible`.
-- Manage nav: Members (Member list, Add member), Organization, Role/Permission (Teams, Role), Statistic, Audit Log.
+- Manage nav: Members (All Members, Invitations, Roles, Permissions, Activity, Import / Export), Organization, Role/Permission (Teams, Role), Statistic, Audit Log. All Members uses only `/members` endpoints; Invitations / Roles (and Role under Role/Permission) call their panels; Permissions, Activity, Import / Export, Statistic and Audit Log remain placeholders.
 - JWT Bearer token is attached by `authInterceptor` on all HTTP calls.
 
 ## Don't

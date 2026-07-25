@@ -3,10 +3,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { OrgManageLayoutService } from '../../../core/layout/org-manage-layout.service';
-import { Organization } from '../../../core/organizations/organization.model';
+import { MeMembership, Organization } from '../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../core/organizations/organization.service';
 import { Sidebar } from '../../../shared/sidebar/sidebar';
 import { SidebarNavItem } from '../../../shared/sidebar/sidebar.model';
+import { OrgAddMemberPanel } from './manage/org-add-member-panel';
+import { OrgMemberListPanel } from './manage/org-member-list-panel';
+import { OrgRolesPanel } from './manage/org-roles-panel';
+import { OrgSettingsPanel } from './manage/org-settings-panel';
+import { OrgTeamsPanel } from './manage/org-teams-panel';
 
 interface ManagePageChrome {
   title: string;
@@ -19,7 +24,15 @@ interface ManagePageChrome {
 
 @Component({
   selector: 'app-organization-manage',
-  imports: [RouterLink, Sidebar],
+  imports: [
+    RouterLink,
+    Sidebar,
+    OrgMemberListPanel,
+    OrgAddMemberPanel,
+    OrgSettingsPanel,
+    OrgTeamsPanel,
+    OrgRolesPanel,
+  ],
   templateUrl: './organization-manage.html',
   styleUrl: './organization-manage.scss',
 })
@@ -31,9 +44,10 @@ export class OrganizationManage implements OnInit {
 
   readonly slug = this.route.snapshot.paramMap.get('slug') ?? '';
   readonly organization = signal<Organization | null>(null);
+  readonly me = signal<MeMembership | null>(null);
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
-  readonly activeTab = signal('member-list');
+  readonly activeTab = signal('all-members');
 
   readonly sidebarCollapsed = this.orgManageLayout.sidebarCollapsed;
 
@@ -43,8 +57,12 @@ export class OrganizationManage implements OnInit {
       label: 'Members',
       icon: 'members',
       children: [
-        { id: 'member-list', label: 'Member list' },
-        { id: 'add-member', label: 'Add member' },
+        { id: 'all-members', label: 'All Members' },
+        { id: 'invitations', label: 'Invitations' },
+        { id: 'member-roles', label: 'Roles' },
+        { id: 'permissions', label: 'Permissions' },
+        { id: 'activity', label: 'Activity' },
+        { id: 'import-export', label: 'Import / Export' },
       ],
     },
     {
@@ -74,14 +92,29 @@ export class OrganizationManage implements OnInit {
   ];
 
   private readonly pageChromeByTab: Record<string, ManagePageChrome> = {
-    'member-list': {
-      title: 'Member list',
+    'all-members': {
+      title: 'All Members',
       description: 'View and manage people who belong to this organization.',
-      primaryAction: { label: 'Add member', tabId: 'add-member' },
     },
-    'add-member': {
-      title: 'Add member',
-      description: 'Invite a new member to this organization.',
+    invitations: {
+      title: 'Invitations',
+      description: 'Invite members and review pending invitations.',
+    },
+    'member-roles': {
+      title: 'Roles',
+      description: 'Define roles for organization members.',
+    },
+    permissions: {
+      title: 'Permissions',
+      description: 'Review and manage permission codes for this organization.',
+    },
+    activity: {
+      title: 'Activity',
+      description: 'Member activity and recent changes.',
+    },
+    'import-export': {
+      title: 'Import / Export',
+      description: 'Import or export organization members.',
     },
     organization: {
       title: 'Organization',
@@ -137,7 +170,7 @@ export class OrganizationManage implements OnInit {
         next: (organization) => {
           this.organization.set(organization);
           this.orgManageLayout.setOrganizationContext(organization.name, organization.slug || this.slug);
-          this.isLoading.set(false);
+          this.loadMembership(organization.id);
         },
         error: () => {
           this.loadError.set('Failed to load organization.');
@@ -159,5 +192,26 @@ export class OrganizationManage implements OnInit {
     if (action) {
       this.activeTab.set(action.tabId);
     }
+  }
+
+  onOrganizationUpdated(organization: Organization): void {
+    this.organization.set(organization);
+    this.orgManageLayout.setOrganizationContext(organization.name, organization.slug || this.slug);
+  }
+
+  private loadMembership(organizationId: string): void {
+    this.organizationService
+      .getMe(organizationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (membership) => {
+          this.me.set(membership);
+          this.isLoading.set(false);
+        },
+        error: () => {
+          this.loadError.set('Failed to load organization membership.');
+          this.isLoading.set(false);
+        },
+      });
   }
 }
