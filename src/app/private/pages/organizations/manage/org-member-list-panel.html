@@ -8,14 +8,18 @@
       <h2 class="manage-panel__card-title">Filters</h2>
       <div class="manage-panel__filters">
         <div class="manage-panel__field">
-          <label class="manage-panel__label" for="filter-role-id">Role ID</label>
-          <input
+          <label class="manage-panel__label" for="filter-role-id">Role</label>
+          <select
             id="filter-role-id"
-            class="manage-panel__input"
+            class="manage-panel__select"
             [ngModel]="filterRoleId()"
             (ngModelChange)="filterRoleId.set($event)"
-            placeholder="Optional role GUID"
-          />
+          >
+            <option value="">All roles</option>
+            @for (role of orgRoles(); track role.id) {
+              <option [value]="role.id">{{ role.name }}</option>
+            }
+          </select>
         </div>
         <div class="manage-panel__field">
           <label class="manage-panel__label" for="filter-team-id">Team ID</label>
@@ -49,14 +53,18 @@
             />
           </div>
           <div class="manage-panel__field">
-            <label class="manage-panel__label" for="add-role-id">Role ID</label>
-            <input
+            <label class="manage-panel__label" for="add-role-id">Role</label>
+            <select
               id="add-role-id"
-              class="manage-panel__input"
+              class="manage-panel__select"
               [ngModel]="addRoleId()"
               (ngModelChange)="addRoleId.set($event)"
-              placeholder="Org role GUID"
-            />
+            >
+              <option value="">Select role</option>
+              @for (role of orgRoles(); track role.id) {
+                <option [value]="role.id">{{ role.name }}</option>
+              }
+            </select>
           </div>
           <div class="manage-panel__actions">
             <button type="button" class="btn btn--primary" [disabled]="isAdding()" (click)="addMember()">
@@ -79,7 +87,7 @@
         <thead>
           <tr>
             <th>User ID</th>
-            <th>Role</th>
+            <th>Roles</th>
             <th>Teams</th>
             <th>Joined</th>
             <th>Actions</th>
@@ -91,22 +99,26 @@
               <td class="manage-panel__mono">{{ member.userId }}</td>
               <td>
                 <div class="manage-panel__role-cell">
-                  <span>{{ member.roleName }}</span>
+                  <span>{{ roleNames(member) }}</span>
                   @if (canManage()) {
-                    <input
-                      class="manage-panel__input"
+                    <select
+                      class="manage-panel__select"
                       [ngModel]="roleDrafts()[member.userId]"
                       (ngModelChange)="onRoleDraftChange(member.userId, $event)"
                       [disabled]="busyUserId() === member.userId"
-                      [attr.aria-label]="'Role ID for ' + member.userId"
-                    />
+                      [attr.aria-label]="'Role for ' + member.userId"
+                    >
+                      @for (role of orgRoles(); track role.id) {
+                        <option [value]="role.id">{{ role.name }}</option>
+                      }
+                    </select>
                     <button
                       type="button"
                       class="btn btn--ghost"
                       [disabled]="busyUserId() === member.userId"
                       (click)="applyRole(member)"
                     >
-                      Apply role
+                      Replace roles
                     </button>
                   }
                 </div>
@@ -154,8 +166,12 @@
         } @else if (detailsMember(); as detail) {
           <p class="manage-panel__card-meta manage-panel__mono">User ID: {{ detail.userId }}</p>
           <p class="manage-panel__card-meta">
-            Role: {{ detail.roleName }}
-            <span class="manage-panel__mono">({{ detail.roleId }})</span>
+            Roles:
+            <span class="manage-panel__tags">
+              @for (role of detail.roles; track role.id) {
+                <span class="manage-panel__tag">{{ role.name }}</span>
+              }
+            </span>
           </p>
           <p class="manage-panel__card-meta">Joined: {{ detail.joinedAt | date: 'medium' }}</p>
           <p class="manage-panel__card-meta">Team IDs: {{ detail.teamIds.join(', ') || '—' }}</p>

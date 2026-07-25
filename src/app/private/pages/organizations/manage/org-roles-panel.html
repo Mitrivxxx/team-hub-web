@@ -3,67 +3,185 @@
 } @else if (error()) {
   <p class="manage-panel__error">{{ error() }}</p>
 } @else {
-  <section class="manage-panel__card">
-    <h3 class="manage-panel__card-title">Organization roles</h3>
-    <div class="manage-panel__table-wrap">
-      <table class="manage-panel__table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Permissions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (role of orgRoles(); track role.id) {
-            <tr>
-              <td>{{ role.name }}</td>
-              <td>{{ role.isSystem ? 'System' : 'Custom' }}</td>
-              <td>
-                <div class="manage-panel__tags">
-                  @for (code of role.permissionCodes; track code) {
-                    <span class="manage-panel__tag">{{ code }}</span>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
+  <div class="manage-panel">
+    @if (actionError()) {
+      <p class="manage-panel__error">{{ actionError() }}</p>
+    }
+    @if (actionSuccess()) {
+      <p class="manage-panel__success">{{ actionSuccess() }}</p>
+    }
 
-  <section class="manage-panel__card">
-    <h3 class="manage-panel__card-title">Team roles</h3>
-    <div class="manage-panel__table-wrap">
-      <table class="manage-panel__table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Permissions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (role of teamRoles(); track role.id) {
-            <tr>
-              <td>{{ role.name }}</td>
-              <td>{{ role.isSystem ? 'System' : 'Custom' }}</td>
-              <td>
-                <div class="manage-panel__tags">
-                  @for (code of role.permissionCodes; track code) {
-                    <span class="manage-panel__tag">{{ code }}</span>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
+    @if (canManage()) {
+      <section class="manage-panel__card">
+        <h3 class="manage-panel__card-title">Create role</h3>
+        <div class="manage-panel__filters">
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="create-role-name">Name</label>
+            <input
+              id="create-role-name"
+              class="manage-panel__input"
+              [ngModel]="createName()"
+              (ngModelChange)="createName.set($event)"
+            />
+          </div>
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="create-role-description">Description</label>
+            <input
+              id="create-role-description"
+              class="manage-panel__input"
+              [ngModel]="createDescription()"
+              (ngModelChange)="createDescription.set($event)"
+            />
+          </div>
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="create-role-scope">Scope</label>
+            <select
+              id="create-role-scope"
+              class="manage-panel__select"
+              [ngModel]="createScope()"
+              (ngModelChange)="createScope.set($event)"
+            >
+              <option value="ORG">ORG</option>
+              <option value="TEAM">TEAM</option>
+            </select>
+          </div>
+          <div class="manage-panel__actions">
+            <button type="button" class="btn btn--primary" [disabled]="isCreating()" (click)="createRole()">
+              Create
+            </button>
+          </div>
+        </div>
+      </section>
+    }
 
-  @if (!canManage()) {
-    <p class="manage-panel__hint">Role editing requires organization role management permission.</p>
-  }
+    <section class="manage-panel__card">
+      <h3 class="manage-panel__card-title">Organization roles</h3>
+      <div class="manage-panel__table-wrap">
+        <table class="manage-panel__table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Members</th>
+              <th>Permissions</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (role of orgRoles(); track role.id) {
+              <tr>
+                <td>
+                  <div>{{ role.name }}</div>
+                  @if (role.description) {
+                    <div class="manage-panel__hint">{{ role.description }}</div>
+                  }
+                </td>
+                <td>{{ role.isSystem ? 'System' : 'Custom' }}</td>
+                <td>{{ role.memberCount }}</td>
+                <td>{{ role.permissionCount }}</td>
+                <td>
+                  <div class="manage-panel__actions">
+                    <button type="button" class="btn btn--ghost" (click)="openRole(role)">
+                      {{ selectedRoleId() === role.id ? 'Hide' : 'Details' }}
+                    </button>
+                    @if (canManage() && !role.isSystem) {
+                      <button type="button" class="btn btn--ghost" (click)="deleteRole(role)">Delete</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="manage-panel__card">
+      <h3 class="manage-panel__card-title">Team roles</h3>
+      <div class="manage-panel__table-wrap">
+        <table class="manage-panel__table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Permissions</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (role of teamRoles(); track role.id) {
+              <tr>
+                <td>{{ role.name }}</td>
+                <td>{{ role.isSystem ? 'System' : 'Custom' }}</td>
+                <td>{{ role.permissionCount }}</td>
+                <td>
+                  <button type="button" class="btn btn--ghost" (click)="openRole(role)">
+                    {{ selectedRoleId() === role.id ? 'Hide' : 'Details' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    @if (selectedRoleId()) {
+      <section class="manage-panel__card">
+        <div class="manage-panel__toolbar">
+          <h3 class="manage-panel__card-title">Role details</h3>
+          <button type="button" class="btn btn--ghost" (click)="closeRole()">Close</button>
+        </div>
+
+        @if (detailLoading()) {
+          <p class="manage-panel__status">Loading role...</p>
+        } @else if (selectedRole(); as role) {
+          <p class="manage-panel__card-meta">{{ role.name }} · {{ role.scope }} · {{ role.memberCount }} members</p>
+
+          <h4 class="manage-panel__card-title">Permissions</h4>
+          @if (canManage() && role.name !== 'Owner') {
+            <div class="manage-panel__permission-list">
+              @for (permission of permissions(); track permission.id) {
+                <label class="manage-panel__check">
+                  <input
+                    type="checkbox"
+                    [checked]="isPermissionSelected(permission.id)"
+                    (change)="togglePermissionDraft(permission.id, $any($event.target).checked)"
+                  />
+                  <span>{{ permission.code }}</span>
+                  <span class="manage-panel__hint">{{ permission.name }}</span>
+                </label>
+              }
+            </div>
+            <div class="manage-panel__actions">
+              <button type="button" class="btn btn--primary" (click)="saveRolePermissions()">Save permissions</button>
+            </div>
+          } @else {
+            <div class="manage-panel__tags">
+              @for (permission of role.permissions; track permission.id) {
+                <span class="manage-panel__tag">{{ permission.code }}</span>
+              }
+            </div>
+          }
+
+          @if (role.scope === 'ORG') {
+            <h4 class="manage-panel__card-title">Members</h4>
+            @if (role.members.length === 0) {
+              <p class="manage-panel__hint">No members assigned.</p>
+            } @else {
+              <ul class="manage-panel__plain-list">
+                @for (member of role.members; track member.userId) {
+                  <li class="manage-panel__mono">{{ member.userId }}</li>
+                }
+              </ul>
+            }
+          }
+        }
+      </section>
+    }
+
+    @if (!canManage()) {
+      <p class="manage-panel__hint">Role editing requires organization role management permission.</p>
+    }
+  </div>
 }

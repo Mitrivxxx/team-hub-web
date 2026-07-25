@@ -33,21 +33,39 @@ export interface TransferOwnershipRequest {
   newOwnerUserId: string;
 }
 
+export interface RoleSummary {
+  id: string;
+  name: string;
+  scope: 'ORG' | 'TEAM' | string;
+  isSystem: boolean;
+}
+
+export interface PermissionSummary {
+  id: string;
+  name: string;
+  code: string;
+  isSystem: boolean;
+}
+
+export interface MemberSummary {
+  userId: string;
+  joinedAt: string;
+}
+
 export interface Member {
   userId: string;
-  roleId: string;
-  roleName: string;
+  roles: RoleSummary[];
   joinedAt: string;
   teamIds: string[];
 }
 
 export interface AddMemberRequest {
   userId: string;
-  roleId: string;
+  roleIds: string[];
 }
 
 export interface UpdateMemberRequest {
-  roleId: string;
+  roleIds: string[];
 }
 
 export interface TeamMembership {
@@ -59,33 +77,88 @@ export interface TeamMembership {
   joinedAt: string;
 }
 
-export interface Permission {
-  id: string;
-  code: string;
-  description: string | null;
-}
-
-export interface Role {
+export interface PermissionListItem {
   id: string;
   organizationId: string;
   name: string;
-  scope: 'ORG' | 'TEAM';
-  createdAt: string;
-  permissionCodes: string[];
+  code: string;
+  description: string | null;
   isSystem: boolean;
+  createdAt: string;
+  roleCount: number;
 }
+
+export interface PermissionDetail {
+  id: string;
+  organizationId: string;
+  name: string;
+  code: string;
+  description: string | null;
+  isSystem: boolean;
+  createdAt: string;
+  roleCount: number;
+  roles: RoleSummary[];
+}
+
+export interface CreatePermissionRequest {
+  name: string;
+  code: string;
+  description?: string;
+}
+
+export interface UpdatePermissionRequest {
+  name?: string;
+  description?: string | null;
+}
+
+export interface RoleListItem {
+  id: string;
+  organizationId: string;
+  name: string;
+  description: string | null;
+  scope: 'ORG' | 'TEAM' | string;
+  isSystem: boolean;
+  createdAt: string;
+  memberCount: number;
+  permissionCount: number;
+}
+
+export interface RoleDetail {
+  id: string;
+  organizationId: string;
+  name: string;
+  description: string | null;
+  scope: 'ORG' | 'TEAM' | string;
+  isSystem: boolean;
+  createdAt: string;
+  memberCount: number;
+  members: MemberSummary[];
+  permissions: PermissionSummary[];
+}
+
+/** @deprecated Prefer RoleListItem / RoleDetail */
+export type Role = RoleListItem;
+
+/** @deprecated Prefer PermissionListItem / PermissionDetail */
+export type Permission = PermissionListItem;
 
 export interface CreateRoleRequest {
   name: string;
+  description?: string;
   scope: 'ORG' | 'TEAM';
 }
 
 export interface UpdateRoleRequest {
   name?: string;
+  description?: string | null;
 }
 
-export interface RolePermissionsRequest {
-  permissionCodes: string[];
+export interface AssignRolePermissionsRequest {
+  permissionIds: string[];
+}
+
+export interface AssignRoleMemberRequest {
+  userId: string;
 }
 
 export interface Team {
@@ -134,7 +207,7 @@ export interface Invitation {
   teamId: string | null;
   email: string;
   invitedByUserId: string;
-  orgRoleId: string;
+  orgRoleIds: string[];
   teamRoleId: string | null;
   status: string;
   createdAt: string;
@@ -144,15 +217,14 @@ export interface Invitation {
 
 export interface CreateInvitationRequest {
   email: string;
-  orgRoleId: string;
+  orgRoleIds: string[];
   teamId?: string;
   teamRoleId?: string;
 }
 
 export interface MeMembership {
   userId: string;
-  roleId: string;
-  roleName: string;
+  roles: RoleSummary[];
   joinedAt: string;
   permissions: string[];
   teams: TeamMembership[];

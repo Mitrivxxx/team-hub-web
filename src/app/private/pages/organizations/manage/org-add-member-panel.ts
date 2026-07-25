@@ -5,7 +5,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { organizationApiErrorMessage } from '../../../../core/organizations/organization-api.utils';
-import { Invitation, MeMembership, Organization, Role } from '../../../../core/organizations/organization.model';
+import {
+  Invitation,
+  MeMembership,
+  Organization,
+  RoleListItem,
+} from '../../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../../core/organizations/organization.service';
 
 @Component({
@@ -24,7 +29,7 @@ export class OrgAddMemberPanel {
 
   readonly invitationCreated = output<void>();
 
-  readonly orgRoles = signal<Role[]>([]);
+  readonly orgRoles = signal<RoleListItem[]>([]);
   readonly invitations = signal<Invitation[]>([]);
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
@@ -47,6 +52,11 @@ export class OrgAddMemberPanel {
     });
   }
 
+  roleNamesForInvitation(invitation: Invitation): string {
+    const byId = new Map(this.orgRoles().map((r) => [r.id, r.name]));
+    return invitation.orgRoleIds.map((id) => byId.get(id) ?? id).join(', ') || '—';
+  }
+
   submitInvite(): void {
     if (!this.canManage() || this.isSubmitting()) {
       return;
@@ -64,7 +74,10 @@ export class OrgAddMemberPanel {
     const { email, orgRoleId } = this.inviteForm.getRawValue();
 
     this.organizationService
-      .createInvitation(this.organization().id, { email: email.trim().toLowerCase(), orgRoleId })
+      .createInvitation(this.organization().id, {
+        email: email.trim().toLowerCase(),
+        orgRoleIds: [orgRoleId],
+      })
       .pipe(
         finalize(() => this.isSubmitting.set(false)),
         takeUntilDestroyed(this.destroyRef),

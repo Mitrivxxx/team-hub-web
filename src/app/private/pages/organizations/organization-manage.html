@@ -55,6 +55,9 @@
               @case ('member-roles') {
                 <app-org-roles-panel [organization]="org" [me]="membership" />
               }
+              @case ('permissions') {
+                <app-org-permissions-panel [organization]="org" [me]="membership" />
+              }
               @case ('role') {
                 <app-org-roles-panel [organization]="org" [me]="membership" />
               }

@@ -1,0 +1,136 @@
+@if (isLoading()) {
+  <p class="manage-panel__status">Loading permissions...</p>
+} @else if (error()) {
+  <p class="manage-panel__error">{{ error() }}</p>
+} @else {
+  <div class="manage-panel">
+    @if (actionError()) {
+      <p class="manage-panel__error">{{ actionError() }}</p>
+    }
+    @if (actionSuccess()) {
+      <p class="manage-panel__success">{{ actionSuccess() }}</p>
+    }
+
+    @if (canManage()) {
+      <section class="manage-panel__card">
+        <h3 class="manage-panel__card-title">Create permission</h3>
+        <div class="manage-panel__filters">
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="create-permission-name">Name</label>
+            <input
+              id="create-permission-name"
+              class="manage-panel__input"
+              [ngModel]="createName()"
+              (ngModelChange)="createName.set($event)"
+            />
+          </div>
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="create-permission-code">Code</label>
+            <input
+              id="create-permission-code"
+              class="manage-panel__input"
+              [ngModel]="createCode()"
+              (ngModelChange)="createCode.set($event)"
+              placeholder="e.g. billing.read"
+            />
+          </div>
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="create-permission-description">Description</label>
+            <input
+              id="create-permission-description"
+              class="manage-panel__input"
+              [ngModel]="createDescription()"
+              (ngModelChange)="createDescription.set($event)"
+            />
+          </div>
+          <div class="manage-panel__actions">
+            <button type="button" class="btn btn--primary" [disabled]="isCreating()" (click)="createPermission()">
+              Create
+            </button>
+          </div>
+        </div>
+      </section>
+    }
+
+    <section class="manage-panel__card">
+      <h3 class="manage-panel__card-title">Permissions</h3>
+      <div class="manage-panel__table-wrap">
+        <table class="manage-panel__table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Type</th>
+              <th>Roles</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (permission of permissions(); track permission.id) {
+              <tr>
+                <td>
+                  <div>{{ permission.name }}</div>
+                  @if (permission.description) {
+                    <div class="manage-panel__hint">{{ permission.description }}</div>
+                  }
+                </td>
+                <td class="manage-panel__mono">{{ permission.code }}</td>
+                <td>{{ permission.isSystem ? 'System' : 'Custom' }}</td>
+                <td>{{ permission.roleCount }}</td>
+                <td>
+                  <div class="manage-panel__actions">
+                    <button type="button" class="btn btn--ghost" (click)="openPermission(permission)">
+                      {{ selectedId() === permission.id ? 'Hide' : 'Details' }}
+                    </button>
+                    @if (canManage() && !permission.isSystem) {
+                      <button type="button" class="btn btn--ghost" (click)="deletePermission(permission)">
+                        Delete
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5">No permissions found.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    @if (selectedId()) {
+      <section class="manage-panel__card">
+        <div class="manage-panel__toolbar">
+          <h3 class="manage-panel__card-title">Permission details</h3>
+          <button type="button" class="btn btn--ghost" (click)="closePermission()">Close</button>
+        </div>
+
+        @if (detailLoading()) {
+          <p class="manage-panel__status">Loading permission...</p>
+        } @else if (selected(); as permission) {
+          <p class="manage-panel__card-meta manage-panel__mono">{{ permission.code }}</p>
+          <p class="manage-panel__card-meta">{{ permission.name }}</p>
+          <p class="manage-panel__card-meta">{{ permission.description || 'No description' }}</p>
+          <p class="manage-panel__card-meta">Created: {{ permission.createdAt | date: 'medium' }}</p>
+
+          <h4 class="manage-panel__card-title">Used by roles ({{ permission.roleCount }})</h4>
+          @if (permission.roles.length === 0) {
+            <p class="manage-panel__hint">Not assigned to any role.</p>
+          } @else {
+            <div class="manage-panel__tags">
+              @for (role of permission.roles; track role.id) {
+                <span class="manage-panel__tag">{{ role.name }} ({{ role.scope }})</span>
+              }
+            </div>
+          }
+        }
+      </section>
+    }
+
+    @if (!canManage()) {
+      <p class="manage-panel__hint">Permission editing requires organization role management permission.</p>
+    }
+  </div>
+}

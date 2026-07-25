@@ -9,6 +9,7 @@ import { Sidebar } from '../../../shared/sidebar/sidebar';
 import { SidebarNavItem } from '../../../shared/sidebar/sidebar.model';
 import { OrgAddMemberPanel } from './manage/org-add-member-panel';
 import { OrgMemberListPanel } from './manage/org-member-list-panel';
+import { OrgPermissionsPanel } from './manage/org-permissions-panel';
 import { OrgRolesPanel } from './manage/org-roles-panel';
 import { OrgSettingsPanel } from './manage/org-settings-panel';
 import { OrgTeamsPanel } from './manage/org-teams-panel';
@@ -32,6 +33,7 @@ interface ManagePageChrome {
     OrgSettingsPanel,
     OrgTeamsPanel,
     OrgRolesPanel,
+    OrgPermissionsPanel,
   ],
   templateUrl: './organization-manage.html',
   styleUrl: './organization-manage.scss',

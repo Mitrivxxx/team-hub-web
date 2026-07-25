@@ -6,26 +6,33 @@ import { environment } from '../../../environments/environment';
 import {
   AddMemberRequest,
   AddTeamMemberRequest,
+  AssignRoleMemberRequest,
+  AssignRolePermissionsRequest,
   CreateInvitationRequest,
   CreateOrganizationInput,
   CreateOrganizationRequest,
   CreateOrganizationResult,
+  CreatePermissionRequest,
   CreateRoleRequest,
   CreateTeamRequest,
   Invitation,
   InvitationStatus,
   Member,
+  MemberSummary,
   MeMembership,
   Organization,
-  Permission,
-  Role,
-  RolePermissionsRequest,
+  PermissionDetail,
+  PermissionListItem,
+  PermissionSummary,
+  RoleDetail,
+  RoleListItem,
   Team,
   TeamMember,
   TeamMembership,
   TransferOwnershipRequest,
   UpdateMemberRequest,
   UpdateOrganizationRequest,
+  UpdatePermissionRequest,
   UpdateRoleRequest,
   UpdateTeamMemberRequest,
   UpdateTeamRequest,
@@ -190,46 +197,101 @@ export class OrganizationService {
     return this.http.delete<void>(`${this.baseUrl}/${organizationId}/teams/${teamId}/members/${userId}`);
   }
 
-  listPermissions(): Observable<Permission[]> {
-    return this.http.get<Permission[]>(`${this.baseUrl}/permissions`);
+  listPermissions(organizationId: string): Observable<PermissionListItem[]> {
+    return this.http.get<PermissionListItem[]>(`${this.baseUrl}/${organizationId}/permissions`);
   }
 
-  listRoles(organizationId: string, scope?: 'ORG' | 'TEAM'): Observable<Role[]> {
+  getPermission(organizationId: string, permissionId: string): Observable<PermissionDetail> {
+    return this.http.get<PermissionDetail>(`${this.baseUrl}/${organizationId}/permissions/${permissionId}`);
+  }
+
+  createPermission(organizationId: string, request: CreatePermissionRequest): Observable<PermissionDetail> {
+    return this.http.post<PermissionDetail>(`${this.baseUrl}/${organizationId}/permissions`, request);
+  }
+
+  updatePermission(
+    organizationId: string,
+    permissionId: string,
+    request: UpdatePermissionRequest,
+  ): Observable<PermissionDetail> {
+    return this.http.patch<PermissionDetail>(
+      `${this.baseUrl}/${organizationId}/permissions/${permissionId}`,
+      request,
+    );
+  }
+
+  deletePermission(organizationId: string, permissionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${organizationId}/permissions/${permissionId}`);
+  }
+
+  listRoles(organizationId: string, scope?: 'ORG' | 'TEAM'): Observable<RoleListItem[]> {
     let params = new HttpParams();
     if (scope) {
       params = params.set('scope', scope);
     }
-    return this.http.get<Role[]>(`${this.baseUrl}/${organizationId}/roles`, { params });
+    return this.http.get<RoleListItem[]>(`${this.baseUrl}/${organizationId}/roles`, { params });
   }
 
-  getRole(organizationId: string, roleId: string): Observable<Role> {
-    return this.http.get<Role>(`${this.baseUrl}/${organizationId}/roles/${roleId}`);
+  getRole(organizationId: string, roleId: string): Observable<RoleDetail> {
+    return this.http.get<RoleDetail>(`${this.baseUrl}/${organizationId}/roles/${roleId}`);
   }
 
-  createRole(organizationId: string, request: CreateRoleRequest): Observable<Role> {
-    return this.http.post<Role>(`${this.baseUrl}/${organizationId}/roles`, request);
+  createRole(organizationId: string, request: CreateRoleRequest): Observable<RoleDetail> {
+    return this.http.post<RoleDetail>(`${this.baseUrl}/${organizationId}/roles`, request);
   }
 
-  updateRole(organizationId: string, roleId: string, request: UpdateRoleRequest): Observable<Role> {
-    return this.http.patch<Role>(`${this.baseUrl}/${organizationId}/roles/${roleId}`, request);
+  updateRole(organizationId: string, roleId: string, request: UpdateRoleRequest): Observable<RoleDetail> {
+    return this.http.patch<RoleDetail>(`${this.baseUrl}/${organizationId}/roles/${roleId}`, request);
   }
 
   deleteRole(organizationId: string, roleId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${organizationId}/roles/${roleId}`);
   }
 
-  replaceRolePermissions(organizationId: string, roleId: string, request: RolePermissionsRequest): Observable<Role> {
-    return this.http.put<Role>(`${this.baseUrl}/${organizationId}/roles/${roleId}/permissions`, request);
+  listRolePermissions(organizationId: string, roleId: string): Observable<PermissionSummary[]> {
+    return this.http.get<PermissionSummary[]>(`${this.baseUrl}/${organizationId}/roles/${roleId}/permissions`);
   }
 
-  addRolePermissions(organizationId: string, roleId: string, request: RolePermissionsRequest): Observable<Role> {
-    return this.http.post<Role>(`${this.baseUrl}/${organizationId}/roles/${roleId}/permissions`, request);
-  }
-
-  removeRolePermission(organizationId: string, roleId: string, permissionCode: string): Observable<void> {
-    return this.http.delete<void>(
-      `${this.baseUrl}/${organizationId}/roles/${roleId}/permissions/${encodeURIComponent(permissionCode)}`,
+  replaceRolePermissions(
+    organizationId: string,
+    roleId: string,
+    request: AssignRolePermissionsRequest,
+  ): Observable<PermissionSummary[]> {
+    return this.http.put<PermissionSummary[]>(
+      `${this.baseUrl}/${organizationId}/roles/${roleId}/permissions`,
+      request,
     );
+  }
+
+  addRolePermissions(
+    organizationId: string,
+    roleId: string,
+    request: AssignRolePermissionsRequest,
+  ): Observable<PermissionSummary[]> {
+    return this.http.post<PermissionSummary[]>(
+      `${this.baseUrl}/${organizationId}/roles/${roleId}/permissions`,
+      request,
+    );
+  }
+
+  removeRolePermission(organizationId: string, roleId: string, permissionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${organizationId}/roles/${roleId}/permissions/${permissionId}`);
+  }
+
+  listRoleMembers(organizationId: string, roleId: string): Observable<MemberSummary[]> {
+    return this.http.get<MemberSummary[]>(`${this.baseUrl}/${organizationId}/roles/${roleId}/members`);
+  }
+
+  assignRoleMember(
+    organizationId: string,
+    roleId: string,
+    request: AssignRoleMemberRequest,
+  ): Observable<MemberSummary> {
+    return this.http.post<MemberSummary>(`${this.baseUrl}/${organizationId}/roles/${roleId}/members`, request);
+  }
+
+  revokeRoleMember(organizationId: string, roleId: string, userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${organizationId}/roles/${roleId}/members/${userId}`);
   }
 
   listInvitations(organizationId: string, status?: InvitationStatus): Observable<Invitation[]> {

@@ -9,6 +9,7 @@ import {
   MeMembership,
   Member,
   Organization,
+  RoleListItem,
   TeamMembership,
 } from '../../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../../core/organizations/organization.service';
@@ -27,6 +28,7 @@ export class OrgMemberListPanel {
   readonly me = input.required<MeMembership>();
 
   readonly members = signal<Member[]>([]);
+  readonly orgRoles = signal<RoleListItem[]>([]);
   readonly isLoading = signal(true);
   readonly error = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
@@ -54,9 +56,18 @@ export class OrgMemberListPanel {
     effect(() => {
       const org = this.organization();
       if (org?.id) {
+        this.loadRoles(org.id);
         this.load(org.id);
       }
     });
+  }
+
+  roleNames(member: Member): string {
+    return member.roles.map((r) => r.name).join(', ') || '—';
+  }
+
+  primaryRoleId(member: Member): string {
+    return member.roles[0]?.id ?? '';
   }
 
   applyFilters(): void {
@@ -77,7 +88,7 @@ export class OrgMemberListPanel {
     const userId = this.addUserId().trim();
     const roleId = this.addRoleId().trim();
     if (!userId || !roleId) {
-      this.actionError.set('User ID and Role ID are required.');
+      this.actionError.set('User ID and Role are required.');
       return;
     }
 
@@ -86,7 +97,7 @@ export class OrgMemberListPanel {
     this.isAdding.set(true);
 
     this.organizationService
-      .addMember(this.organization().id, { userId, roleId })
+      .addMember(this.organization().id, { userId, roleIds: [roleId] })
       .pipe(
         finalize(() => this.isAdding.set(false)),
         takeUntilDestroyed(this.destroyRef),
@@ -111,8 +122,9 @@ export class OrgMemberListPanel {
       return;
     }
 
-    const roleId = (this.roleDrafts()[member.userId] ?? member.roleId).trim();
-    if (!roleId || roleId === member.roleId) {
+    const roleId = (this.roleDrafts()[member.userId] ?? this.primaryRoleId(member)).trim();
+    const currentIds = member.roles.map((r) => r.id).sort().join(',');
+    if (!roleId || currentIds === roleId) {
       return;
     }
 
@@ -121,7 +133,7 @@ export class OrgMemberListPanel {
     this.busyUserId.set(member.userId);
 
     this.organizationService
-      .updateMember(this.organization().id, member.userId, { roleId })
+      .updateMember(this.organization().id, member.userId, { roleIds: [roleId] })
       .pipe(
         finalize(() => this.busyUserId.set(null)),
         takeUntilDestroyed(this.destroyRef),
@@ -129,8 +141,11 @@ export class OrgMemberListPanel {
       .subscribe({
         next: (updated) => {
           this.members.update((items) => items.map((m) => (m.userId === updated.userId ? updated : m)));
-          this.roleDrafts.update((drafts) => ({ ...drafts, [updated.userId]: updated.roleId }));
-          this.actionSuccess.set('Role updated.');
+          this.roleDrafts.update((drafts) => ({
+            ...drafts,
+            [updated.userId]: updated.roles[0]?.id ?? '',
+          }));
+          this.actionSuccess.set('Roles updated.');
         },
         error: (err) => this.actionError.set(organizationApiErrorMessage(err, 'Failed to update member role.')),
       });
@@ -205,6 +220,16 @@ export class OrgMemberListPanel {
     this.detailsLoading.set(false);
   }
 
+  private loadRoles(organizationId: string): void {
+    this.organizationService
+      .listRoles(organizationId, 'ORG')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (roles) => this.orgRoles.set(roles),
+        error: () => this.orgRoles.set([]),
+      });
+  }
+
   private load(
     organizationId: string,
     override?: { roleId?: string; teamId?: string },
@@ -221,7 +246,9 @@ export class OrgMemberListPanel {
       .subscribe({
         next: (members) => {
           this.members.set(members);
-          this.roleDrafts.set(Object.fromEntries(members.map((m) => [m.userId, m.roleId])));
+          this.roleDrafts.set(
+            Object.fromEntries(members.map((m) => [m.userId, m.roles[0]?.id ?? ''])),
+          );
           this.isLoading.set(false);
         },
         error: (err) => {

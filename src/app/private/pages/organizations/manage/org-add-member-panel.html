@@ -42,6 +42,7 @@
           <thead>
             <tr>
               <th>Email</th>
+              <th>Roles</th>
               <th>Expires</th>
               <th>Actions</th>
             </tr>
@@ -50,6 +51,7 @@
             @for (invitation of invitations(); track invitation.id) {
               <tr>
                 <td>{{ invitation.email }}</td>
+                <td>{{ roleNamesForInvitation(invitation) }}</td>
                 <td>{{ invitation.expiresAt | date: 'medium' }}</td>
                 <td>
                   <button type="button" class="btn btn--ghost" (click)="cancelInvitation(invitation)">

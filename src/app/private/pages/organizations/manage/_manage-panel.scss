@@ -162,6 +162,26 @@
     font-weight: $font-weight-medium;
   }
 
+  &__permission-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
+  }
+
+  &__check {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: $spacing-sm;
+    font-size: 0.9rem;
+  }
+
+  &__plain-list {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+
   &__danger-zone {
     margin-top: $spacing-lg;
     padding-top: $spacing-md;

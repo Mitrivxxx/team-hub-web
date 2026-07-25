@@ -41,20 +41,22 @@
 ## Organizations
 - `OrganizationService` (`src/app/core/organizations/organization.service.ts`):
   - Organization: list, getBySlug, create, update, delete, transferOwnership, leave, uploadAvatar, deleteAvatar, createWithDetails
-  - Me: getMe, listMyInvitations
-  - Members: listMembers, getMember, addMember, updateMember, removeMember, listMemberTeams
+  - Me: getMe (`roles[]` + permission codes), listMyInvitations
+  - Members: listMembers, getMember, addMember (`roleIds[]`), updateMember (`roleIds[]` replace), removeMember, listMemberTeams
   - Teams: listTeams, getTeam, createTeam, updateTeam, deleteTeam, uploadTeamAvatar, deleteTeamAvatar, listTeamMembers, addTeamMember, updateTeamMember, removeTeamMember
-  - Roles: listPermissions, listRoles, getRole, createRole, updateRole, deleteRole, replaceRolePermissions, addRolePermissions, removeRolePermission
-  - Invitations: listInvitations, getInvitation, createInvitation, cancelInvitation, resendInvitation, getInvitationByToken, acceptInvitation, rejectInvitation
+  - Roles: listRoles, getRole, createRole, updateRole, deleteRole, listRolePermissions, replace/add/remove role permissions (`permissionIds`), list/assign/revoke role members
+  - Permissions: listPermissions(`orgId`), getPermission, createPermission, updatePermission, deletePermission (org-scoped)
+  - Invitations: listInvitations, getInvitation, createInvitation (`orgRoleIds[]`), cancelInvitation, resendInvitation, getInvitationByToken, acceptInvitation, rejectInvitation
 - Manage UI panels (`src/app/private/pages/organizations/manage/`):
-  - `OrgMemberListPanel` — All Members: list (`?roleId`/`?teamId`), add, update role, remove, details (`getMember` + `listMemberTeams`); only AllMembers controller APIs
-  - `OrgAddMemberPanel` — email invitations + pending list
+  - `OrgMemberListPanel` — All Members: list (`?roleId`/`?teamId`), add, replace roles, remove, details
+  - `OrgAddMemberPanel` — email invitations + pending list (`orgRoleIds`)
   - `OrgSettingsPanel` — name/description, avatar, leave, delete
   - `OrgTeamsPanel` — team list/create/delete + team members
-  - `OrgRolesPanel` — org/team roles with permission codes
+  - `OrgRolesPanel` — org/team roles, create, detail, permission attach by id, delete custom
+  - `OrgPermissionsPanel` — org permission catalog CRUD + detail (roles using permission)
 - Create modal: `CreateOrganizationModal` — fields: name, description, photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`).
 - Reusable `Sidebar` (`src/app/shared/sidebar/`): tree `items` + `activeId` + `collapsed`; `itemSelect` + `collapsedChange`; collapsed CSS tooltips; chevron row toggles; `aria-current` / `aria-expanded` / `:focus-visible`.
-- Manage nav: Members (All Members, Invitations, Roles, Permissions, Activity, Import / Export), Organization, Role/Permission (Teams, Role), Statistic, Audit Log. All Members uses only `/members` endpoints; Invitations / Roles (and Role under Role/Permission) call their panels; Permissions, Activity, Import / Export, Statistic and Audit Log remain placeholders.
+- Manage nav: Members (All Members, Invitations, Roles, Permissions, Activity, Import / Export), Organization, Role/Permission (Teams, Role), Statistic, Audit Log. Activity, Import / Export, Statistic and Audit Log remain placeholders.
 - JWT Bearer token is attached by `authInterceptor` on all HTTP calls.
 
 ## Don't
