@@ -37,17 +37,20 @@
 - `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
 - `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page chrome (title + description + optional primary action). `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`. Tab content panels not built yet.
 - Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v0.1.0`).
+- GraphQL: `environment.graphqlUrl` (`/api/graphql`) for composed reads (All Members table).
 
 ## Organizations
 - `OrganizationService` (`src/app/core/organizations/organization.service.ts`):
   - Organization: list, getBySlug, create, update, delete, transferOwnership, leave, uploadAvatar, deleteAvatar, createWithDetails
   - Me: getMe (`roles[]` + permission codes), listMyInvitations
-  - Members: listMembers, getMember, addMember (`roleIds[]`), updateMember (`roleIds[]` replace), removeMember, listMemberTeams
+  - Members: listMembers (REST), getMember, addMember (`roleIds[]`), updateMember (`roleIds[]` replace), removeMember, listMemberTeams
+  - `OrganizationGraphqlService.listMembers` powers All Members table (name/surname via BFF GraphQL)
   - Teams: listTeams, getTeam, createTeam, updateTeam, deleteTeam, uploadTeamAvatar, deleteTeamAvatar, listTeamMembers, addTeamMember, updateTeamMember, removeTeamMember
   - Roles: listRoles, getRole, createRole, updateRole, deleteRole, listRolePermissions, replace/add/remove role permissions (`permissionIds`), list/assign/revoke role members
   - Permissions: listPermissions(`orgId`), getPermission, createPermission, updatePermission, deletePermission (org-scoped)
   - Invitations: listInvitations, getInvitation, createInvitation (`orgRoleIds[]`), cancelInvitation, resendInvitation, getInvitationByToken, acceptInvitation, rejectInvitation
 - Manage UI panels (`src/app/private/pages/organizations/manage/`):
+  - All Members table columns: Name, Surname, Roles, Teams, Joined (user profiles from GraphQL)
   - `OrgMemberListPanel` — All Members: list (`?roleId`/`?teamId`), add, replace roles, remove, details
   - `OrgAddMemberPanel` — email invitations + pending list (`orgRoleIds`)
   - `OrgSettingsPanel` — name/description, avatar, leave, delete

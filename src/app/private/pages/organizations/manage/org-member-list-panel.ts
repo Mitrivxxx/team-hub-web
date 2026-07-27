@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
 
+import { OrganizationGraphqlService } from '../../../../core/organizations/organization-graphql.service';
 import { organizationApiErrorMessage } from '../../../../core/organizations/organization-api.utils';
 import {
   MeMembership,
@@ -22,6 +23,7 @@ import { OrganizationService } from '../../../../core/organizations/organization
 })
 export class OrgMemberListPanel {
   private readonly organizationService = inject(OrganizationService);
+  private readonly organizationGraphqlService = inject(OrganizationGraphqlService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly organization = input.required<Organization>();
@@ -60,6 +62,13 @@ export class OrgMemberListPanel {
         this.load(org.id);
       }
     });
+  }
+
+  displayName(member: Member): string {
+    const name = member.user?.name?.trim() ?? '';
+    const surname = member.user?.surname?.trim() ?? '';
+    const full = `${name} ${surname}`.trim();
+    return full || member.user?.username || 'Unknown user';
   }
 
   roleNames(member: Member): string {
@@ -156,7 +165,7 @@ export class OrgMemberListPanel {
       return;
     }
 
-    if (!confirm(`Remove member ${member.userId}?`)) {
+    if (!confirm(`Remove member ${this.displayName(member)}?`)) {
       return;
     }
 
@@ -194,10 +203,10 @@ export class OrgMemberListPanel {
     this.detailsError.set(null);
     this.detailsLoading.set(true);
 
-    const orgId = this.organization().id;
+    const orgId = this.organization();
     forkJoin({
-      member: this.organizationService.getMember(orgId, member.userId),
-      teams: this.organizationService.listMemberTeams(orgId, member.userId),
+      member: this.organizationService.getMember(orgId.id, member.userId),
+      teams: this.organizationService.listMemberTeams(orgId.id, member.userId),
     })
       .pipe(
         finalize(() => this.detailsLoading.set(false)),
@@ -205,7 +214,7 @@ export class OrgMemberListPanel {
       )
       .subscribe({
         next: ({ member: detail, teams }) => {
-          this.detailsMember.set(detail);
+          this.detailsMember.set({ ...detail, user: member.user ?? detail.user });
           this.detailsTeams.set(teams);
         },
         error: (err) => this.detailsError.set(organizationApiErrorMessage(err, 'Failed to load member details.')),
@@ -240,7 +249,7 @@ export class OrgMemberListPanel {
     const roleId = (override?.roleId ?? this.filterRoleId()).trim() || undefined;
     const teamId = (override?.teamId ?? this.filterTeamId()).trim() || undefined;
 
-    this.organizationService
+    this.organizationGraphqlService
       .listMembers(organizationId, { roleId, teamId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

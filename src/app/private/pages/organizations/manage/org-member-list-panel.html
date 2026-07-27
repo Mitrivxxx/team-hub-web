@@ -86,7 +86,8 @@
       <table class="manage-panel__table">
         <thead>
           <tr>
-            <th>User ID</th>
+            <th>Name</th>
+            <th>Surname</th>
             <th>Roles</th>
             <th>Teams</th>
             <th>Joined</th>
@@ -96,7 +97,8 @@
         <tbody>
           @for (member of members(); track member.userId) {
             <tr>
-              <td class="manage-panel__mono">{{ member.userId }}</td>
+              <td>{{ member.user?.name || '—' }}</td>
+              <td>{{ member.user?.surname || '—' }}</td>
               <td>
                 <div class="manage-panel__role-cell">
                   <span>{{ roleNames(member) }}</span>
@@ -106,7 +108,7 @@
                       [ngModel]="roleDrafts()[member.userId]"
                       (ngModelChange)="onRoleDraftChange(member.userId, $event)"
                       [disabled]="busyUserId() === member.userId"
-                      [attr.aria-label]="'Role for ' + member.userId"
+                      [attr.aria-label]="'Role for ' + displayName(member)"
                     >
                       @for (role of orgRoles(); track role.id) {
                         <option [value]="role.id">{{ role.name }}</option>
@@ -145,7 +147,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="5">No members match the current filters.</td>
+              <td colspan="6">No members match the current filters.</td>
             </tr>
           }
         </tbody>
@@ -164,6 +166,10 @@
         } @else if (detailsError()) {
           <p class="manage-panel__error">{{ detailsError() }}</p>
         } @else if (detailsMember(); as detail) {
+          <p class="manage-panel__card-meta">
+            Name: {{ detail.user?.name || '—' }} {{ detail.user?.surname || '' }}
+          </p>
+          <p class="manage-panel__card-meta">Username: {{ detail.user?.username || '—' }}</p>
           <p class="manage-panel__card-meta manage-panel__mono">User ID: {{ detail.userId }}</p>
           <p class="manage-panel__card-meta">
             Roles:

@@ -57,6 +57,14 @@ export interface Member {
   roles: RoleSummary[];
   joinedAt: string;
   teamIds: string[];
+  user?: MemberUser | null;
+}
+
+export interface MemberUser {
+  id?: string;
+  username: string;
+  name: string;
+  surname: string;
 }
 
 export interface AddMemberRequest {

@@ -17,5 +17,9 @@ export function organizationApiErrorMessage(error: unknown, fallback: string): s
     }
   }
 
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
   return fallback;
 }
