@@ -1,6 +1,2 @@
 @use 'variables' as *;
 @use 'manage-panel';
-
-.manage-panel__card + .manage-panel__card {
-  margin-top: $spacing-md;
-}

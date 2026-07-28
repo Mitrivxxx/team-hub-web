@@ -2,13 +2,14 @@
 
 :host {
   display: block;
-  min-height: calc(100vh - #{$header-height-compact});
+  height: 100%;
+  overflow: hidden;
 }
 
 .org-manage {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - #{$header-height-compact});
+  height: 100%;
   padding-left: $sidebar-collapsed-width;
   transition: padding-left 0.2s ease;
 
@@ -48,14 +49,16 @@
   &__content {
     flex: 1;
     min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background: $color-white;
+    overflow-y: auto;
   }
 
   &__page-header {
     position: sticky;
-    top: $header-height-compact;
+    top: 0;
     z-index: 50;
     display: flex;
     align-items: flex-start;
@@ -115,9 +118,5 @@
   .org-manage__sidebar {
     position: static;
     z-index: auto;
-  }
-
-  .org-manage__page-header {
-    top: 0;
   }
 }

@@ -35,7 +35,7 @@
 - Authenticated header uses avatar initials menu with Log out (Escape / outside click closes).
 - `/app` shows organization list for the logged-in user (`OrganizationList`).
 - `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
-- `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page chrome (title + description + optional primary action). `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`. Tab content panels not built yet.
+- `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page chrome (title + description + optional primary action) pinned at top of the manage content scrollport (`.app-layout--org-manage` locks viewport height; `.org-manage__content` scrolls). `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`.
 - Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v0.1.0`).
 - GraphQL: `environment.graphqlUrl` (`/api/graphql`) for composed reads (All Members table).
 
@@ -55,7 +55,7 @@
   - `OrgAddMemberPanel` — email invitations + pending list (`orgRoleIds`)
   - `OrgSettingsPanel` — name/description, avatar, leave, delete
   - `OrgTeamsPanel` — team list/create/delete + team members
-  - `OrgRolesPanel` — org/team roles, create, detail, permission attach by id, delete custom
+  - `OrgRolesPanel` — section tabs (Create role, Organization roles, Team roles); create, detail, permission attach by id, delete custom; shared tab styles in `_manage-panel.scss`
   - `OrgPermissionsPanel` — org permission catalog CRUD + detail (roles using permission)
 - Create modal: `CreateOrganizationModal` — fields: name, description, photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`).
 - Reusable `Sidebar` (`src/app/shared/sidebar/`): tree `items` + `activeId` + `collapsed`; `itemSelect` + `collapsedChange`; collapsed CSS tooltips; chevron row toggles; `aria-current` / `aria-expanded` / `:focus-visible`.

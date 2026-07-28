@@ -5,6 +5,66 @@
   flex-direction: column;
   gap: $spacing-md;
 
+  &__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+    border-bottom: 1px solid $color-border;
+    padding-bottom: 0;
+  }
+
+  &__tab {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: $color-text-muted;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: $font-weight-medium;
+    padding: 10px 14px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    border-radius: $border-radius-base $border-radius-base 0 0;
+
+    &:hover {
+      color: var(--color-primary-dark);
+      background: rgba(var(--color-primary-rgb), 0.06);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    &--active {
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary);
+      font-weight: $font-weight-semibold;
+    }
+  }
+
+  &__tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+
+  &__filters {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-md;
+    align-items: end;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (min-width: 1100px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    }
+  }
+
   &__toolbar {
     display: flex;
     flex-wrap: wrap;

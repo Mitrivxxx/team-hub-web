@@ -13,6 +13,8 @@ import {
 } from '../../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../../core/organizations/organization.service';
 
+type RolesSection = 'create' | 'organization' | 'team';
+
 @Component({
   selector: 'app-org-roles-panel',
   imports: [FormsModule],
@@ -34,6 +36,7 @@ export class OrgRolesPanel {
   readonly actionError = signal<string | null>(null);
   readonly actionSuccess = signal<string | null>(null);
   readonly isCreating = signal(false);
+  readonly activeSection = signal<RolesSection>('organization');
 
   readonly createName = signal('');
   readonly createDescription = signal('');
@@ -55,6 +58,17 @@ export class OrgRolesPanel {
     });
   }
 
+  selectSection(section: RolesSection): void {
+    if (this.activeSection() === section) {
+      return;
+    }
+
+    this.activeSection.set(section);
+    this.closeRole();
+    this.actionError.set(null);
+    this.actionSuccess.set(null);
+  }
+
   createRole(): void {
     if (!this.canManage()) {
       return;
@@ -70,11 +84,13 @@ export class OrgRolesPanel {
     this.actionSuccess.set(null);
     this.isCreating.set(true);
 
+    const scope = this.createScope();
+
     this.organizationService
       .createRole(this.organization().id, {
         name,
         description: this.createDescription().trim() || undefined,
-        scope: this.createScope(),
+        scope,
       })
       .pipe(
         finalize(() => this.isCreating.set(false)),
@@ -85,6 +101,7 @@ export class OrgRolesPanel {
           this.createName.set('');
           this.createDescription.set('');
           this.actionSuccess.set('Role created.');
+          this.activeSection.set(scope === 'TEAM' ? 'team' : 'organization');
           this.load(this.organization().id);
         },
         error: (err) => this.actionError.set(organizationApiErrorMessage(err, 'Failed to create role.')),

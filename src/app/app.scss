@@ -20,6 +20,13 @@
     --color-primary-dark: #{$color-org-primary-dark};
     --color-primary-rgb: #{$color-org-primary-rgb};
     --color-primary-dark-rgb: #{$color-org-primary-dark-rgb};
+    height: 100vh;
+    overflow: hidden;
+
+    .app-layout__content {
+      min-height: 0;
+      overflow: hidden;
+    }
   }
 
   &__content {
