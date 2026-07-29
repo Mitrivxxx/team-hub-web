@@ -35,7 +35,7 @@
 - Authenticated header uses avatar initials menu with Log out (Escape / outside click closes).
 - `/app` shows organization list for the logged-in user (`OrganizationList`).
 - `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
-- `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page chrome (title + description + optional primary action) pinned at top of the manage content scrollport (`.app-layout--org-manage` locks viewport height; `.org-manage__content` scrolls). `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`.
+- `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (white background; persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page title (no subtitles/borders) pinned at top of the manage content scrollport. Content area uses light gray background (`$color-bg-alt`); panel content on white cards. `.app-layout--org-manage` locks viewport height; `.org-manage__content` scrolls. `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`.
 - Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v0.1.0`).
 - GraphQL: `environment.graphqlUrl` (`/api/graphql`) for composed reads (All Members table).
 
@@ -51,7 +51,9 @@
   - Invitations: listInvitations, getInvitation, createInvitation (`orgRoleIds[]`), cancelInvitation, resendInvitation, getInvitationByToken, acceptInvitation, rejectInvitation
 - Manage UI panels (`src/app/private/pages/organizations/manage/`):
   - All Members table columns: Name, Surname, Roles, Teams, Joined (user profiles from GraphQL)
-  - `OrgMemberListPanel` — All Members: list (`?roleId`/`?teamId`), add, replace roles, remove, details
+  - `OrgMemberListPanel` — All Members: client-side search (name/surname/username), column sort/filter (name, surname, joined), pagination (10/page), overflow row menu (`Details`, `Edit role`, `Remove`), role edit in details panel, `+ Add Member` header action opens `AddMemberModal` (User GUID + role)
+  - `AddMemberModal` — add member by User GUID + org role (`OrganizationService.addMember`)
+  - Shared: `OverflowMenu` (`src/app/shared/overflow-menu/`), `TablePagination` (`src/app/shared/table-pagination/`)
   - `OrgAddMemberPanel` — email invitations + pending list (`orgRoleIds`)
   - `OrgSettingsPanel` — name/description, avatar, leave, delete
   - `OrgTeamsPanel` — team list/create/delete + team members

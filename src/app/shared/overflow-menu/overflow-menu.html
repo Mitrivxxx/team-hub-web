@@ -1,0 +1,29 @@
+<div class="overflow-menu">
+  <button
+    type="button"
+    class="overflow-menu__trigger"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="menu"
+    (click)="toggle($event)"
+  >
+    <span class="overflow-menu__dots" aria-hidden="true">···</span>
+  </button>
+
+  @if (isOpen()) {
+    <div class="overflow-menu__dropdown" role="menu">
+      @for (item of items(); track item.id) {
+        <button
+          type="button"
+          class="overflow-menu__item"
+          [class.overflow-menu__item--danger]="item.danger"
+          role="menuitem"
+          [disabled]="item.disabled"
+          (click)="onItemClick(item, $event)"
+        >
+          {{ item.label }}
+        </button>
+      }
+    </div>
+  }
+</div>

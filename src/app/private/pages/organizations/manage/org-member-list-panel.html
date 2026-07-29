@@ -3,77 +3,20 @@
 } @else if (error()) {
   <p class="manage-panel__error">{{ error() }}</p>
 } @else {
-  <div class="manage-panel">
-    <div class="manage-panel__card">
-      <h2 class="manage-panel__card-title">Filters</h2>
-      <div class="manage-panel__filters">
-        <div class="manage-panel__field">
-          <label class="manage-panel__label" for="filter-role-id">Role</label>
-          <select
-            id="filter-role-id"
-            class="manage-panel__select"
-            [ngModel]="filterRoleId()"
-            (ngModelChange)="filterRoleId.set($event)"
-          >
-            <option value="">All roles</option>
-            @for (role of orgRoles(); track role.id) {
-              <option [value]="role.id">{{ role.name }}</option>
-            }
-          </select>
-        </div>
-        <div class="manage-panel__field">
-          <label class="manage-panel__label" for="filter-team-id">Team ID</label>
-          <input
-            id="filter-team-id"
-            class="manage-panel__input"
-            [ngModel]="filterTeamId()"
-            (ngModelChange)="filterTeamId.set($event)"
-            placeholder="Optional team GUID"
-          />
-        </div>
-        <div class="manage-panel__actions">
-          <button type="button" class="btn btn--primary" (click)="applyFilters()">Apply</button>
-          <button type="button" class="btn btn--ghost" (click)="clearFilters()">Clear</button>
-        </div>
-      </div>
+  <div class="manage-panel member-panel">
+    <div class="member-panel__toolbar">
+      <label class="member-panel__search">
+        <span class="member-panel__search-icon" aria-hidden="true">⌕</span>
+        <input
+          type="search"
+          class="member-panel__search-input"
+          placeholder="Search"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          aria-label="Search members by name or surname"
+        />
+      </label>
     </div>
-
-    @if (canManage()) {
-      <div class="manage-panel__card">
-        <h2 class="manage-panel__card-title">Add member</h2>
-        <div class="manage-panel__add-row">
-          <div class="manage-panel__field">
-            <label class="manage-panel__label" for="add-user-id">User ID</label>
-            <input
-              id="add-user-id"
-              class="manage-panel__input"
-              [ngModel]="addUserId()"
-              (ngModelChange)="addUserId.set($event)"
-              placeholder="User GUID"
-            />
-          </div>
-          <div class="manage-panel__field">
-            <label class="manage-panel__label" for="add-role-id">Role</label>
-            <select
-              id="add-role-id"
-              class="manage-panel__select"
-              [ngModel]="addRoleId()"
-              (ngModelChange)="addRoleId.set($event)"
-            >
-              <option value="">Select role</option>
-              @for (role of orgRoles(); track role.id) {
-                <option [value]="role.id">{{ role.name }}</option>
-              }
-            </select>
-          </div>
-          <div class="manage-panel__actions">
-            <button type="button" class="btn btn--primary" [disabled]="isAdding()" (click)="addMember()">
-              Add member
-            </button>
-          </div>
-        </div>
-      </div>
-    }
 
     @if (actionError()) {
       <p class="manage-panel__error">{{ actionError() }}</p>
@@ -82,67 +25,68 @@
       <p class="manage-panel__success">{{ actionSuccess() }}</p>
     }
 
-    <div class="manage-panel__table-wrap">
-      <table class="manage-panel__table">
+    <div class="manage-panel__table-wrap member-panel__table-wrap">
+      <table class="manage-panel__table member-panel__table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Surname</th>
+            <th class="manage-panel__th-sortable">
+              <button type="button" class="manage-panel__th-btn" (click)="toggleSort('name')">
+                Name{{ sortIndicator('name') }}
+              </button>
+              <input
+                type="text"
+                class="manage-panel__th-filter"
+                placeholder="Filter"
+                [ngModel]="nameFilter()"
+                (ngModelChange)="nameFilter.set($event)"
+                aria-label="Filter by name"
+              />
+            </th>
+            <th class="manage-panel__th-sortable">
+              <button type="button" class="manage-panel__th-btn" (click)="toggleSort('surname')">
+                Surname{{ sortIndicator('surname') }}
+              </button>
+              <input
+                type="text"
+                class="manage-panel__th-filter"
+                placeholder="Filter"
+                [ngModel]="surnameFilter()"
+                (ngModelChange)="surnameFilter.set($event)"
+                aria-label="Filter by surname"
+              />
+            </th>
             <th>Roles</th>
             <th>Teams</th>
-            <th>Joined</th>
-            <th>Actions</th>
+            <th class="manage-panel__th-sortable">
+              <button type="button" class="manage-panel__th-btn" (click)="toggleSort('joined')">
+                Joined{{ sortIndicator('joined') }}
+              </button>
+            </th>
+            <th class="member-panel__actions-col" aria-label="Actions"></th>
           </tr>
         </thead>
         <tbody>
-          @for (member of members(); track member.userId) {
+          @for (member of pagedMembers(); track member.userId) {
             <tr>
               <td>{{ member.user?.name || '—' }}</td>
               <td>{{ member.user?.surname || '—' }}</td>
               <td>
-                <div class="manage-panel__role-cell">
-                  <span>{{ roleNames(member) }}</span>
-                  @if (canManage()) {
-                    <select
-                      class="manage-panel__select"
-                      [ngModel]="roleDrafts()[member.userId]"
-                      (ngModelChange)="onRoleDraftChange(member.userId, $event)"
-                      [disabled]="busyUserId() === member.userId"
-                      [attr.aria-label]="'Role for ' + displayName(member)"
-                    >
-                      @for (role of orgRoles(); track role.id) {
-                        <option [value]="role.id">{{ role.name }}</option>
-                      }
-                    </select>
-                    <button
-                      type="button"
-                      class="btn btn--ghost"
-                      [disabled]="busyUserId() === member.userId"
-                      (click)="applyRole(member)"
-                    >
-                      Replace roles
-                    </button>
+                <div class="manage-panel__tags">
+                  @for (role of member.roles; track role.id) {
+                    <span class="manage-panel__tag">{{ role.name }}</span>
+                  } @empty {
+                    <span class="manage-panel__hint">—</span>
                   }
                 </div>
               </td>
               <td>{{ member.teamIds.length }}</td>
               <td>{{ member.joinedAt | date: 'mediumDate' }}</td>
-              <td>
-                <div class="manage-panel__actions">
-                  <button type="button" class="btn btn--ghost" (click)="toggleDetails(member)">
-                    {{ detailsUserId() === member.userId ? 'Hide' : 'Details' }}
-                  </button>
-                  @if (canManage()) {
-                    <button
-                      type="button"
-                      class="btn btn--ghost"
-                      [disabled]="busyUserId() === member.userId || member.userId === me().userId"
-                      (click)="removeMember(member)"
-                    >
-                      Remove
-                    </button>
-                  }
-                </div>
+              <td class="member-panel__actions-col">
+                <app-overflow-menu
+                  [items]="menuItems(member)"
+                  [ariaLabel]="'Actions for ' + displayName(member)"
+                  (itemSelect)="onMenuAction(member, $event)"
+                />
               </td>
             </tr>
           } @empty {
@@ -154,8 +98,15 @@
       </table>
     </div>
 
+    <app-table-pagination
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      [totalItems]="filteredMembers().length"
+      (pageChange)="onPageChange($event)"
+    />
+
     @if (detailsUserId()) {
-      <div class="manage-panel__card">
+      <div class="manage-panel__card member-panel__details">
         <div class="manage-panel__toolbar">
           <h2 class="manage-panel__card-title">Member details</h2>
           <button type="button" class="btn btn--ghost" (click)="closeDetails()">Close</button>
@@ -171,14 +122,50 @@
           </p>
           <p class="manage-panel__card-meta">Username: {{ detail.user?.username || '—' }}</p>
           <p class="manage-panel__card-meta manage-panel__mono">User ID: {{ detail.userId }}</p>
-          <p class="manage-panel__card-meta">
-            Roles:
-            <span class="manage-panel__tags">
-              @for (role of detail.roles; track role.id) {
-                <span class="manage-panel__tag">{{ role.name }}</span>
+
+          <h3 class="manage-panel__card-title">Role</h3>
+          @if (canManage() && editingRoleInDetails()) {
+            <div class="member-panel__role-edit">
+              <select
+                class="manage-panel__select"
+                [ngModel]="roleDrafts()[detail.userId]"
+                (ngModelChange)="onRoleDraftChange(detail.userId, $event)"
+                [disabled]="busyUserId() === detail.userId"
+                aria-label="Role for member"
+              >
+                @for (role of orgRoles(); track role.id) {
+                  <option [value]="role.id">{{ role.name }}</option>
+                }
+              </select>
+              <div class="manage-panel__actions">
+                <button
+                  type="button"
+                  class="btn btn--primary"
+                  [disabled]="busyUserId() === detail.userId"
+                  (click)="applyRole(detail)"
+                >
+                  Save role
+                </button>
+                <button type="button" class="btn btn--ghost" (click)="editingRoleInDetails.set(false)">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          } @else {
+            <p class="manage-panel__card-meta">
+              <span class="manage-panel__tags">
+                @for (role of detail.roles; track role.id) {
+                  <span class="manage-panel__tag">{{ role.name }}</span>
+                }
+              </span>
+              @if (canManage()) {
+                <button type="button" class="btn btn--ghost" (click)="editingRoleInDetails.set(true)">
+                  Edit role
+                </button>
               }
-            </span>
-          </p>
+            </p>
+          }
+
           <p class="manage-panel__card-meta">Joined: {{ detail.joinedAt | date: 'medium' }}</p>
           <p class="manage-panel__card-meta">Team IDs: {{ detail.teamIds.join(', ') || '—' }}</p>
 
@@ -215,4 +202,13 @@
       </div>
     }
   </div>
+}
+
+@if (showAddMemberModal()) {
+  <app-add-member-modal
+    [organizationId]="organization().id"
+    [orgRoles]="orgRoles()"
+    (closed)="closeAddMemberModal()"
+    (added)="onMemberAdded()"
+  />
 }

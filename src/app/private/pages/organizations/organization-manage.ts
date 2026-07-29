@@ -16,10 +16,9 @@ import { OrgTeamsPanel } from './manage/org-teams-panel';
 
 interface ManagePageChrome {
   title: string;
-  description: string;
   primaryAction?: {
     label: string;
-    tabId: string;
+    action: 'add-member';
   };
 }
 
@@ -50,6 +49,7 @@ export class OrganizationManage implements OnInit {
   readonly isLoading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly activeTab = signal('all-members');
+  readonly addMemberRequest = signal(0);
 
   readonly sidebarCollapsed = this.orgManageLayout.sidebarCollapsed;
 
@@ -96,58 +96,23 @@ export class OrganizationManage implements OnInit {
   private readonly pageChromeByTab: Record<string, ManagePageChrome> = {
     'all-members': {
       title: 'All Members',
-      description: 'View and manage people who belong to this organization.',
+      primaryAction: { label: '+ Add Member', action: 'add-member' },
     },
-    invitations: {
-      title: 'Invitations',
-      description: 'Invite members and review pending invitations.',
-    },
-    'member-roles': {
-      title: 'Roles',
-      description: 'Define roles for organization members.',
-    },
-    permissions: {
-      title: 'Permissions',
-      description: 'Review and manage permission codes for this organization.',
-    },
-    activity: {
-      title: 'Activity',
-      description: 'Member activity and recent changes.',
-    },
-    'import-export': {
-      title: 'Import / Export',
-      description: 'Import or export organization members.',
-    },
-    organization: {
-      title: 'Organization',
-      description: 'General settings and profile for this organization.',
-    },
-    teams: {
-      title: 'Teams',
-      description: 'Group members into teams for collaboration and access.',
-    },
-    role: {
-      title: 'Role',
-      description: 'Define roles and permissions for organization members.',
-    },
-    statistic: {
-      title: 'Statistic',
-      description: 'Usage and activity metrics for this organization.',
-    },
-    'audit-log': {
-      title: 'Audit Log',
-      description: 'Review security and administration events.',
-    },
+    invitations: { title: 'Invitations' },
+    'member-roles': { title: 'Roles' },
+    permissions: { title: 'Permissions' },
+    activity: { title: 'Activity' },
+    'import-export': { title: 'Import / Export' },
+    organization: { title: 'Organization' },
+    teams: { title: 'Teams' },
+    role: { title: 'Role' },
+    statistic: { title: 'Statistic' },
+    'audit-log': { title: 'Audit Log' },
   };
 
   readonly pageChrome = computed(() => {
     const tab = this.activeTab();
-    return (
-      this.pageChromeByTab[tab] ?? {
-        title: tab,
-        description: 'Content for this section will be added later.',
-      }
-    );
+    return this.pageChromeByTab[tab] ?? { title: tab };
   });
 
   constructor() {
@@ -191,8 +156,8 @@ export class OrganizationManage implements OnInit {
 
   onPrimaryAction(): void {
     const action = this.pageChrome().primaryAction;
-    if (action) {
-      this.activeTab.set(action.tabId);
+    if (action?.action === 'add-member') {
+      this.addMemberRequest.update((n) => n + 1);
     }
   }
 

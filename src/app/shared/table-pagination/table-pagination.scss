@@ -1,0 +1,74 @@
+@use 'variables' as *;
+
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-md 0 0;
+  flex-wrap: wrap;
+
+  &__label {
+    font-size: 0.875rem;
+    color: $color-text-muted;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__nav,
+  &__page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    background: $color-white;
+    color: $color-text-dark;
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      color: var(--color-primary-dark);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__nav {
+    border-color: transparent;
+    background: transparent;
+    color: $color-text-muted;
+    font-size: 1rem;
+  }
+
+  &__page--active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: $color-white;
+    font-weight: $font-weight-semibold;
+
+    &:hover {
+      background: var(--color-primary-dark);
+      border-color: var(--color-primary-dark);
+      color: $color-white;
+    }
+  }
+
+  &__ellipsis {
+    color: $color-text-muted;
+    padding: 0 4px;
+    user-select: none;
+  }
+}

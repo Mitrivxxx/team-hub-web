@@ -52,7 +52,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: $color-white;
+    background: $color-bg-alt;
     overflow-y: auto;
   }
 
@@ -61,32 +61,20 @@
     top: 0;
     z-index: 50;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: $spacing-md;
     flex-wrap: wrap;
-    padding: $spacing-md $spacing-lg;
-    background: $color-white;
-    border-bottom: 1px solid $color-border;
-  }
-
-  &__page-intro {
-    min-width: 0;
-    flex: 1;
+    padding: $spacing-lg $spacing-lg $spacing-sm;
+    background: $color-bg-alt;
   }
 
   &__page-title {
-    margin: 0 0 $spacing-xs;
-    font-size: 1.375rem;
-    font-weight: $font-weight-semibold;
-    color: $color-text-heading;
-  }
-
-  &__page-description {
     margin: 0;
-    color: $color-text-muted;
-    font-size: 0.95rem;
-    max-width: 52rem;
+    font-size: 1.75rem;
+    font-weight: $font-weight-normal;
+    color: $color-text-heading;
+    letter-spacing: -0.02em;
   }
 
   &__page-action {
@@ -97,7 +85,7 @@
 
   &__page-body {
     flex: 1;
-    padding: $spacing-lg;
+    padding: 0 $spacing-lg $spacing-lg;
     color: $color-text-muted;
   }
 }

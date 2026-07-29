@@ -85,7 +85,7 @@ export class OrgTeamsPanel {
           this.createForm.reset({ name: '', description: '' });
           this.selectTeam(team.id);
         },
-        error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to create team.')),
+        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to create team.')),
       });
   }
 
@@ -105,7 +105,7 @@ export class OrgTeamsPanel {
             this.members.set([]);
           }
         },
-        error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to delete team.')),
+        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to delete team.')),
       });
   }
 
@@ -126,11 +126,11 @@ export class OrgTeamsPanel {
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (member) => {
+        next: (member: TeamMember) => {
           this.members.update((items) => [...items, member]);
           this.addMemberForm.reset({ userId: '', roleId: this.defaultTeamRoleId(), jobTitle: '' });
         },
-        error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to add team member.')),
+        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to add team member.')),
       });
   }
 
@@ -145,7 +145,7 @@ export class OrgTeamsPanel {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.members.update((items) => items.filter((m) => m.userId !== member.userId)),
-        error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to remove team member.')),
+        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to remove team member.')),
       });
   }
 
@@ -162,11 +162,11 @@ export class OrgTeamsPanel {
       .listTeams(organizationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (teams) => {
+        next: (teams: Team[]) => {
           this.teams.set(teams);
           this.isLoading.set(false);
         },
-        error: (err) => {
+        error: (err: unknown) => {
           this.error.set(organizationApiErrorMessage(err, 'Failed to load teams.'));
           this.isLoading.set(false);
         },
@@ -192,8 +192,8 @@ export class OrgTeamsPanel {
       .listTeamMembers(this.organization().id, teamId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (members) => this.members.set(members),
-        error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to load team members.')),
+        next: (members: TeamMember[]) => this.members.set(members),
+        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to load team members.')),
       });
   }
 

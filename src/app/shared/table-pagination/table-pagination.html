@@ -1,0 +1,65 @@
+@if (totalPages() > 0) {
+  <nav class="table-pagination" aria-label="Table pagination">
+    <span class="table-pagination__label">{{ pageLabel() }}</span>
+
+    <div class="table-pagination__controls">
+      <button
+        type="button"
+        class="table-pagination__nav"
+        aria-label="First page"
+        [disabled]="currentPage() <= 1"
+        (click)="goTo(1)"
+      >
+        &laquo;
+      </button>
+      <button
+        type="button"
+        class="table-pagination__nav"
+        aria-label="Previous page"
+        [disabled]="currentPage() <= 1"
+        (click)="goTo(currentPage() - 1)"
+      >
+        &lsaquo;
+      </button>
+
+      @if (showLeadingEllipsis()) {
+        <span class="table-pagination__ellipsis" aria-hidden="true">…</span>
+      }
+
+      @for (page of visiblePages(); track page) {
+        <button
+          type="button"
+          class="table-pagination__page"
+          [class.table-pagination__page--active]="page === currentPage()"
+          [attr.aria-current]="page === currentPage() ? 'page' : null"
+          (click)="goTo(page)"
+        >
+          {{ page }}
+        </button>
+      }
+
+      @if (showTrailingEllipsis()) {
+        <span class="table-pagination__ellipsis" aria-hidden="true">…</span>
+      }
+
+      <button
+        type="button"
+        class="table-pagination__nav"
+        aria-label="Next page"
+        [disabled]="currentPage() >= totalPages()"
+        (click)="goTo(currentPage() + 1)"
+      >
+        &rsaquo;
+      </button>
+      <button
+        type="button"
+        class="table-pagination__nav"
+        aria-label="Last page"
+        [disabled]="currentPage() >= totalPages()"
+        (click)="goTo(totalPages())"
+      >
+        &raquo;
+      </button>
+    </div>
+  </nav>
+}

@@ -1,0 +1,75 @@
+@use 'variables' as *;
+
+.add-member-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md;
+  background-color: rgba($color-text-heading, 0.45);
+
+  &__panel {
+    width: 100%;
+    max-width: 440px;
+    background-color: $color-white;
+    border: 1px solid rgba($color-border, 0.6);
+    border-radius: $border-radius-base;
+    padding: $spacing-lg;
+  }
+
+  &__title {
+    margin: 0 0 $spacing-md;
+    font-size: 1.375rem;
+    font-weight: $font-weight-semibold;
+    color: $color-text-heading;
+  }
+
+  &__error {
+    margin: 0 0 $spacing-md;
+    color: #dc2626;
+    font-size: 0.9rem;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: $font-weight-semibold;
+    color: $color-text-heading;
+  }
+
+  &__input,
+  &__select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid $color-border;
+    border-radius: $border-radius-base;
+    font: inherit;
+    color: $color-text-dark;
+    background: $color-white;
+
+    &:focus {
+      outline: 2px solid rgba(var(--color-primary-rgb), 0.25);
+      border-color: var(--color-primary);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+    margin-top: $spacing-xs;
+  }
+}
