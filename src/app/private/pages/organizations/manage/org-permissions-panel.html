@@ -11,49 +11,7 @@
       <p class="manage-panel__success">{{ actionSuccess() }}</p>
     }
 
-    @if (canManage()) {
-      <section class="manage-panel__card">
-        <h3 class="manage-panel__card-title">Create permission</h3>
-        <div class="manage-panel__filters">
-          <div class="manage-panel__field">
-            <label class="manage-panel__label" for="create-permission-name">Name</label>
-            <input
-              id="create-permission-name"
-              class="manage-panel__input"
-              [ngModel]="createName()"
-              (ngModelChange)="createName.set($event)"
-            />
-          </div>
-          <div class="manage-panel__field">
-            <label class="manage-panel__label" for="create-permission-code">Code</label>
-            <input
-              id="create-permission-code"
-              class="manage-panel__input"
-              [ngModel]="createCode()"
-              (ngModelChange)="createCode.set($event)"
-              placeholder="e.g. billing.read"
-            />
-          </div>
-          <div class="manage-panel__field">
-            <label class="manage-panel__label" for="create-permission-description">Description</label>
-            <input
-              id="create-permission-description"
-              class="manage-panel__input"
-              [ngModel]="createDescription()"
-              (ngModelChange)="createDescription.set($event)"
-            />
-          </div>
-          <div class="manage-panel__actions">
-            <button type="button" class="btn btn--primary" [disabled]="isCreating()" (click)="createPermission()">
-              Create
-            </button>
-          </div>
-        </div>
-      </section>
-    }
-
     <section class="manage-panel__card">
-      <h3 class="manage-panel__card-title">Permissions</h3>
       <div class="manage-panel__table-wrap">
         <table class="manage-panel__table">
           <thead>
@@ -130,7 +88,7 @@
     }
 
     @if (!canManage()) {
-      <p class="manage-panel__hint">Permission editing requires organization role management permission.</p>
+      <p class="manage-panel__hint">Permission deletion requires organization role management permission.</p>
     }
   </div>
 }

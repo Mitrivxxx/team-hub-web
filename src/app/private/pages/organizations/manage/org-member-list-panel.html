@@ -33,27 +33,11 @@
               <button type="button" class="manage-panel__th-btn" (click)="toggleSort('name')">
                 Name{{ sortIndicator('name') }}
               </button>
-              <input
-                type="text"
-                class="manage-panel__th-filter"
-                placeholder="Filter"
-                [ngModel]="nameFilter()"
-                (ngModelChange)="nameFilter.set($event)"
-                aria-label="Filter by name"
-              />
             </th>
             <th class="manage-panel__th-sortable">
               <button type="button" class="manage-panel__th-btn" (click)="toggleSort('surname')">
                 Surname{{ sortIndicator('surname') }}
               </button>
-              <input
-                type="text"
-                class="manage-panel__th-filter"
-                placeholder="Filter"
-                [ngModel]="surnameFilter()"
-                (ngModelChange)="surnameFilter.set($event)"
-                aria-label="Filter by surname"
-              />
             </th>
             <th>Roles</th>
             <th>Teams</th>
@@ -208,6 +192,7 @@
   <app-add-member-modal
     [organizationId]="organization().id"
     [orgRoles]="orgRoles()"
+    [existingMemberIds]="memberUserIds()"
     (closed)="closeAddMemberModal()"
     (added)="onMemberAdded()"
   />

@@ -1,5 +1,6 @@
 <div class="overflow-menu">
   <button
+    #trigger
     type="button"
     class="overflow-menu__trigger"
     [attr.aria-label]="ariaLabel()"
@@ -11,7 +12,12 @@
   </button>
 
   @if (isOpen()) {
-    <div class="overflow-menu__dropdown" role="menu">
+    <div
+      #dropdown
+      class="overflow-menu__dropdown"
+      role="menu"
+      [ngStyle]="menuStyle()"
+    >
       @for (item of items(); track item.id) {
         <button
           type="button"

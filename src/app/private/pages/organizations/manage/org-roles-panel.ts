@@ -12,6 +12,7 @@ import {
   RoleListItem,
 } from '../../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../../core/organizations/organization.service';
+import { createFlashMessage } from '../../../../shared/flash-message';
 
 type RolesSection = 'create' | 'organization' | 'team';
 
@@ -24,6 +25,7 @@ type RolesSection = 'create' | 'organization' | 'team';
 export class OrgRolesPanel {
   private readonly organizationService = inject(OrganizationService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly successFlash = createFlashMessage(this.destroyRef);
 
   readonly organization = input.required<Organization>();
   readonly me = input.required<MeMembership>();
@@ -34,7 +36,7 @@ export class OrgRolesPanel {
   readonly isLoading = signal(true);
   readonly error = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
-  readonly actionSuccess = signal<string | null>(null);
+  readonly actionSuccess = this.successFlash.message;
   readonly isCreating = signal(false);
   readonly activeSection = signal<RolesSection>('organization');
 
@@ -66,7 +68,7 @@ export class OrgRolesPanel {
     this.activeSection.set(section);
     this.closeRole();
     this.actionError.set(null);
-    this.actionSuccess.set(null);
+    this.successFlash.clear();
   }
 
   createRole(): void {
@@ -81,7 +83,7 @@ export class OrgRolesPanel {
     }
 
     this.actionError.set(null);
-    this.actionSuccess.set(null);
+    this.successFlash.clear();
     this.isCreating.set(true);
 
     const scope = this.createScope();
@@ -100,7 +102,7 @@ export class OrgRolesPanel {
         next: () => {
           this.createName.set('');
           this.createDescription.set('');
-          this.actionSuccess.set('Role created.');
+          this.successFlash.show('Role created.');
           this.activeSection.set(scope === 'TEAM' ? 'team' : 'organization');
           this.load(this.organization().id);
         },
@@ -159,7 +161,7 @@ export class OrgRolesPanel {
     }
 
     this.actionError.set(null);
-    this.actionSuccess.set(null);
+    this.successFlash.clear();
 
     this.organizationService
       .replaceRolePermissions(this.organization().id, role.id, {
@@ -177,7 +179,7 @@ export class OrgRolesPanel {
                 }
               : current,
           );
-          this.actionSuccess.set('Role permissions updated.');
+          this.successFlash.show('Role permissions updated.');
           this.load(this.organization().id);
         },
         error: (err) => this.actionError.set(organizationApiErrorMessage(err, 'Failed to update permissions.')),
@@ -201,7 +203,7 @@ export class OrgRolesPanel {
           if (this.selectedRoleId() === role.id) {
             this.closeRole();
           }
-          this.actionSuccess.set('Role deleted.');
+          this.successFlash.show('Role deleted.');
           this.load(this.organization().id);
         },
         error: (err) => this.actionError.set(organizationApiErrorMessage(err, 'Failed to delete role.')),

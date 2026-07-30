@@ -31,7 +31,6 @@
   </form>
 
   <section class="manage-panel__card">
-    <h3 class="manage-panel__card-title">Pending invitations</h3>
     @if (isLoading()) {
       <p class="manage-panel__status">Loading invitations...</p>
     } @else if (invitations().length === 0) {

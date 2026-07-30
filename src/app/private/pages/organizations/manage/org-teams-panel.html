@@ -4,7 +4,6 @@
 
 <div class="org-teams__layout">
   <section class="manage-panel__card org-teams__list">
-    <h3 class="manage-panel__card-title">Teams</h3>
     @if (isLoading()) {
       <p class="manage-panel__status">Loading teams...</p>
     } @else if (teams().length === 0) {

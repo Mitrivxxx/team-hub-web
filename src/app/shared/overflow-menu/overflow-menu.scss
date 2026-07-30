@@ -35,16 +35,14 @@
   }
 
   &__dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
+    position: fixed;
     min-width: 160px;
     padding: $spacing-xs;
     border: 1px solid $color-border;
     border-radius: $border-radius-base;
     background: $color-white;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    z-index: 120;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
   }
 
   &__item {

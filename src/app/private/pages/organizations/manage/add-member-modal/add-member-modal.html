@@ -5,48 +5,119 @@
   aria-labelledby="add-member-title"
   (click)="onBackdropClick($event)"
 >
-  <div class="add-member-modal__panel shadow-soft">
-    <h2 id="add-member-title" class="add-member-modal__title">Add member</h2>
+  <div class="add-member-modal__panel">
+    <header class="add-member-modal__header">
+      <div class="add-member-modal__heading">
+        <h2 id="add-member-title" class="add-member-modal__title">Add member</h2>
+        <p class="add-member-modal__subtitle">Search for a person and add them to this organization.</p>
+      </div>
+      <button
+        type="button"
+        class="add-member-modal__close"
+        [disabled]="isSubmitting()"
+        (click)="close()"
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </header>
 
     @if (submitError()) {
-      <p class="add-member-modal__error">{{ submitError() }}</p>
+      <p class="add-member-modal__error" role="alert">{{ submitError() }}</p>
     }
 
-    <div class="add-member-modal__form">
-      <div class="add-member-modal__field">
-        <label class="add-member-modal__label" for="add-member-user-id">User ID</label>
+    <div class="add-member-modal__body">
+      <label class="add-member-modal__label" for="add-member-search">Find people</label>
+      <div class="add-member-modal__search">
+        <span class="add-member-modal__search-icon" aria-hidden="true">⌕</span>
         <input
-          id="add-member-user-id"
+          #searchInput
+          id="add-member-search"
+          type="search"
           class="add-member-modal__input"
-          [ngModel]="userId()"
-          (ngModelChange)="userId.set($event)"
-          placeholder="User GUID"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearchInput($event)"
+          (keydown)="onSearchKeydown($event)"
+          (focus)="onSearchFocus()"
+          placeholder="Search by name, surname, or email"
+          autocomplete="off"
+          [disabled]="isSubmitting()"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls="add-member-results"
+          [attr.aria-expanded]="dropdownOpen()"
+          [attr.aria-activedescendant]="activeIndex() >= 0 ? resultOptionId(activeIndex()) : null"
         />
+
+        @if (dropdownOpen()) {
+          <ul id="add-member-results" class="add-member-modal__dropdown" role="listbox">
+            @if (isSearching()) {
+              <li class="add-member-modal__dropdown-status">Searching…</li>
+            } @else if (searchError()) {
+              <li class="add-member-modal__dropdown-status add-member-modal__dropdown-status--error">
+                {{ searchError() }}
+              </li>
+            } @else if (filteredResults().length === 0) {
+              <li class="add-member-modal__dropdown-status">No users found</li>
+            } @else {
+              @for (user of filteredResults(); track user.id; let i = $index) {
+                <li
+                  role="option"
+                  [id]="resultOptionId(i)"
+                  [attr.aria-selected]="activeIndex() === i"
+                >
+                  <button
+                    type="button"
+                    class="add-member-modal__result"
+                    [class.add-member-modal__result--active]="activeIndex() === i"
+                    [disabled]="isSubmitting()"
+                    (click)="selectUser(user)"
+                    (mouseenter)="activeIndex.set(i)"
+                  >
+                    <span class="add-member-modal__avatar" aria-hidden="true">{{ initials(user) }}</span>
+                    <span class="add-member-modal__result-text">
+                      <span class="add-member-modal__result-name">
+                        {{ user.name }} {{ user.surname }}
+                      </span>
+                      <span class="add-member-modal__result-email">{{ user.email }}</span>
+                    </span>
+                  </button>
+                </li>
+              }
+            }
+          </ul>
+        }
       </div>
 
-      <div class="add-member-modal__field">
-        <label class="add-member-modal__label" for="add-member-role-id">Role</label>
-        <select
-          id="add-member-role-id"
-          class="add-member-modal__select"
-          [ngModel]="roleId()"
-          (ngModelChange)="roleId.set($event)"
-        >
-          <option value="">Select role</option>
-          @for (role of orgRoles(); track role.id) {
-            <option [value]="role.id">{{ role.name }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="add-member-modal__actions">
-        <button type="button" class="btn btn--outline" [disabled]="isSubmitting()" (click)="close()">
-          Cancel
-        </button>
-        <button type="button" class="btn btn--primary" [disabled]="isSubmitting()" (click)="submit()">
-          {{ isSubmitting() ? 'Adding...' : 'Add member' }}
-        </button>
-      </div>
+      @if (selectedUser(); as user) {
+        <div class="add-member-modal__selected">
+          <span class="add-member-modal__avatar add-member-modal__avatar--lg" aria-hidden="true">
+            {{ initials(user) }}
+          </span>
+          <div class="add-member-modal__selected-info">
+            <span class="add-member-modal__selected-name">{{ user.name }} {{ user.surname }}</span>
+            <span class="add-member-modal__selected-email">{{ user.email }}</span>
+          </div>
+          <button
+            type="button"
+            class="add-member-modal__clear"
+            [disabled]="isSubmitting()"
+            (click)="clearSelection()"
+            aria-label="Clear selection"
+          >
+            Clear
+          </button>
+        </div>
+      }
     </div>
+
+    <footer class="add-member-modal__actions">
+      <button type="button" class="btn btn--outline" [disabled]="isSubmitting()" (click)="close()">
+        Cancel
+      </button>
+      <button type="button" class="btn btn--primary" [disabled]="!canSubmit()" (click)="submit()">
+        {{ isSubmitting() ? 'Adding…' : 'Add to organization' }}
+      </button>
+    </footer>
   </div>
 </div>

@@ -15,6 +15,7 @@ export interface AuthResponse {
 export interface UserResponse {
   id: string;
   username: string;
+  email: string;
   name: string;
   surname: string;
 }
@@ -66,9 +67,16 @@ export class AuthService {
       );
   }
 
-  register(data: { username: string; name: string; surname: string; password: string }): Observable<AuthResponse> {
+  register(data: {
+    username: string;
+    email: string;
+    name: string;
+    surname: string;
+    password: string;
+  }): Observable<AuthResponse> {
     const payload = {
       username: data.username.trim(),
+      email: data.email.trim(),
       name: data.name.trim(),
       surname: data.surname.trim(),
       password: data.password,
@@ -114,6 +122,18 @@ export class AuthService {
       );
   }
 
+  searchUsers(q: string, pageSize = 20): Observable<UserResponse[]> {
+    const params: Record<string, string> = {
+      page: '1',
+      pageSize: String(pageSize),
+    };
+    const term = q.trim();
+    if (term) {
+      params['q'] = term;
+    }
+    return this.http.get<UserResponse[]>(`${this.baseUrl}/users`, { params });
+  }
+
   changePassword(data: {
     username: string;
     name: string;
@@ -149,7 +169,7 @@ export class AuthService {
   }
 
   private validateRegisterPayload(
-    data: { username: string; name: string; surname: string; password: string },
+    data: { username: string; email: string; name: string; surname: string; password: string },
   ): FieldValidationErrors | null {
     const fieldErrors: FieldValidationErrors = {};
 
@@ -165,8 +185,13 @@ export class AuthService {
       fieldErrors['username'] = ['Username is invalid.'];
     }
 
-    if (data.password.length < 12 || data.password.length > 128) {
-      fieldErrors['password'] = ['Password must be 12-128 characters long.'];
+    const email = data.email.trim();
+    if (email.length < 3 || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      fieldErrors['email'] = ['Email is invalid.'];
+    }
+
+    if (data.password.length < 8 || data.password.length > 128) {
+      fieldErrors['password'] = ['Password must be 8-128 characters long.'];
     }
 
     return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
@@ -189,8 +214,8 @@ export class AuthService {
       fieldErrors['username'] = ['Username is invalid.'];
     }
 
-    if (data.password.length < 12 || data.password.length > 128) {
-      fieldErrors['password'] = ['Password must be 12-128 characters long.'];
+    if (data.password.length < 8 || data.password.length > 128) {
+      fieldErrors['password'] = ['Password must be 8-128 characters long.'];
     }
 
     return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;

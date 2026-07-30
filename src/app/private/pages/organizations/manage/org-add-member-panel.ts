@@ -12,6 +12,7 @@ import {
   RoleListItem,
 } from '../../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../../core/organizations/organization.service';
+import { createFlashMessage } from '../../../../shared/flash-message';
 
 @Component({
   selector: 'app-org-add-member-panel',
@@ -23,6 +24,7 @@ export class OrgAddMemberPanel {
   private readonly organizationService = inject(OrganizationService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly successFlash = createFlashMessage(this.destroyRef);
 
   readonly organization = input.required<Organization>();
   readonly me = input.required<MeMembership>();
@@ -34,7 +36,7 @@ export class OrgAddMemberPanel {
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly error = signal<string | null>(null);
-  readonly success = signal<string | null>(null);
+  readonly success = this.successFlash.message;
 
   readonly canManage = () => this.me().permissions.includes('org.members.manage');
 
@@ -63,7 +65,7 @@ export class OrgAddMemberPanel {
     }
 
     this.error.set(null);
-    this.success.set(null);
+    this.successFlash.clear();
 
     if (this.inviteForm.invalid) {
       this.inviteForm.markAllAsTouched();
@@ -86,7 +88,7 @@ export class OrgAddMemberPanel {
         next: (invitation) => {
           this.invitations.update((items) => [invitation, ...items]);
           this.inviteForm.reset({ email: '', orgRoleId: this.defaultRoleId() });
-          this.success.set(`Invitation sent to ${invitation.email}.`);
+          this.successFlash.show(`Invitation sent to ${invitation.email}.`);
           this.invitationCreated.emit();
         },
         error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to create invitation.')),

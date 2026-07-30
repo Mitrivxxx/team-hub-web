@@ -98,9 +98,9 @@
 
   &__table-wrap {
     overflow-x: auto;
-    border: 1px solid $color-border;
-    border-radius: $border-radius-base;
-    background: $color-white;
+    border: none;
+    border-radius: 0;
+    background: transparent;
   }
 
   &__table {
@@ -235,10 +235,10 @@
   }
 
   &__card {
-    border: 1px solid $color-border;
-    border-radius: $border-radius-base;
-    padding: $spacing-md;
-    background: $color-white;
+    border: none;
+    border-radius: 0;
+    padding: $spacing-md 0;
+    background: transparent;
   }
 
   &__card-title {

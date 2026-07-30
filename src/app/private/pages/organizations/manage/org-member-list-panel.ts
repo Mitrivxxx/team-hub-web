@@ -14,6 +14,7 @@ import {
   TeamMembership,
 } from '../../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../../core/organizations/organization.service';
+import { createFlashMessage } from '../../../../shared/flash-message';
 import { OverflowMenu } from '../../../../shared/overflow-menu/overflow-menu';
 import { OverflowMenuItem } from '../../../../shared/overflow-menu/overflow-menu.model';
 import { TablePagination } from '../../../../shared/table-pagination/table-pagination';
@@ -34,6 +35,7 @@ export class OrgMemberListPanel {
   private readonly organizationService = inject(OrganizationService);
   private readonly organizationGraphqlService = inject(OrganizationGraphqlService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly successFlash = createFlashMessage(this.destroyRef);
 
   readonly organization = input.required<Organization>();
   readonly me = input.required<MeMembership>();
@@ -44,13 +46,11 @@ export class OrgMemberListPanel {
   readonly isLoading = signal(true);
   readonly error = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
-  readonly actionSuccess = signal<string | null>(null);
+  readonly actionSuccess = this.successFlash.message;
   readonly busyUserId = signal<string | null>(null);
   readonly showAddMemberModal = signal(false);
 
   readonly searchQuery = signal('');
-  readonly nameFilter = signal('');
-  readonly surnameFilter = signal('');
   readonly sortColumn = signal<SortColumn | null>(null);
   readonly sortDirection = signal<SortDirection>('asc');
   readonly currentPage = signal(1);
@@ -68,8 +68,6 @@ export class OrgMemberListPanel {
 
   readonly filteredMembers = computed(() => {
     const search = this.searchQuery().trim().toLowerCase();
-    const nameFilter = this.nameFilter().trim().toLowerCase();
-    const surnameFilter = this.surnameFilter().trim().toLowerCase();
 
     let result = this.members().filter((member) => {
       const name = member.user?.name?.toLowerCase() ?? '';
@@ -77,12 +75,6 @@ export class OrgMemberListPanel {
       const username = member.user?.username?.toLowerCase() ?? '';
 
       if (search && !`${name} ${surname} ${username}`.includes(search)) {
-        return false;
-      }
-      if (nameFilter && !name.includes(nameFilter)) {
-        return false;
-      }
-      if (surnameFilter && !surname.includes(surnameFilter)) {
         return false;
       }
       return true;
@@ -122,6 +114,8 @@ export class OrgMemberListPanel {
     return this.filteredMembers().slice(start, start + PAGE_SIZE);
   });
 
+  readonly memberUserIds = computed(() => this.members().map((m) => m.userId));
+
   constructor() {
     effect(() => {
       const org = this.organization();
@@ -140,8 +134,6 @@ export class OrgMemberListPanel {
 
     effect(() => {
       this.searchQuery();
-      this.nameFilter();
-      this.surnameFilter();
       this.sortColumn();
       this.sortDirection();
       this.members();
@@ -214,7 +206,7 @@ export class OrgMemberListPanel {
 
   onMemberAdded(): void {
     this.showAddMemberModal.set(false);
-    this.actionSuccess.set('Member added.');
+    this.successFlash.show('Member added.');
     this.load(this.organization().id);
   }
 
@@ -234,7 +226,7 @@ export class OrgMemberListPanel {
     }
 
     this.actionError.set(null);
-    this.actionSuccess.set(null);
+    this.successFlash.clear();
     this.busyUserId.set(member.userId);
 
     this.organizationService
@@ -254,7 +246,7 @@ export class OrgMemberListPanel {
             this.detailsMember.set({ ...updated, user: member.user ?? updated.user });
           }
           this.editingRoleInDetails.set(false);
-          this.actionSuccess.set('Roles updated.');
+          this.successFlash.show('Roles updated.');
         },
         error: (err) => this.actionError.set(organizationApiErrorMessage(err, 'Failed to update member role.')),
       });
@@ -270,7 +262,7 @@ export class OrgMemberListPanel {
     }
 
     this.actionError.set(null);
-    this.actionSuccess.set(null);
+    this.successFlash.clear();
     this.busyUserId.set(member.userId);
 
     this.organizationService
@@ -285,7 +277,7 @@ export class OrgMemberListPanel {
           if (this.detailsUserId() === member.userId) {
             this.closeDetails();
           }
-          this.actionSuccess.set('Member removed.');
+          this.successFlash.show('Member removed.');
         },
         error: (err) => this.actionError.set(organizationApiErrorMessage(err, 'Failed to remove member.')),
       });

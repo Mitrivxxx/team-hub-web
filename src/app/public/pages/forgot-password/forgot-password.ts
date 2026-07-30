@@ -34,7 +34,7 @@ export class ForgotPassword implements OnInit {
     username: [{ value: '', disabled: true }, [Validators.required]],
     firstName: ['', [Validators.required, humanNameValidator(50)]],
     lastName: ['', [Validators.required, humanNameValidator(80)]],
-    newPassword: ['', [Validators.required, Validators.minLength(12), Validators.maxLength(128)]],
+    newPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(128)]],
   });
 
   ngOnInit(): void {

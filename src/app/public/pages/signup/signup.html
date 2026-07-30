@@ -93,6 +93,30 @@
       </div>
 
       <div class="auth-form__field">
+        <label class="auth-form__label" for="signup-email">Email</label>
+        <input
+          id="signup-email"
+          type="email"
+          class="auth-form__input"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="you@example.com"
+          [class.auth-form__input--invalid]="
+            signupForm.controls.email.touched && signupForm.controls.email.invalid
+          "
+        />
+        @if (signupForm.controls.email.touched && signupForm.controls.email.hasError('required')) {
+          <span class="auth-form__error">Email is required.</span>
+        }
+        @if (signupForm.controls.email.touched && signupForm.controls.email.hasError('emailFormat')) {
+          <span class="auth-form__error">Enter a valid email address.</span>
+        }
+        @if (signupForm.controls.email.touched && signupForm.controls.email.hasError('server')) {
+          <span class="auth-form__error">{{ signupForm.controls.email.getError('server') }}</span>
+        }
+      </div>
+
+      <div class="auth-form__field">
         <label class="auth-form__label" for="signup-password">Password</label>
         <div class="auth-form__password-wrapper">
           <input
@@ -136,7 +160,7 @@
           signupForm.controls.password.touched &&
           (signupForm.controls.password.hasError('minlength') || signupForm.controls.password.hasError('maxlength'))
         ) {
-          <span class="auth-form__error">Password must be 12-128 characters long.</span>
+          <span class="auth-form__error">Password must be 8-128 characters long.</span>
         }
         @if (signupForm.controls.password.touched && signupForm.controls.password.hasError('server')) {
           <span class="auth-form__error">{{ signupForm.controls.password.getError('server') }}</span>

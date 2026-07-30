@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthService, AuthValidationError } from '../../../core/auth/auth.service';
-import { humanNameValidator, usernameFormatValidator } from '../../../core/auth/register.validators';
+import { humanNameValidator, emailFormatValidator, usernameFormatValidator } from '../../../core/auth/register.validators';
 
 function passwordsMatch(control: AbstractControl): { passwordMismatch: true } | null {
   const password = control.get('password')?.value;
@@ -21,6 +21,7 @@ const registerFieldToFormControl = {
   name: 'firstName',
   surname: 'lastName',
   username: 'username',
+  email: 'email',
   password: 'password',
 } as const;
 
@@ -45,7 +46,8 @@ export class Signup {
       firstName: ['', [Validators.required, humanNameValidator(50)]],
       lastName: ['', [Validators.required, humanNameValidator(80)]],
       username: ['', [Validators.required, usernameFormatValidator]],
-      password: ['', [Validators.required, Validators.minLength(12), Validators.maxLength(128)]],
+      email: ['', [Validators.required, emailFormatValidator]],
+      password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(128)]],
       confirmPassword: ['', [Validators.required]],
     },
     { validators: passwordsMatch },
@@ -85,12 +87,13 @@ export class Signup {
       return;
     }
 
-    const { firstName, lastName, username, password } = this.signupForm.getRawValue();
+    const { firstName, lastName, username, email, password } = this.signupForm.getRawValue();
     this.isSubmitting = true;
 
     this.authService
       .register({
         username,
+        email,
         name: firstName,
         surname: lastName,
         password,

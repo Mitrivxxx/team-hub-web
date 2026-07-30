@@ -7,6 +7,7 @@ import { finalize } from 'rxjs';
 import { organizationApiErrorMessage } from '../../../../core/organizations/organization-api.utils';
 import { MeMembership, Organization } from '../../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../../core/organizations/organization.service';
+import { createFlashMessage } from '../../../../shared/flash-message';
 
 const MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -22,6 +23,7 @@ export class OrgSettingsPanel {
   private readonly destroyRef = inject(DestroyRef);
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly successFlash = createFlashMessage(this.destroyRef);
 
   readonly organization = input.required<Organization>();
   readonly me = input.required<MeMembership>();
@@ -32,7 +34,7 @@ export class OrgSettingsPanel {
   readonly isLeaving = signal(false);
   readonly isDeleting = signal(false);
   readonly error = signal<string | null>(null);
-  readonly success = signal<string | null>(null);
+  readonly success = this.successFlash.message;
   readonly avatarError = signal<string | null>(null);
 
   readonly canManage = () => this.me().permissions.includes('org.manage');
@@ -59,7 +61,7 @@ export class OrgSettingsPanel {
     }
 
     this.error.set(null);
-    this.success.set(null);
+    this.successFlash.clear();
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -81,7 +83,7 @@ export class OrgSettingsPanel {
       .subscribe({
         next: (updated) => {
           this.organizationUpdated.emit(updated);
-          this.success.set('Organization settings saved.');
+          this.successFlash.show('Organization settings saved.');
         },
         error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to update organization.')),
       });

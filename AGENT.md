@@ -16,7 +16,7 @@
   - `name`: trim, 2-50, Unicode letters + single space/apostrophe/hyphen.
   - `surname`: trim, 2-80, Unicode letters + single space/apostrophe/hyphen.
   - `username`: trim, `^[a-zA-Z0-9._-]{3,30}$`.
-  - `password`: length 12-128.
+  - `password`: length 8-128.
 - In dev, keep proxy `/api` on `https://localhost:8080` (infrastructure nginx HTTPS).
 - In docker (Production), serve frontend on `https://localhost:4200` (`team-hub-web-prod`); frontend nginx proxies `/api` to `http://nginx:80`.
 - Set `X-Correlation-ID` on every API request via `src/app/core/http/correlation-id.interceptor.ts` (new UUID per request).
@@ -51,14 +51,15 @@
   - Invitations: listInvitations, getInvitation, createInvitation (`orgRoleIds[]`), cancelInvitation, resendInvitation, getInvitationByToken, acceptInvitation, rejectInvitation
 - Manage UI panels (`src/app/private/pages/organizations/manage/`):
   - All Members table columns: Name, Surname, Roles, Teams, Joined (user profiles from GraphQL)
-  - `OrgMemberListPanel` — All Members: client-side search (name/surname/username), column sort/filter (name, surname, joined), pagination (10/page), overflow row menu (`Details`, `Edit role`, `Remove`), role edit in details panel, `+ Add Member` header action opens `AddMemberModal` (User GUID + role)
-  - `AddMemberModal` — add member by User GUID + org role (`OrganizationService.addMember`)
+  - `OrgMemberListPanel` — All Members: client-side search (name/surname/username), column sort/filter (name, surname, joined), pagination (10/page), overflow row menu (`Details`, `Edit role`, `Remove`), role edit in details panel, `+ Add Member` header action opens `AddMemberModal`
+  - `AddMemberModal` — search users via `AuthService.searchUsers` (`GET /api/auth/v0.0/users?q=`), dropdown excludes current org members; select user then **Add to organization** assigns fixed org **Member** role via `OrganizationService.addMember`; ArrowUp/ArrowDown + Enter select from list; search after 300ms idle (debounce)
+  - `AuthService.searchUsers(q, pageSize?)` — authenticated user search for Add Member picker
   - Shared: `OverflowMenu` (`src/app/shared/overflow-menu/`), `TablePagination` (`src/app/shared/table-pagination/`)
   - `OrgAddMemberPanel` — email invitations + pending list (`orgRoleIds`)
   - `OrgSettingsPanel` — name/description, avatar, leave, delete
   - `OrgTeamsPanel` — team list/create/delete + team members
   - `OrgRolesPanel` — section tabs (Create role, Organization roles, Team roles); create, detail, permission attach by id, delete custom; shared tab styles in `_manage-panel.scss`
-  - `OrgPermissionsPanel` — org permission catalog CRUD + detail (roles using permission)
+  - `OrgPermissionsPanel` — org permission catalog list + detail (roles using permission); create disabled in UI
 - Create modal: `CreateOrganizationModal` — fields: name, description, photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`).
 - Reusable `Sidebar` (`src/app/shared/sidebar/`): tree `items` + `activeId` + `collapsed`; `itemSelect` + `collapsedChange`; collapsed CSS tooltips; chevron row toggles; `aria-current` / `aria-expanded` / `:focus-visible`.
 - Manage nav: Members (All Members, Invitations, Roles, Permissions, Activity, Import / Export), Organization, Role/Permission (Teams, Role), Statistic, Audit Log. Activity, Import / Export, Statistic and Audit Log remain placeholders.

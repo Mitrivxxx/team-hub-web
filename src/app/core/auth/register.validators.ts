@@ -24,3 +24,15 @@ export function usernameFormatValidator(control: AbstractControl): ValidationErr
 
   return null;
 }
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function emailFormatValidator(control: AbstractControl): ValidationErrors | null {
+  const value = (control.value as string | null | undefined)?.trim() ?? '';
+
+  if (value.length < 3 || value.length > 254 || !emailPattern.test(value)) {
+    return { emailFormat: true };
+  }
+
+  return null;
+}
