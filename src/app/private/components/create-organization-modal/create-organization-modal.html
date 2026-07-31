@@ -53,6 +53,82 @@
       </div>
 
       <div class="create-org-modal__field">
+        <label class="create-org-modal__label" for="org-nip">NIP</label>
+        <input
+          id="org-nip"
+          type="text"
+          class="create-org-modal__input"
+          formControlName="nip"
+          inputmode="numeric"
+          maxlength="10"
+          placeholder="10-digit tax ID"
+          [class.create-org-modal__input--invalid]="
+            form.controls.nip.touched && form.controls.nip.invalid
+          "
+        />
+        @if (form.controls.nip.touched && form.controls.nip.hasError('required')) {
+          <span class="create-org-modal__field-error">NIP is required.</span>
+        }
+        @if (form.controls.nip.touched && form.controls.nip.hasError('pattern')) {
+          <span class="create-org-modal__field-error">NIP must be exactly 10 digits.</span>
+        }
+      </div>
+
+      <div class="create-org-modal__field">
+        <label class="create-org-modal__label" for="org-country">Country</label>
+        <input
+          id="org-country"
+          type="text"
+          class="create-org-modal__input"
+          formControlName="country"
+          autocomplete="country-name"
+          placeholder="e.g. Poland"
+          [class.create-org-modal__input--invalid]="
+            form.controls.country.touched && form.controls.country.invalid
+          "
+        />
+        @if (form.controls.country.touched && form.controls.country.hasError('required')) {
+          <span class="create-org-modal__field-error">Country is required.</span>
+        }
+      </div>
+
+      <div class="create-org-modal__field">
+        <label class="create-org-modal__label" for="org-city">City</label>
+        <input
+          id="org-city"
+          type="text"
+          class="create-org-modal__input"
+          formControlName="city"
+          autocomplete="address-level2"
+          placeholder="e.g. Warsaw"
+          [class.create-org-modal__input--invalid]="
+            form.controls.city.touched && form.controls.city.invalid
+          "
+        />
+        @if (form.controls.city.touched && form.controls.city.hasError('required')) {
+          <span class="create-org-modal__field-error">City is required.</span>
+        }
+      </div>
+
+      <div class="create-org-modal__field">
+        <label class="create-org-modal__label" for="org-postal-code">Postal code</label>
+        <input
+          id="org-postal-code"
+          type="text"
+          class="create-org-modal__input"
+          formControlName="postalCode"
+          autocomplete="postal-code"
+          placeholder="e.g. 00-001"
+          [class.create-org-modal__input--invalid]="
+            form.controls.postalCode.touched && form.controls.postalCode.invalid
+          "
+        />
+        @if (form.controls.postalCode.touched && form.controls.postalCode.hasError('required')) {
+          <span class="create-org-modal__field-error">Postal code is required.</span>
+        }
+      </div>
+
+      <div class="create-org-modal__field">
         <span class="create-org-modal__label">Organization photo</span>
         <div class="create-org-modal__photo">
           @if (avatarPreviewUrl) {

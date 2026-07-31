@@ -1,78 +1,225 @@
-@if (error()) {
-  <p class="manage-panel__error">{{ error() }}</p>
-}
-@if (success()) {
-  <p class="manage-panel__success">{{ success() }}</p>
-}
-
-<form class="manage-panel__form" [formGroup]="form" (ngSubmit)="save()" novalidate>
-  <div class="manage-panel__field">
-    <label class="manage-panel__label" for="org-settings-name">Name</label>
-    <input
-      id="org-settings-name"
-      type="text"
-      class="manage-panel__input"
-      formControlName="name"
-      [readonly]="!canManage()"
-    />
-  </div>
-
-  <div class="manage-panel__field">
-    <label class="manage-panel__label" for="org-settings-description">Description</label>
-    <textarea
-      id="org-settings-description"
-      class="manage-panel__textarea"
-      formControlName="description"
-      rows="4"
-      [readonly]="!canManage()"
-    ></textarea>
-  </div>
-
-  @if (canManage()) {
-    <div class="manage-panel__actions">
-      <button type="submit" class="btn btn--primary" [disabled]="isSaving()">
-        {{ isSaving() ? 'Saving...' : 'Save changes' }}
-      </button>
-    </div>
+<div class="org-settings">
+  @if (error()) {
+    <p class="manage-panel__error">{{ error() }}</p>
   }
-</form>
-
-<section class="manage-panel__card">
-  <h3 class="manage-panel__card-title">Organization photo</h3>
-  @if (organization().avatarUrl) {
-    <img [src]="organization().avatarUrl!" alt="" class="org-settings__avatar" />
-  } @else {
-    <p class="manage-panel__status">No photo uploaded.</p>
+  @if (success()) {
+    <p class="manage-panel__success">{{ success() }}</p>
   }
 
-  @if (canManage()) {
-    <div class="manage-panel__actions">
-      <label class="btn btn--outline">
-        Upload photo
-        <input type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="onAvatarSelected($event)" />
-      </label>
-      @if (organization().avatarUrl) {
-        <button type="button" class="btn btn--ghost" (click)="removeAvatar()">Remove photo</button>
+  <section class="org-settings__identity" aria-labelledby="org-identity-heading">
+    <div class="org-settings__avatar-block">
+      <div class="org-settings__avatar" [class.org-settings__avatar--empty]="!organization().avatarUrl">
+        @if (organization().avatarUrl) {
+          <img [src]="organization().avatarUrl!" [alt]="organization().name + ' photo'" />
+        } @else {
+          <span aria-hidden="true">{{ initials() }}</span>
+        }
+      </div>
+
+      @if (canManage()) {
+        <div class="org-settings__avatar-actions">
+          <label class="btn btn--outline org-settings__avatar-upload" [class.btn--disabled]="isUploadingAvatar()">
+            {{ isUploadingAvatar() ? 'Uploading...' : organization().avatarUrl ? 'Change photo' : 'Upload photo' }}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              [disabled]="isUploadingAvatar()"
+              (change)="onAvatarSelected($event)"
+            />
+          </label>
+          @if (organization().avatarUrl) {
+            <button
+              type="button"
+              class="btn btn--ghost"
+              [disabled]="isUploadingAvatar()"
+              (click)="removeAvatar()"
+            >
+              Remove
+            </button>
+          }
+        </div>
+        <p class="manage-panel__hint">JPEG, PNG, or WebP. Max 2 MB.</p>
+        @if (avatarError()) {
+          <p class="manage-panel__error">{{ avatarError() }}</p>
+        }
       }
     </div>
-    <p class="manage-panel__hint">JPEG, PNG, or WebP. Max 2 MB.</p>
-    @if (avatarError()) {
-      <p class="manage-panel__error">{{ avatarError() }}</p>
-    }
-  }
-</section>
 
-<div class="manage-panel__danger-zone">
-  <h3 class="manage-panel__card-title">Membership</h3>
-  <p class="manage-panel__card-meta">Leave this organization or delete it if you are the owner.</p>
-  <div class="manage-panel__actions">
-    <button type="button" class="btn btn--outline" [disabled]="isLeaving()" (click)="leaveOrganization()">
-      {{ isLeaving() ? 'Leaving...' : 'Leave organization' }}
-    </button>
-    @if (canDelete()) {
-      <button type="button" class="btn btn--ghost" [disabled]="isDeleting()" (click)="deleteOrganization()">
-        {{ isDeleting() ? 'Deleting...' : 'Delete organization' }}
+    <div class="org-settings__identity-meta">
+      <h2 id="org-identity-heading" class="org-settings__name">{{ organization().name }}</h2>
+      <dl class="org-settings__meta-list">
+        <div class="org-settings__meta-row">
+          <dt>Slug</dt>
+          <dd><code>{{ organization().slug }}</code></dd>
+        </div>
+        <div class="org-settings__meta-row">
+          <dt>Email</dt>
+          <dd>
+            <a class="org-settings__email" [href]="'mailto:' + organization().email">{{ organization().email }}</a>
+          </dd>
+        </div>
+      </dl>
+      <p class="org-settings__email-hint">
+        Organization email is assigned automatically and cannot be changed.
+      </p>
+    </div>
+  </section>
+
+  <section class="org-settings__section" aria-labelledby="org-details-heading">
+    <div class="org-settings__section-head">
+      <h3 id="org-details-heading" class="org-settings__section-title">Organization details</h3>
+      <p class="org-settings__section-desc">
+        @if (canManage()) {
+          Edit and save changes below.
+        } @else {
+          You can view organization details. Editing requires the org.manage permission.
+        }
+      </p>
+    </div>
+
+    <form class="org-settings__form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="org-settings__grid">
+        <div class="manage-panel__field org-settings__field--full">
+          <label class="manage-panel__label" for="org-settings-name">Name</label>
+          <input
+            id="org-settings-name"
+            type="text"
+            class="manage-panel__input"
+            formControlName="name"
+            autocomplete="organization"
+            [class.manage-panel__input--invalid]="form.controls.name.touched && form.controls.name.invalid"
+          />
+          @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+            <span class="org-settings__field-error">Name is required.</span>
+          }
+          @if (form.controls.name.touched && form.controls.name.hasError('maxlength')) {
+            <span class="org-settings__field-error">Name must be at most 100 characters.</span>
+          }
+        </div>
+
+        <div class="manage-panel__field org-settings__field--full">
+          <label class="manage-panel__label" for="org-settings-description">Description</label>
+          <textarea
+            id="org-settings-description"
+            class="manage-panel__textarea"
+            formControlName="description"
+            rows="3"
+            placeholder="Short description of this organization"
+            [class.manage-panel__input--invalid]="
+              form.controls.description.touched && form.controls.description.invalid
+            "
+          ></textarea>
+          @if (form.controls.description.touched && form.controls.description.hasError('maxlength')) {
+            <span class="org-settings__field-error">Description must be at most 500 characters.</span>
+          }
+        </div>
+
+        <div class="manage-panel__field">
+          <label class="manage-panel__label" for="org-settings-nip">NIP</label>
+          <input
+            id="org-settings-nip"
+            type="text"
+            class="manage-panel__input"
+            formControlName="nip"
+            inputmode="numeric"
+            maxlength="10"
+            placeholder="10-digit tax ID"
+            [class.manage-panel__input--invalid]="form.controls.nip.touched && form.controls.nip.invalid"
+          />
+          @if (form.controls.nip.touched && form.controls.nip.hasError('required')) {
+            <span class="org-settings__field-error">NIP is required.</span>
+          }
+          @if (form.controls.nip.touched && form.controls.nip.hasError('pattern')) {
+            <span class="org-settings__field-error">NIP must be exactly 10 digits.</span>
+          }
+        </div>
+
+        <div class="manage-panel__field">
+          <label class="manage-panel__label" for="org-settings-country">Country</label>
+          <input
+            id="org-settings-country"
+            type="text"
+            class="manage-panel__input"
+            formControlName="country"
+            autocomplete="country-name"
+            [class.manage-panel__input--invalid]="form.controls.country.touched && form.controls.country.invalid"
+          />
+          @if (form.controls.country.touched && form.controls.country.hasError('required')) {
+            <span class="org-settings__field-error">Country is required.</span>
+          }
+        </div>
+
+        <div class="manage-panel__field">
+          <label class="manage-panel__label" for="org-settings-city">City</label>
+          <input
+            id="org-settings-city"
+            type="text"
+            class="manage-panel__input"
+            formControlName="city"
+            autocomplete="address-level2"
+            [class.manage-panel__input--invalid]="form.controls.city.touched && form.controls.city.invalid"
+          />
+          @if (form.controls.city.touched && form.controls.city.hasError('required')) {
+            <span class="org-settings__field-error">City is required.</span>
+          }
+        </div>
+
+        <div class="manage-panel__field">
+          <label class="manage-panel__label" for="org-settings-postal-code">Postal code</label>
+          <input
+            id="org-settings-postal-code"
+            type="text"
+            class="manage-panel__input"
+            formControlName="postalCode"
+            autocomplete="postal-code"
+            [class.manage-panel__input--invalid]="
+              form.controls.postalCode.touched && form.controls.postalCode.invalid
+            "
+          />
+          @if (form.controls.postalCode.touched && form.controls.postalCode.hasError('required')) {
+            <span class="org-settings__field-error">Postal code is required.</span>
+          }
+        </div>
+      </div>
+
+      @if (canManage()) {
+        <div class="org-settings__form-actions">
+          <button
+            type="button"
+            class="btn btn--outline"
+            [disabled]="form.pristine || isSaving()"
+            (click)="discard()"
+          >
+            Discard
+          </button>
+          <button type="submit" class="btn btn--primary" [disabled]="form.pristine || isSaving()">
+            {{ isSaving() ? 'Saving...' : 'Save changes' }}
+          </button>
+        </div>
+      }
+    </form>
+  </section>
+
+  <section class="org-settings__danger" aria-labelledby="org-danger-heading">
+    <h3 id="org-danger-heading" class="org-settings__section-title">Danger zone</h3>
+    <p class="org-settings__section-desc">
+      Leave this organization or permanently delete it if you are the owner.
+    </p>
+    <div class="manage-panel__actions">
+      <button type="button" class="btn btn--outline" [disabled]="isLeaving()" (click)="leaveOrganization()">
+        {{ isLeaving() ? 'Leaving...' : 'Leave organization' }}
       </button>
-    }
-  </div>
+      @if (canDelete()) {
+        <button
+          type="button"
+          class="btn btn--ghost org-settings__delete"
+          [disabled]="isDeleting()"
+          (click)="deleteOrganization()"
+        >
+          {{ isDeleting() ? 'Deleting...' : 'Delete organization' }}
+        </button>
+      }
+    </div>
+  </section>
 </div>

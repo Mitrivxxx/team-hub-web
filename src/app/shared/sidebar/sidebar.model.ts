@@ -1,6 +1,7 @@
 export type SidebarIcon =
   | 'members'
   | 'organization'
+  | 'teams'
   | 'roles'
   | 'statistic'
   | 'auditLog';

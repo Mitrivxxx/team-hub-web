@@ -116,6 +116,9 @@ export class OrgMemberListPanel {
 
   readonly memberUserIds = computed(() => this.members().map((m) => m.userId));
 
+  /** Baseline so remounting the panel (tab switch) does not re-open the modal. */
+  private lastSeenAddMemberRequest: number | null = null;
+
   constructor() {
     effect(() => {
       const org = this.organization();
@@ -127,7 +130,9 @@ export class OrgMemberListPanel {
 
     effect(() => {
       const request = this.addMemberRequest();
-      if (request > 0 && this.canManage()) {
+      const previous = this.lastSeenAddMemberRequest;
+      this.lastSeenAddMemberRequest = request;
+      if (previous !== null && request > previous && this.canManage()) {
         this.showAddMemberModal.set(true);
       }
     });

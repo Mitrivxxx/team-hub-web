@@ -48,7 +48,12 @@ export class OrganizationService {
 
   createWithDetails(input: CreateOrganizationInput): Observable<CreateOrganizationResult> {
     return this.http
-      .post<Organization>(`${this.baseUrl}`, { name: input.name, description: input.description })
+      .post<Organization>(`${this.baseUrl}`, {
+        name: input.name,
+        description: input.description,
+        nip: input.nip,
+        address: input.address,
+      })
       .pipe(
         switchMap((organization) => {
           if (!input.avatar) {

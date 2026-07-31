@@ -61,8 +61,6 @@ export class OrganizationManage implements OnInit {
       children: [
         { id: 'all-members', label: 'All Members' },
         { id: 'invitations', label: 'Invitations' },
-        { id: 'member-roles', label: 'Roles' },
-        { id: 'permissions', label: 'Permissions' },
         { id: 'activity', label: 'Activity' },
         { id: 'import-export', label: 'Import / Export' },
       ],
@@ -73,12 +71,17 @@ export class OrganizationManage implements OnInit {
       icon: 'organization',
     },
     {
+      id: 'teams',
+      label: 'Teams',
+      icon: 'teams',
+    },
+    {
       id: 'roles',
       label: 'Role/Permission',
       icon: 'roles',
       children: [
-        { id: 'teams', label: 'Teams' },
-        { id: 'role', label: 'Role' },
+        { id: 'member-roles', label: 'Roles' },
+        { id: 'permissions', label: 'Permissions' },
       ],
     },
     {
@@ -105,7 +108,6 @@ export class OrganizationManage implements OnInit {
     'import-export': { title: 'Import / Export' },
     organization: { title: 'Organization' },
     teams: { title: 'Teams' },
-    role: { title: 'Role' },
     statistic: { title: 'Statistic' },
     'audit-log': { title: 'Audit Log' },
   };

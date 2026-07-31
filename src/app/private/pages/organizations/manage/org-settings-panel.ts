@@ -33,26 +33,66 @@ export class OrgSettingsPanel {
   readonly isSaving = signal(false);
   readonly isLeaving = signal(false);
   readonly isDeleting = signal(false);
+  readonly isUploadingAvatar = signal(false);
   readonly error = signal<string | null>(null);
   readonly success = this.successFlash.message;
   readonly avatarError = signal<string | null>(null);
 
-  readonly canManage = () => this.me().permissions.includes('org.manage');
-  readonly canDelete = () => this.me().permissions.includes('org.delete');
-
   readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],
     description: ['', [Validators.maxLength(500)]],
+    nip: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+    country: ['', [Validators.required, Validators.maxLength(100)]],
+    city: ['', [Validators.required, Validators.maxLength(100)]],
+    postalCode: ['', [Validators.required, Validators.maxLength(20)]],
   });
 
   constructor() {
     effect(() => {
       const org = this.organization();
-      this.form.patchValue({
-        name: org.name,
-        description: org.description ?? '',
-      });
+      const canManage = this.me().permissions.includes('org.manage');
+
+      this.form.patchValue(
+        {
+          name: org.name,
+          description: org.description ?? '',
+          nip: org.nip ?? '',
+          country: org.address?.country ?? '',
+          city: org.address?.city ?? '',
+          postalCode: org.address?.postalCode ?? '',
+        },
+        { emitEvent: false },
+      );
+      this.form.markAsPristine();
+
+      if (canManage) {
+        this.form.enable({ emitEvent: false });
+      } else {
+        this.form.disable({ emitEvent: false });
+      }
     });
+  }
+
+  canManage(): boolean {
+    return this.me().permissions.includes('org.manage');
+  }
+
+  canDelete(): boolean {
+    return this.me().permissions.includes('org.delete');
+  }
+
+  initials(): string {
+    const name = this.organization().name.trim();
+    if (!name) {
+      return '?';
+    }
+
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+
+    return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
   }
 
   save(): void {
@@ -68,13 +108,19 @@ export class OrgSettingsPanel {
       return;
     }
 
-    const { name, description } = this.form.getRawValue();
+    const { name, description, nip, country, city, postalCode } = this.form.getRawValue();
     this.isSaving.set(true);
 
     this.organizationService
       .update(this.organization().id, {
         name: name.trim(),
         description: description.trim() || null,
+        nip: nip.trim(),
+        address: {
+          country: country.trim(),
+          city: city.trim(),
+          postalCode: postalCode.trim(),
+        },
       })
       .pipe(
         finalize(() => this.isSaving.set(false)),
@@ -83,14 +129,28 @@ export class OrgSettingsPanel {
       .subscribe({
         next: (updated) => {
           this.organizationUpdated.emit(updated);
-          this.successFlash.show('Organization settings saved.');
+          this.successFlash.show('Organization details saved.');
         },
         error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to update organization.')),
       });
   }
 
+  discard(): void {
+    const org = this.organization();
+    this.form.patchValue({
+      name: org.name,
+      description: org.description ?? '',
+      nip: org.nip ?? '',
+      country: org.address?.country ?? '',
+      city: org.address?.city ?? '',
+      postalCode: org.address?.postalCode ?? '',
+    });
+    this.form.markAsPristine();
+    this.error.set(null);
+  }
+
   onAvatarSelected(event: Event): void {
-    if (!this.canManage()) {
+    if (!this.canManage() || this.isUploadingAvatar()) {
       return;
     }
 
@@ -113,25 +173,40 @@ export class OrgSettingsPanel {
       return;
     }
 
+    this.isUploadingAvatar.set(true);
     this.organizationService
       .uploadAvatar(this.organization().id, file)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.isUploadingAvatar.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
-        next: (updated) => this.organizationUpdated.emit(updated),
+        next: (updated) => {
+          this.organizationUpdated.emit(updated);
+          this.successFlash.show('Organization photo updated.');
+        },
         error: (err) => this.avatarError.set(organizationApiErrorMessage(err, 'Failed to upload avatar.')),
       });
   }
 
   removeAvatar(): void {
-    if (!this.canManage()) {
+    if (!this.canManage() || this.isUploadingAvatar()) {
       return;
     }
 
+    this.avatarError.set(null);
+    this.isUploadingAvatar.set(true);
     this.organizationService
       .deleteAvatar(this.organization().id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.isUploadingAvatar.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
-        next: (updated) => this.organizationUpdated.emit(updated),
+        next: (updated) => {
+          this.organizationUpdated.emit(updated);
+          this.successFlash.show('Organization photo removed.');
+        },
         error: (err) => this.avatarError.set(organizationApiErrorMessage(err, 'Failed to remove avatar.')),
       });
   }

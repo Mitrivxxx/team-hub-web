@@ -56,13 +56,13 @@
   - `AuthService.searchUsers(q, pageSize?)` — authenticated user search for Add Member picker
   - Shared: `OverflowMenu` (`src/app/shared/overflow-menu/`), `TablePagination` (`src/app/shared/table-pagination/`)
   - `OrgAddMemberPanel` — email invitations + pending list (`orgRoleIds`)
-  - `OrgSettingsPanel` — name/description, avatar, leave, delete
+  - `OrgSettingsPanel` — Organization tab: identity (avatar, slug, read-only email), editable details (name, description, nip, address), save/discard, leave/delete; requires `org.manage` to edit
   - `OrgTeamsPanel` — team list/create/delete + team members
   - `OrgRolesPanel` — section tabs (Create role, Organization roles, Team roles); create, detail, permission attach by id, delete custom; shared tab styles in `_manage-panel.scss`
   - `OrgPermissionsPanel` — org permission catalog list + detail (roles using permission); create disabled in UI
-- Create modal: `CreateOrganizationModal` — fields: name, description, photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`).
+- Create modal: `CreateOrganizationModal` — fields: name, description, nip (10 digits), address (country, city, postal code), photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`). Org `email` is server-generated (`{name}{4digits}@teamhub.local`).
 - Reusable `Sidebar` (`src/app/shared/sidebar/`): tree `items` + `activeId` + `collapsed`; `itemSelect` + `collapsedChange`; collapsed CSS tooltips; chevron row toggles; `aria-current` / `aria-expanded` / `:focus-visible`.
-- Manage nav: Members (All Members, Invitations, Roles, Permissions, Activity, Import / Export), Organization, Role/Permission (Teams, Role), Statistic, Audit Log. Activity, Import / Export, Statistic and Audit Log remain placeholders.
+- Manage nav: Members (All Members, Invitations, Activity, Import / Export), Organization, Teams, Role/Permission (Roles, Permissions), Statistic, Audit Log. Activity, Import / Export, Statistic and Audit Log remain placeholders.
 - JWT Bearer token is attached by `authInterceptor` on all HTTP calls.
 
 ## Don't

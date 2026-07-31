@@ -1,8 +1,17 @@
+export interface OrganizationAddress {
+  country: string;
+  city: string;
+  postalCode: string;
+}
+
 export interface Organization {
   id: string;
   name: string;
   slug: string;
   description: string | null;
+  nip: string;
+  email: string;
+  address: OrganizationAddress;
   avatarUrl: string | null;
   createdAt: string;
   updatedAt: string;
@@ -11,11 +20,15 @@ export interface Organization {
 export interface CreateOrganizationRequest {
   name: string;
   description?: string;
+  nip: string;
+  address: OrganizationAddress;
 }
 
 export interface CreateOrganizationInput {
   name: string;
   description?: string;
+  nip: string;
+  address: OrganizationAddress;
   avatar?: File;
 }
 
@@ -27,6 +40,8 @@ export interface CreateOrganizationResult {
 export interface UpdateOrganizationRequest {
   name?: string;
   description?: string | null;
+  nip?: string;
+  address?: OrganizationAddress;
 }
 
 export interface TransferOwnershipRequest {

@@ -31,6 +31,10 @@ export class CreateOrganizationModal implements OnDestroy {
   readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],
     description: ['', [Validators.maxLength(500)]],
+    nip: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+    country: ['', [Validators.required, Validators.maxLength(100)]],
+    city: ['', [Validators.required, Validators.maxLength(100)]],
+    postalCode: ['', [Validators.required, Validators.maxLength(20)]],
   });
 
   ngOnDestroy(): void {
@@ -102,12 +106,18 @@ export class CreateOrganizationModal implements OnDestroy {
     }
 
     const description = this.form.controls.description.value.trim();
+    const nip = this.form.controls.nip.value.trim();
+    const country = this.form.controls.country.value.trim();
+    const city = this.form.controls.city.value.trim();
+    const postalCode = this.form.controls.postalCode.value.trim();
 
     this.isSubmitting = true;
     this.organizationService
       .createWithDetails({
         name,
         description: description || undefined,
+        nip,
+        address: { country, city, postalCode },
         avatar: this.selectedAvatar ?? undefined,
       })
       .pipe(finalize(() => (this.isSubmitting = false)))
