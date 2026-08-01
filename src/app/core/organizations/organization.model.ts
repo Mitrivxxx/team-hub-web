@@ -82,6 +82,32 @@ export interface MemberUser {
   surname: string;
 }
 
+export interface ActivityUser {
+  username: string;
+  name: string;
+  surname: string;
+}
+
+export interface OrganizationActivityItem {
+  id: string;
+  type: string;
+  actorUserId: string | null;
+  targetUserId: string | null;
+  entityType: string | null;
+  entityId: string | null;
+  details: string | null;
+  occurredAt: string;
+  actor: ActivityUser | null;
+  target: ActivityUser | null;
+}
+
+export interface OrganizationActivityPage {
+  items: OrganizationActivityItem[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
 export interface AddMemberRequest {
   userId: string;
   roleIds: string[];

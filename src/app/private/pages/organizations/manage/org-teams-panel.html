@@ -1,118 +1,255 @@
-@if (error()) {
+@if (isLoading()) {
+  <p class="manage-panel__status">Loading teams...</p>
+} @else if (error()) {
   <p class="manage-panel__error">{{ error() }}</p>
+} @else {
+  <div class="manage-panel team-panel">
+    <div class="team-panel__toolbar">
+      <label class="team-panel__search">
+        <span class="team-panel__search-icon" aria-hidden="true">⌕</span>
+        <input
+          type="search"
+          class="team-panel__search-input"
+          placeholder="Search"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          aria-label="Search teams by name or description"
+        />
+      </label>
+    </div>
+
+    @if (actionError()) {
+      <p class="manage-panel__error">{{ actionError() }}</p>
+    }
+    @if (actionSuccess()) {
+      <p class="manage-panel__success">{{ actionSuccess() }}</p>
+    }
+
+    <div class="manage-panel__table-wrap team-panel__table-wrap">
+      <table class="manage-panel__table team-panel__table">
+        <thead>
+          <tr>
+            <th class="manage-panel__th-sortable">
+              <button type="button" class="manage-panel__th-btn" (click)="toggleSort('name')">
+                Name{{ sortIndicator('name') }}
+              </button>
+            </th>
+            <th>Description</th>
+            <th class="manage-panel__th-sortable">
+              <button type="button" class="manage-panel__th-btn" (click)="toggleSort('members')">
+                Members{{ sortIndicator('members') }}
+              </button>
+            </th>
+            <th class="manage-panel__th-sortable">
+              <button type="button" class="manage-panel__th-btn" (click)="toggleSort('created')">
+                Created{{ sortIndicator('created') }}
+              </button>
+            </th>
+            <th class="team-panel__actions-col" aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (team of pagedTeams(); track team.id) {
+            <tr>
+              <td>{{ team.name }}</td>
+              <td>{{ team.description || '—' }}</td>
+              <td>{{ team.memberCount }}</td>
+              <td>{{ team.createdAt | date: 'mediumDate' }}</td>
+              <td class="team-panel__actions-col">
+                <app-overflow-menu
+                  [items]="menuItems(team)"
+                  [ariaLabel]="'Actions for ' + team.name"
+                  (itemSelect)="onMenuAction(team, $event)"
+                />
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">No teams match the current filters.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-table-pagination
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      [totalItems]="filteredTeams().length"
+      (pageChange)="onPageChange($event)"
+    />
+
+    @if (detailsTeam(); as team) {
+      <div class="manage-panel__card team-panel__details">
+        <div class="manage-panel__toolbar">
+          <h2 class="manage-panel__card-title">Team details</h2>
+          <button type="button" class="btn btn--ghost" (click)="closeDetails()">Close</button>
+        </div>
+
+        <p class="manage-panel__card-meta">Name: {{ team.name }}</p>
+        <p class="manage-panel__card-meta">Description: {{ team.description || '—' }}</p>
+        <p class="manage-panel__card-meta">Created: {{ team.createdAt | date: 'medium' }}</p>
+        <p class="manage-panel__card-meta">Members: {{ team.memberCount }}</p>
+
+        <h3 class="manage-panel__card-title">Members</h3>
+
+        @if (detailsLoading()) {
+          <p class="manage-panel__status">Loading members...</p>
+        } @else if (detailsError()) {
+          <p class="manage-panel__error">{{ detailsError() }}</p>
+        } @else {
+          <div class="manage-panel__table-wrap">
+            <table class="manage-panel__table">
+              <thead>
+                <tr>
+                  <th>User ID</th>
+                  <th>Role</th>
+                  <th>Job title</th>
+                  <th>Joined</th>
+                  @if (canManage()) {
+                    <th>Actions</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (member of detailsMembers(); track member.userId) {
+                  <tr>
+                    <td class="manage-panel__mono">{{ member.userId }}</td>
+                    <td>{{ member.roleName }}</td>
+                    <td>{{ member.jobTitle || '—' }}</td>
+                    <td>{{ member.joinedAt | date: 'mediumDate' }}</td>
+                    @if (canManage()) {
+                      <td>
+                        <button type="button" class="btn btn--ghost" (click)="removeTeamMember(member)">
+                          Remove
+                        </button>
+                      </td>
+                    }
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td [attr.colspan]="canManage() ? 5 : 4">No team members yet.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (canManage()) {
+            <form
+              class="manage-panel__form team-panel__add-member"
+              [formGroup]="addMemberForm"
+              (ngSubmit)="addTeamMember()"
+              novalidate
+            >
+              <h3 class="manage-panel__card-title">Add to team</h3>
+
+              <div class="manage-panel__field team-panel__user-search">
+                <label class="manage-panel__label" for="team-member-search">Find people</label>
+                <div class="team-panel__search-wrap">
+                  <span class="team-panel__search-icon" aria-hidden="true">⌕</span>
+                  <input
+                    id="team-member-search"
+                    type="search"
+                    class="manage-panel__input team-panel__member-search-input"
+                    [ngModel]="memberSearchQuery()"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="onMemberSearchInput($event)"
+                    (focus)="onMemberSearchFocus()"
+                    placeholder="Search by name, surname, or email"
+                    autocomplete="off"
+                    [disabled]="isAddingMember()"
+                  />
+
+                  @if (memberDropdownOpen()) {
+                    <ul class="team-panel__dropdown" role="listbox">
+                      @if (isSearchingMembers()) {
+                        <li class="team-panel__dropdown-status">Searching…</li>
+                      } @else if (memberSearchError()) {
+                        <li class="team-panel__dropdown-status team-panel__dropdown-status--error">
+                          {{ memberSearchError() }}
+                        </li>
+                      } @else if (filteredMemberResults().length === 0) {
+                        <li class="team-panel__dropdown-status">No users found</li>
+                      } @else {
+                        @for (user of filteredMemberResults(); track user.id) {
+                          <li role="option">
+                            <button
+                              type="button"
+                              class="team-panel__result"
+                              [disabled]="isAddingMember()"
+                              (click)="selectMemberUser(user)"
+                            >
+                              <span class="team-panel__avatar" aria-hidden="true">{{ initials(user) }}</span>
+                              <span class="team-panel__result-text">
+                                <span class="team-panel__result-name">{{ user.name }} {{ user.surname }}</span>
+                                <span class="team-panel__result-email">{{ user.email }}</span>
+                              </span>
+                            </button>
+                          </li>
+                        }
+                      }
+                    </ul>
+                  }
+                </div>
+
+                @if (selectedUser(); as user) {
+                  <div class="team-panel__selected">
+                    <span class="team-panel__avatar" aria-hidden="true">{{ initials(user) }}</span>
+                    <div class="team-panel__selected-info">
+                      <span class="team-panel__result-name">{{ user.name }} {{ user.surname }}</span>
+                      <span class="team-panel__result-email">{{ user.email }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn--ghost"
+                      [disabled]="isAddingMember()"
+                      (click)="clearMemberSelection()"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                }
+              </div>
+
+              <div class="manage-panel__field">
+                <label class="manage-panel__label" for="team-member-role">Team role</label>
+                <select
+                  id="team-member-role"
+                  class="manage-panel__select"
+                  formControlName="roleId"
+                >
+                  @for (role of teamRoles(); track role.id) {
+                    <option [value]="role.id">{{ role.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="manage-panel__field">
+                <label class="manage-panel__label" for="team-member-title">Job title</label>
+                <input
+                  id="team-member-title"
+                  type="text"
+                  class="manage-panel__input"
+                  formControlName="jobTitle"
+                />
+              </div>
+
+              <button type="submit" class="btn btn--outline" [disabled]="isAddingMember()">
+                {{ isAddingMember() ? 'Adding…' : 'Add to team' }}
+              </button>
+            </form>
+          }
+        }
+      </div>
+    }
+  </div>
 }
 
-<div class="org-teams__layout">
-  <section class="manage-panel__card org-teams__list">
-    @if (isLoading()) {
-      <p class="manage-panel__status">Loading teams...</p>
-    } @else if (teams().length === 0) {
-      <p class="manage-panel__status">No teams yet.</p>
-    } @else {
-      <ul class="org-teams__items">
-        @for (team of teams(); track team.id) {
-          <li>
-            <button
-              type="button"
-              class="org-teams__item"
-              [class.org-teams__item--active]="selectedTeamId() === team.id"
-              (click)="selectTeam(team.id)"
-            >
-              <span>{{ team.name }}</span>
-              <span class="org-teams__item-meta">{{ team.memberCount }} members</span>
-            </button>
-          </li>
-        }
-      </ul>
-    }
-
-    @if (canManage()) {
-      <form class="manage-panel__form org-teams__create" [formGroup]="createForm" (ngSubmit)="createTeam()" novalidate>
-        <div class="manage-panel__field">
-          <label class="manage-panel__label" for="team-name">New team name</label>
-          <input id="team-name" type="text" class="manage-panel__input" formControlName="name" />
-        </div>
-        <div class="manage-panel__field">
-          <label class="manage-panel__label" for="team-description">Description</label>
-          <textarea id="team-description" class="manage-panel__textarea" formControlName="description" rows="2"></textarea>
-        </div>
-        <button type="submit" class="btn btn--primary" [disabled]="isCreating()">
-          {{ isCreating() ? 'Creating...' : 'Create team' }}
-        </button>
-      </form>
-    }
-  </section>
-
-  <section class="manage-panel__card org-teams__detail">
-    @if (selectedTeam(); as team) {
-      <div class="org-teams__detail-header">
-        <div>
-          <h3 class="manage-panel__card-title">{{ team.name }}</h3>
-          @if (team.description) {
-            <p class="manage-panel__card-meta">{{ team.description }}</p>
-          }
-        </div>
-        @if (canManage()) {
-          <button type="button" class="btn btn--ghost" (click)="deleteTeam(team)">Delete team</button>
-        }
-      </div>
-
-      <div class="manage-panel__table-wrap">
-        <table class="manage-panel__table">
-          <thead>
-            <tr>
-              <th>User ID</th>
-              <th>Role</th>
-              <th>Job title</th>
-              @if (canManage()) {
-                <th>Actions</th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            @for (member of members(); track member.userId) {
-              <tr>
-                <td class="manage-panel__mono">{{ member.userId }}</td>
-                <td>{{ member.roleName }}</td>
-                <td>{{ member.jobTitle || '—' }}</td>
-                @if (canManage()) {
-                  <td>
-                    <button type="button" class="btn btn--ghost" (click)="removeTeamMember(member)">Remove</button>
-                  </td>
-                }
-              </tr>
-            } @empty {
-              <tr>
-                <td [attr.colspan]="canManage() ? 4 : 3">No team members yet.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      @if (canManage()) {
-        <form class="manage-panel__form" [formGroup]="addMemberForm" (ngSubmit)="addTeamMember()" novalidate>
-          <div class="manage-panel__field">
-            <label class="manage-panel__label" for="team-member-user">User ID</label>
-            <input id="team-member-user" type="text" class="manage-panel__input" formControlName="userId" />
-          </div>
-          <div class="manage-panel__field">
-            <label class="manage-panel__label" for="team-member-role">Team role</label>
-            <select id="team-member-role" class="manage-panel__select" formControlName="roleId">
-              @for (role of teamRoles(); track role.id) {
-                <option [value]="role.id">{{ role.name }}</option>
-              }
-            </select>
-          </div>
-          <div class="manage-panel__field">
-            <label class="manage-panel__label" for="team-member-title">Job title</label>
-            <input id="team-member-title" type="text" class="manage-panel__input" formControlName="jobTitle" />
-          </div>
-          <button type="submit" class="btn btn--outline">Add to team</button>
-        </form>
-      }
-    } @else {
-      <p class="manage-panel__status">Select a team to view members.</p>
-    }
-  </section>
-</div>
+@if (showAddTeamModal()) {
+  <app-add-team-modal
+    [organizationId]="organization().id"
+    (closed)="closeAddTeamModal()"
+    (created)="onTeamCreated()"
+  />
+}

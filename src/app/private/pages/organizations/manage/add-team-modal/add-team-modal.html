@@ -1,0 +1,70 @@
+<div
+  class="add-team-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="add-team-title"
+  (click)="onBackdropClick($event)"
+>
+  <div class="add-team-modal__panel">
+    <header class="add-team-modal__header">
+      <div class="add-team-modal__heading">
+        <h2 id="add-team-title" class="add-team-modal__title">Add team</h2>
+        <p class="add-team-modal__subtitle">Create a team within this organization.</p>
+      </div>
+      <button
+        type="button"
+        class="add-team-modal__close"
+        [disabled]="isSubmitting()"
+        (click)="close()"
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </header>
+
+    @if (submitError()) {
+      <p class="add-team-modal__error" role="alert">{{ submitError() }}</p>
+    }
+
+    <form class="add-team-modal__body" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="add-team-modal__field">
+        <label class="add-team-modal__label" for="add-team-name">Name</label>
+        <input
+          #nameInput
+          id="add-team-name"
+          type="text"
+          class="add-team-modal__input"
+          formControlName="name"
+          placeholder="Team name"
+          autocomplete="off"
+        />
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <p class="add-team-modal__field-error">Name is required (max 100 characters).</p>
+        }
+      </div>
+
+      <div class="add-team-modal__field">
+        <label class="add-team-modal__label" for="add-team-description">Description</label>
+        <textarea
+          id="add-team-description"
+          class="add-team-modal__textarea"
+          formControlName="description"
+          rows="3"
+          placeholder="Optional description"
+        ></textarea>
+        @if (form.controls.description.touched && form.controls.description.invalid) {
+          <p class="add-team-modal__field-error">Description must be at most 500 characters.</p>
+        }
+      </div>
+
+      <footer class="add-team-modal__actions">
+        <button type="button" class="btn btn--outline" [disabled]="isSubmitting()" (click)="close()">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="form.invalid || isSubmitting()">
+          {{ isSubmitting() ? 'Creating…' : 'Create team' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

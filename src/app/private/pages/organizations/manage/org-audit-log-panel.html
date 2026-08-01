@@ -1,0 +1,71 @@
+@if (isLoading() && items().length === 0) {
+  <p class="manage-panel__status">Loading audit log...</p>
+} @else if (error()) {
+  <p class="manage-panel__error">{{ error() }}</p>
+} @else {
+  <div class="manage-panel audit-log-panel">
+    <div class="audit-log-panel__toolbar">
+      <label class="audit-log-panel__filter">
+        <span class="visually-hidden">Filter by type</span>
+        <select
+          class="audit-log-panel__select"
+          [ngModel]="typeFilter()"
+          (ngModelChange)="onTypeChange($event)"
+          aria-label="Filter audit log by type"
+        >
+          @for (option of typeOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="audit-log-panel__search">
+        <span class="audit-log-panel__search-icon" aria-hidden="true">⌕</span>
+        <input
+          type="search"
+          class="audit-log-panel__search-input"
+          placeholder="Search"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearchChange($event)"
+          aria-label="Search audit log"
+        />
+      </label>
+    </div>
+
+    <div class="manage-panel__table-wrap audit-log-panel__table-wrap">
+      <table class="manage-panel__table audit-log-panel__table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>User</th>
+            <th>Actor</th>
+            <th>When</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr>
+              <td>{{ typeLabel(item.type) }}</td>
+              <td>{{ displayUser(item.target, item.targetUserId) }}</td>
+              <td>{{ displayUser(item.actor, item.actorUserId) }}</td>
+              <td>{{ item.occurredAt | date: 'medium' }}</td>
+              <td class="audit-log-panel__details">{{ detailsSummary(item) }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">No audit entries match the current filters.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-table-pagination
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      [totalItems]="totalCount()"
+      (pageChange)="onPageChange($event)"
+    />
+  </div>
+}

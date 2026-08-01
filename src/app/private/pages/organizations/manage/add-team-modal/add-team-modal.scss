@@ -1,0 +1,156 @@
+@use 'variables' as *;
+
+.add-team-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md;
+  background: rgba($color-text-heading, 0.4);
+  backdrop-filter: blur(6px);
+
+  &__panel {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+    background: $color-white;
+    border: 1px solid rgba($color-border, 0.55);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow:
+      0 24px 48px rgba($color-text-heading, 0.16),
+      0 2px 8px rgba($color-text-heading, 0.06);
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $spacing-sm;
+  }
+
+  &__heading {
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: $font-weight-semibold;
+    letter-spacing: -0.02em;
+    color: $color-text-heading;
+  }
+
+  &__subtitle {
+    margin: 0.35rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: $color-text-dark;
+    opacity: 0.72;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: $color-text-dark;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: rgba($color-text-heading, 0.06);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__error {
+    margin: 0;
+    padding: 0.75rem 0.875rem;
+    border-radius: 10px;
+    background: rgba(#dc2626, 0.08);
+    color: #b91c1c;
+    font-size: 0.875rem;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: $font-weight-semibold;
+    color: $color-text-heading;
+  }
+
+  &__input,
+  &__textarea {
+    width: 100%;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid rgba($color-border, 0.9);
+    border-radius: 12px;
+    font: inherit;
+    font-size: 0.9375rem;
+    color: $color-text-dark;
+    background: rgba($color-bg-alt, 0.55);
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease,
+      background 0.15s ease;
+
+    &::placeholder {
+      color: rgba($color-text-dark, 0.45);
+    }
+
+    &:focus {
+      outline: none;
+      background: $color-white;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.18);
+    }
+
+    &:disabled {
+      opacity: 0.65;
+    }
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 5rem;
+  }
+
+  &__field-error {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: #b91c1c;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+    padding-top: 0.25rem;
+  }
+}

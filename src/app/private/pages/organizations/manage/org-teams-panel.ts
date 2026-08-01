@@ -1,92 +1,269 @@
-import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, computed, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  Subject,
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  finalize,
+  of,
+  switchMap,
+} from 'rxjs';
 
+import { AuthService, UserResponse } from '../../../../core/auth/auth.service';
 import { organizationApiErrorMessage } from '../../../../core/organizations/organization-api.utils';
-import { MeMembership, Organization, Role, Team, TeamMember } from '../../../../core/organizations/organization.model';
+import {
+  MeMembership,
+  Organization,
+  RoleListItem,
+  Team,
+  TeamMember,
+} from '../../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../../core/organizations/organization.service';
+import { createFlashMessage } from '../../../../shared/flash-message';
+import { OverflowMenu } from '../../../../shared/overflow-menu/overflow-menu';
+import { OverflowMenuItem } from '../../../../shared/overflow-menu/overflow-menu.model';
+import { TablePagination } from '../../../../shared/table-pagination/table-pagination';
+import { AddTeamModal } from './add-team-modal/add-team-modal';
+
+type SortColumn = 'name' | 'members' | 'created';
+type SortDirection = 'asc' | 'desc';
+
+const PAGE_SIZE = 10;
+const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-org-teams-panel',
-  imports: [ReactiveFormsModule],
+  imports: [
+    DatePipe,
+    FormsModule,
+    ReactiveFormsModule,
+    OverflowMenu,
+    TablePagination,
+    AddTeamModal,
+  ],
   templateUrl: './org-teams-panel.html',
   styleUrl: './org-teams-panel.scss',
 })
 export class OrgTeamsPanel {
   private readonly organizationService = inject(OrganizationService);
+  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly successFlash = createFlashMessage(this.destroyRef);
+  private readonly searchRequests = new Subject<string>();
 
   readonly organization = input.required<Organization>();
   readonly me = input.required<MeMembership>();
+  readonly addTeamRequest = input(0);
 
   readonly teams = signal<Team[]>([]);
-  readonly teamRoles = signal<Role[]>([]);
-  readonly members = signal<TeamMember[]>([]);
-  readonly selectedTeamId = signal<string | null>(null);
+  readonly teamRoles = signal<RoleListItem[]>([]);
   readonly isLoading = signal(true);
-  readonly isCreating = signal(false);
   readonly error = signal<string | null>(null);
+  readonly actionError = signal<string | null>(null);
+  readonly actionSuccess = this.successFlash.message;
+  readonly showAddTeamModal = signal(false);
+
+  readonly searchQuery = signal('');
+  readonly sortColumn = signal<SortColumn | null>(null);
+  readonly sortDirection = signal<SortDirection>('asc');
+  readonly currentPage = signal(1);
+
+  readonly detailsTeamId = signal<string | null>(null);
+  readonly detailsMembers = signal<TeamMember[]>([]);
+  readonly detailsLoading = signal(false);
+  readonly detailsError = signal<string | null>(null);
+  readonly isAddingMember = signal(false);
+
+  readonly memberSearchQuery = signal('');
+  readonly selectedUser = signal<UserResponse | null>(null);
+  readonly memberSearchResults = signal<UserResponse[]>([]);
+  readonly isSearchingMembers = signal(false);
+  readonly memberSearchError = signal<string | null>(null);
+  readonly memberDropdownOpen = signal(false);
 
   readonly canManage = () => this.me().permissions.includes('org.teams.manage');
 
-  readonly createForm = this.formBuilder.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(100)]],
-    description: ['', [Validators.maxLength(500)]],
-  });
-
   readonly addMemberForm = this.formBuilder.nonNullable.group({
-    userId: ['', Validators.required],
     roleId: ['', Validators.required],
     jobTitle: ['', Validators.maxLength(100)],
   });
+
+  readonly filteredTeams = computed(() => {
+    const search = this.searchQuery().trim().toLowerCase();
+
+    let result = this.teams().filter((team) => {
+      const name = team.name.toLowerCase();
+      const description = (team.description ?? '').toLowerCase();
+      if (search && !`${name} ${description}`.includes(search)) {
+        return false;
+      }
+      return true;
+    });
+
+    const column = this.sortColumn();
+    const direction = this.sortDirection();
+    if (column) {
+      result = [...result].sort((a, b) => {
+        let comparison = 0;
+        if (column === 'name') {
+          comparison = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+        } else if (column === 'members') {
+          comparison = a.memberCount - b.memberCount;
+        } else if (column === 'created') {
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        }
+        return direction === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    return result;
+  });
+
+  readonly totalPages = computed(() => {
+    const total = this.filteredTeams().length;
+    return total === 0 ? 0 : Math.ceil(total / PAGE_SIZE);
+  });
+
+  readonly pagedTeams = computed(() => {
+    const page = this.currentPage();
+    const start = (page - 1) * PAGE_SIZE;
+    return this.filteredTeams().slice(start, start + PAGE_SIZE);
+  });
+
+  readonly detailsTeam = computed(() => {
+    const id = this.detailsTeamId();
+    return id ? (this.teams().find((t) => t.id === id) ?? null) : null;
+  });
+
+  readonly teamMemberIdSet = computed(() => new Set(this.detailsMembers().map((m) => m.userId)));
+
+  readonly filteredMemberResults = computed(() => {
+    const excluded = this.teamMemberIdSet();
+    return this.memberSearchResults().filter((user) => !excluded.has(user.id));
+  });
+
+  /** Baseline so remounting the panel (tab switch) does not re-open the modal. */
+  private lastSeenAddTeamRequest: number | null = null;
 
   constructor() {
     effect(() => {
       const org = this.organization();
       if (org?.id) {
-        this.loadTeams(org.id);
+        this.load(org.id);
       }
     });
+
+    effect(() => {
+      const request = this.addTeamRequest();
+      const previous = this.lastSeenAddTeamRequest;
+      this.lastSeenAddTeamRequest = request;
+      if (previous !== null && request > previous && this.canManage()) {
+        this.showAddTeamModal.set(true);
+      }
+    });
+
+    effect(() => {
+      this.searchQuery();
+      this.sortColumn();
+      this.sortDirection();
+      this.teams();
+      this.currentPage.set(1);
+    });
+
+    this.searchRequests
+      .pipe(
+        debounceTime(SEARCH_DEBOUNCE_MS),
+        distinctUntilChanged(),
+        filter((q) => q.trim().length > 0),
+        switchMap((q) => {
+          this.isSearchingMembers.set(true);
+          this.memberSearchError.set(null);
+          return this.authService.searchUsers(q.trim(), SEARCH_PAGE_SIZE).pipe(
+            catchError(() => {
+              this.memberSearchError.set('Failed to search users.');
+              return of([] as UserResponse[]);
+            }),
+            finalize(() => this.isSearchingMembers.set(false)),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((users) => {
+        this.memberSearchResults.set(users);
+        this.memberDropdownOpen.set(true);
+      });
   }
 
-  selectTeam(teamId: string): void {
-    this.selectedTeamId.set(teamId);
-    this.loadTeamMembers(teamId);
+  sortIndicator(column: SortColumn): string {
+    if (this.sortColumn() !== column) {
+      return '';
+    }
+    return this.sortDirection() === 'asc' ? ' ↑' : ' ↓';
   }
 
-  createTeam(): void {
-    if (!this.canManage() || this.isCreating()) {
+  toggleSort(column: SortColumn): void {
+    if (this.sortColumn() === column) {
+      this.sortDirection.update((dir) => (dir === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+    this.sortColumn.set(column);
+    this.sortDirection.set('asc');
+  }
+
+  menuItems(_team: Team): OverflowMenuItem[] {
+    const items: OverflowMenuItem[] = [{ id: 'details', label: 'Details' }];
+    if (this.canManage()) {
+      items.push({ id: 'delete', label: 'Delete', danger: true });
+    }
+    return items;
+  }
+
+  onMenuAction(team: Team, actionId: string): void {
+    if (actionId === 'details') {
+      this.openDetails(team);
+      return;
+    }
+    if (actionId === 'delete') {
+      this.deleteTeam(team);
+    }
+  }
+
+  openDetails(team: Team): void {
+    if (this.detailsTeamId() === team.id) {
       return;
     }
 
-    this.error.set(null);
-    if (this.createForm.invalid) {
-      this.createForm.markAllAsTouched();
-      return;
-    }
-
-    const { name, description } = this.createForm.getRawValue();
-    this.isCreating.set(true);
+    this.detailsTeamId.set(team.id);
+    this.detailsMembers.set([]);
+    this.detailsError.set(null);
+    this.detailsLoading.set(true);
+    this.resetAddMemberForm();
 
     this.organizationService
-      .createTeam(this.organization().id, {
-        name: name.trim(),
-        description: description.trim() || undefined,
-      })
+      .listTeamMembers(this.organization().id, team.id)
       .pipe(
-        finalize(() => this.isCreating.set(false)),
+        finalize(() => this.detailsLoading.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (team) => {
-          this.teams.update((items) => [...items, team].sort((a, b) => a.name.localeCompare(b.name)));
-          this.createForm.reset({ name: '', description: '' });
-          this.selectTeam(team.id);
-        },
-        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to create team.')),
+        next: (members) => this.detailsMembers.set(members),
+        error: (err: unknown) =>
+          this.detailsError.set(organizationApiErrorMessage(err, 'Failed to load team members.')),
       });
+  }
+
+  closeDetails(): void {
+    this.detailsTeamId.set(null);
+    this.detailsMembers.set([]);
+    this.detailsError.set(null);
+    this.detailsLoading.set(false);
+    this.resetAddMemberForm();
   }
 
   deleteTeam(team: Team): void {
@@ -94,67 +271,151 @@ export class OrgTeamsPanel {
       return;
     }
 
+    this.actionError.set(null);
+    this.successFlash.clear();
+
     this.organizationService
       .deleteTeam(this.organization().id, team.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.teams.update((items) => items.filter((t) => t.id !== team.id));
-          if (this.selectedTeamId() === team.id) {
-            this.selectedTeamId.set(null);
-            this.members.set([]);
+          if (this.detailsTeamId() === team.id) {
+            this.closeDetails();
           }
+          this.successFlash.show('Team deleted.');
         },
-        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to delete team.')),
+        error: (err: unknown) =>
+          this.actionError.set(organizationApiErrorMessage(err, 'Failed to delete team.')),
       });
   }
 
+  onMemberSearchInput(value: string): void {
+    this.memberSearchQuery.set(value);
+    this.selectedUser.set(null);
+    this.actionError.set(null);
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      this.clearMemberSearchResults();
+      return;
+    }
+
+    this.searchRequests.next(trimmed);
+  }
+
+  onMemberSearchFocus(): void {
+    if (this.filteredMemberResults().length > 0 || this.memberSearchError()) {
+      this.memberDropdownOpen.set(true);
+    }
+  }
+
+  selectMemberUser(user: UserResponse): void {
+    this.selectedUser.set(user);
+    this.memberSearchQuery.set(`${user.name} ${user.surname}`.trim());
+    this.clearMemberSearchResults();
+  }
+
+  clearMemberSelection(): void {
+    this.selectedUser.set(null);
+    this.memberSearchQuery.set('');
+    this.clearMemberSearchResults();
+  }
+
   addTeamMember(): void {
-    const teamId = this.selectedTeamId();
-    if (!teamId || !this.canManage() || this.addMemberForm.invalid) {
+    const teamId = this.detailsTeamId();
+    const user = this.selectedUser();
+    if (!teamId || !this.canManage()) {
+      return;
+    }
+
+    if (!user) {
+      this.actionError.set('Select a user to add.');
+      return;
+    }
+
+    if (this.addMemberForm.invalid) {
       this.addMemberForm.markAllAsTouched();
       return;
     }
 
-    const { userId, roleId, jobTitle } = this.addMemberForm.getRawValue();
+    const { roleId, jobTitle } = this.addMemberForm.getRawValue();
+    this.actionError.set(null);
+    this.successFlash.clear();
+    this.isAddingMember.set(true);
 
     this.organizationService
       .addTeamMember(this.organization().id, teamId, {
-        userId: userId.trim(),
+        userId: user.id,
         roleId,
         jobTitle: jobTitle.trim() || undefined,
       })
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        finalize(() => this.isAddingMember.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
-        next: (member: TeamMember) => {
-          this.members.update((items) => [...items, member]);
-          this.addMemberForm.reset({ userId: '', roleId: this.defaultTeamRoleId(), jobTitle: '' });
+        next: (member) => {
+          this.detailsMembers.update((items) => [...items, member]);
+          this.teams.update((items) =>
+            items.map((t) => (t.id === teamId ? { ...t, memberCount: t.memberCount + 1 } : t)),
+          );
+          this.resetAddMemberForm();
+          this.successFlash.show('Member added to team.');
         },
-        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to add team member.')),
+        error: (err: unknown) =>
+          this.actionError.set(organizationApiErrorMessage(err, 'Failed to add team member.')),
       });
   }
 
   removeTeamMember(member: TeamMember): void {
-    const teamId = this.selectedTeamId();
+    const teamId = this.detailsTeamId();
     if (!teamId || !this.canManage()) {
       return;
     }
+
+    this.actionError.set(null);
+    this.successFlash.clear();
 
     this.organizationService
       .removeTeamMember(this.organization().id, teamId, member.userId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.members.update((items) => items.filter((m) => m.userId !== member.userId)),
-        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to remove team member.')),
+        next: () => {
+          this.detailsMembers.update((items) => items.filter((m) => m.userId !== member.userId));
+          this.teams.update((items) =>
+            items.map((t) =>
+              t.id === teamId ? { ...t, memberCount: Math.max(0, t.memberCount - 1) } : t,
+            ),
+          );
+          this.successFlash.show('Member removed from team.');
+        },
+        error: (err: unknown) =>
+          this.actionError.set(organizationApiErrorMessage(err, 'Failed to remove team member.')),
       });
   }
 
-  selectedTeam(): Team | null {
-    const id = this.selectedTeamId();
-    return this.teams().find((t) => t.id === id) ?? null;
+  initials(user: UserResponse): string {
+    const first = user.name?.trim().charAt(0) ?? '';
+    const last = user.surname?.trim().charAt(0) ?? '';
+    return `${first}${last}`.toUpperCase() || '?';
   }
 
-  private loadTeams(organizationId: string): void {
+  closeAddTeamModal(): void {
+    this.showAddTeamModal.set(false);
+  }
+
+  onTeamCreated(): void {
+    this.showAddTeamModal.set(false);
+    this.successFlash.show('Team created.');
+    this.load(this.organization().id);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+  }
+
+  private load(organizationId: string): void {
     this.isLoading.set(true);
     this.error.set(null);
 
@@ -162,9 +423,13 @@ export class OrgTeamsPanel {
       .listTeams(organizationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (teams: Team[]) => {
+        next: (teams) => {
           this.teams.set(teams);
           this.isLoading.set(false);
+          const detailsId = this.detailsTeamId();
+          if (detailsId && !teams.some((t) => t.id === detailsId)) {
+            this.closeDetails();
+          }
         },
         error: (err: unknown) => {
           this.error.set(organizationApiErrorMessage(err, 'Failed to load teams.'));
@@ -179,7 +444,7 @@ export class OrgTeamsPanel {
         next: (roles) => {
           this.teamRoles.set(roles);
           const defaultRole = this.defaultTeamRoleId();
-          if (defaultRole) {
+          if (defaultRole && !this.addMemberForm.controls.roleId.value) {
             this.addMemberForm.patchValue({ roleId: defaultRole });
           }
         },
@@ -187,17 +452,18 @@ export class OrgTeamsPanel {
       });
   }
 
-  private loadTeamMembers(teamId: string): void {
-    this.organizationService
-      .listTeamMembers(this.organization().id, teamId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (members: TeamMember[]) => this.members.set(members),
-        error: (err: unknown) => this.error.set(organizationApiErrorMessage(err, 'Failed to load team members.')),
-      });
-  }
-
   private defaultTeamRoleId(): string {
     return this.teamRoles().find((r) => r.name === 'Member')?.id ?? this.teamRoles()[0]?.id ?? '';
+  }
+
+  private resetAddMemberForm(): void {
+    this.addMemberForm.reset({ roleId: this.defaultTeamRoleId(), jobTitle: '' });
+    this.clearMemberSelection();
+  }
+
+  private clearMemberSearchResults(): void {
+    this.memberSearchResults.set([]);
+    this.memberDropdownOpen.set(false);
+    this.memberSearchError.set(null);
   }
 }

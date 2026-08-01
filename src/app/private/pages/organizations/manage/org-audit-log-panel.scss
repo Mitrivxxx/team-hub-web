@@ -1,0 +1,86 @@
+@use 'variables' as *;
+@use 'manage-panel';
+
+.audit-log-panel {
+  background: $color-white;
+  border: none;
+  border-radius: $border-radius-base;
+  padding: $spacing-md $spacing-lg $spacing-lg;
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-sm;
+    justify-content: flex-end;
+    margin-bottom: $spacing-md;
+  }
+
+  &__filter {
+    min-width: 200px;
+  }
+
+  &__select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.9rem;
+    color: $color-text-dark;
+    background: $color-white;
+  }
+
+  &__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: 14px;
+    color: $color-text-muted;
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &__search-input {
+    width: 100%;
+    padding: 10px 14px 10px 36px;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.9rem;
+    color: $color-text-dark;
+    background: $color-white;
+
+    &::placeholder {
+      color: $color-text-muted;
+    }
+
+    &:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__details {
+    max-width: 320px;
+    word-break: break-word;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

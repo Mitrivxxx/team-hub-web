@@ -25,7 +25,10 @@
           <header class="org-manage__page-header">
             <h1 class="org-manage__page-title">{{ pageChrome().title }}</h1>
             @if (pageChrome().primaryAction; as action) {
-              @if (activeTab() !== 'all-members' || membership.permissions.includes('org.members.manage')) {
+              @if (
+                (activeTab() !== 'all-members' || membership.permissions.includes('org.members.manage')) &&
+                (activeTab() !== 'teams' || membership.permissions.includes('org.teams.manage'))
+              ) {
                 <button type="button" class="btn btn--primary org-manage__page-action" (click)="onPrimaryAction()">
                   {{ action.label }}
                 </button>
@@ -53,13 +56,20 @@
                 />
               }
               @case ('teams') {
-                <app-org-teams-panel [organization]="org" [me]="membership" />
+                <app-org-teams-panel
+                  [organization]="org"
+                  [me]="membership"
+                  [addTeamRequest]="addTeamRequest()"
+                />
               }
               @case ('member-roles') {
                 <app-org-roles-panel [organization]="org" [me]="membership" />
               }
               @case ('permissions') {
                 <app-org-permissions-panel [organization]="org" [me]="membership" />
+              }
+              @case ('audit-log') {
+                <app-org-audit-log-panel [organization]="org" [me]="membership" />
               }
               @default {
                 <p>Content for this section will be added later.</p>

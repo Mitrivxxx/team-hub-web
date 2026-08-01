@@ -8,6 +8,7 @@ import { OrganizationService } from '../../../core/organizations/organization.se
 import { Sidebar } from '../../../shared/sidebar/sidebar';
 import { SidebarNavItem } from '../../../shared/sidebar/sidebar.model';
 import { OrgAddMemberPanel } from './manage/org-add-member-panel';
+import { OrgAuditLogPanel } from './manage/org-audit-log-panel';
 import { OrgMemberListPanel } from './manage/org-member-list-panel';
 import { OrgPermissionsPanel } from './manage/org-permissions-panel';
 import { OrgRolesPanel } from './manage/org-roles-panel';
@@ -18,7 +19,7 @@ interface ManagePageChrome {
   title: string;
   primaryAction?: {
     label: string;
-    action: 'add-member';
+    action: 'add-member' | 'add-team';
   };
 }
 
@@ -29,6 +30,7 @@ interface ManagePageChrome {
     Sidebar,
     OrgMemberListPanel,
     OrgAddMemberPanel,
+    OrgAuditLogPanel,
     OrgSettingsPanel,
     OrgTeamsPanel,
     OrgRolesPanel,
@@ -50,6 +52,7 @@ export class OrganizationManage implements OnInit {
   readonly loadError = signal<string | null>(null);
   readonly activeTab = signal('all-members');
   readonly addMemberRequest = signal(0);
+  readonly addTeamRequest = signal(0);
 
   readonly sidebarCollapsed = this.orgManageLayout.sidebarCollapsed;
 
@@ -107,7 +110,10 @@ export class OrganizationManage implements OnInit {
     activity: { title: 'Activity' },
     'import-export': { title: 'Import / Export' },
     organization: { title: 'Organization' },
-    teams: { title: 'Teams' },
+    teams: {
+      title: 'Teams',
+      primaryAction: { label: '+ Add Team', action: 'add-team' },
+    },
     statistic: { title: 'Statistic' },
     'audit-log': { title: 'Audit Log' },
   };
@@ -160,6 +166,8 @@ export class OrganizationManage implements OnInit {
     const action = this.pageChrome().primaryAction;
     if (action?.action === 'add-member') {
       this.addMemberRequest.update((n) => n + 1);
+    } else if (action?.action === 'add-team') {
+      this.addTeamRequest.update((n) => n + 1);
     }
   }
 

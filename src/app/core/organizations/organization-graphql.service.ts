@@ -3,7 +3,13 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Member, MemberUser, RoleSummary } from './organization.model';
+import {
+  ActivityUser,
+  Member,
+  MemberUser,
+  OrganizationActivityPage,
+  RoleSummary,
+} from './organization.model';
 
 interface GraphQlResponse<T> {
   data?: T;
@@ -18,6 +24,26 @@ interface OrganizationMembersData {
     roles: RoleSummary[];
     user: MemberUser | null;
   }>;
+}
+
+interface OrganizationActivityData {
+  organizationActivity: {
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    items: Array<{
+      id: string;
+      type: string;
+      actorUserId: string | null;
+      targetUserId: string | null;
+      entityType: string | null;
+      entityId: string | null;
+      details: string | null;
+      occurredAt: string;
+      actor: ActivityUser | null;
+      target: ActivityUser | null;
+    }>;
+  };
 }
 
 const ORGANIZATION_MEMBERS_QUERY = `
@@ -36,6 +62,52 @@ const ORGANIZATION_MEMBERS_QUERY = `
         username
         name
         surname
+      }
+    }
+  }
+`;
+
+const ORGANIZATION_ACTIVITY_QUERY = `
+  query OrganizationActivity(
+    $organizationId: String!
+    $type: String
+    $q: String
+    $from: String
+    $to: String
+    $page: Int
+    $pageSize: Int
+  ) {
+    organizationActivity(
+      organizationId: $organizationId
+      type: $type
+      q: $q
+      from: $from
+      to: $to
+      page: $page
+      pageSize: $pageSize
+    ) {
+      page
+      pageSize
+      totalCount
+      items {
+        id
+        type
+        actorUserId
+        targetUserId
+        entityType
+        entityId
+        details
+        occurredAt
+        actor {
+          username
+          name
+          surname
+        }
+        target {
+          username
+          name
+          surname
+        }
       }
     }
   }
@@ -72,6 +144,58 @@ export class OrganizationGraphqlService {
             roles: member.roles ?? [],
             user: member.user,
           }));
+        }),
+      );
+  }
+
+  listActivity(
+    organizationId: string,
+    filters?: {
+      type?: string;
+      q?: string;
+      from?: string;
+      to?: string;
+      page?: number;
+      pageSize?: number;
+    },
+  ): Observable<OrganizationActivityPage> {
+    return this.http
+      .post<GraphQlResponse<OrganizationActivityData>>(this.graphqlUrl, {
+        query: ORGANIZATION_ACTIVITY_QUERY,
+        variables: {
+          organizationId,
+          type: filters?.type || null,
+          q: filters?.q || null,
+          from: filters?.from || null,
+          to: filters?.to || null,
+          page: filters?.page ?? 1,
+          pageSize: filters?.pageSize ?? 20,
+        },
+      })
+      .pipe(
+        map((response) => {
+          if (response.errors?.length) {
+            throw new Error(response.errors.map((e) => e.message).join('; '));
+          }
+
+          const page = response.data?.organizationActivity;
+          return {
+            page: page?.page ?? 1,
+            pageSize: page?.pageSize ?? 20,
+            totalCount: page?.totalCount ?? 0,
+            items: (page?.items ?? []).map((item) => ({
+              id: item.id,
+              type: item.type,
+              actorUserId: item.actorUserId,
+              targetUserId: item.targetUserId,
+              entityType: item.entityType,
+              entityId: item.entityId,
+              details: item.details,
+              occurredAt: item.occurredAt,
+              actor: item.actor,
+              target: item.target,
+            })),
+          };
         }),
       );
   }
