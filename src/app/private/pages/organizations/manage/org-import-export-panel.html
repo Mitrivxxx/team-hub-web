@@ -1,0 +1,242 @@
+@if (!canManage()) {
+  <p class="manage-panel__status">You need <code>org.members.manage</code> to use Import / Export.</p>
+} @else {
+  <div class="manage-panel import-export-panel">
+    @if (error()) {
+      <p class="manage-panel__error" role="alert">{{ error() }}</p>
+    }
+    @if (success()) {
+      <p class="manage-panel__success" role="status">{{ success() }}</p>
+    }
+
+    <div class="manage-panel__tabs" role="tablist">
+      <button
+        type="button"
+        class="manage-panel__tab"
+        [class.manage-panel__tab--active]="activeSection() === 'import'"
+        (click)="activeSection.set('import')"
+      >
+        Import
+      </button>
+      <button
+        type="button"
+        class="manage-panel__tab"
+        [class.manage-panel__tab--active]="activeSection() === 'export'"
+        (click)="activeSection.set('export')"
+      >
+        Export
+      </button>
+      <button
+        type="button"
+        class="manage-panel__tab"
+        [class.manage-panel__tab--active]="activeSection() === 'history'"
+        (click)="activeSection.set('history')"
+      >
+        History
+      </button>
+    </div>
+
+    @if (activeSection() === 'import') {
+      <section class="import-export-panel__section">
+        <p class="import-export-panel__hint">
+          Import existing users by email or username. Missing users are skipped and listed in an error
+          report.
+        </p>
+
+        <div class="import-export-panel__actions">
+          <button type="button" class="btn btn--outline" (click)="downloadTemplate()">
+            Download CSV template
+          </button>
+          <label class="btn btn--outline import-export-panel__file-label">
+            Choose CSV
+            <input type="file" accept=".csv,text/csv" (change)="onFileSelected($event)" hidden />
+          </label>
+          @if (selectedFile(); as file) {
+            <span class="import-export-panel__file-name">{{ file.name }}</span>
+          }
+        </div>
+
+        <div class="import-export-panel__actions">
+          <button
+            type="button"
+            class="btn btn--outline"
+            [disabled]="!selectedFile() || isPreviewing()"
+            (click)="previewImport()"
+          >
+            {{ isPreviewing() ? 'Previewing…' : 'Preview' }}
+          </button>
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="!selectedFile() || isImporting()"
+            (click)="confirmImport()"
+          >
+            {{ isImporting() ? 'Importing…' : 'Start import' }}
+          </button>
+        </div>
+
+        @if (preview(); as p) {
+          <p class="import-export-panel__summary">
+            {{ p.validCount }} valid / {{ p.errorCount }} errors ({{ p.totalRows }} rows)
+          </p>
+          <div class="manage-panel__table-wrap">
+            <table class="manage-panel__table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Status</th>
+                  <th>Email</th>
+                  <th>Username</th>
+                  <th>Roles</th>
+                  <th>Errors</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of p.rows; track row.rowNumber) {
+                  <tr>
+                    <td>{{ row.rowNumber }}</td>
+                    <td>{{ row.status }}</td>
+                    <td>{{ row.email || '—' }}</td>
+                    <td>{{ row.username || '—' }}</td>
+                    <td>{{ row.orgRoles || '—' }}</td>
+                    <td>
+                      @if (row.errors.length) {
+                        {{ rowErrorText(row.errors) }}
+                      } @else {
+                        —
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (activeJob(); as job) {
+          @if (job.type === 'import') {
+            <p class="import-export-panel__summary">
+              Job {{ statusLabel(job.status) }} — {{ job.successCount }} ok / {{ job.errorCount }} errors
+            </p>
+            @if (job.hasErrors) {
+              <button type="button" class="btn btn--outline" (click)="downloadArtifact(job.id, 'errors')">
+                Download error CSV
+              </button>
+            }
+          }
+        }
+      </section>
+    }
+
+    @if (activeSection() === 'export') {
+      <section class="import-export-panel__section">
+        <p class="import-export-panel__hint">Export organization data as CSV or JSON.</p>
+
+        <fieldset class="import-export-panel__fieldset">
+          <legend>Datasets</legend>
+          <label class="import-export-panel__check import-export-panel__check--all">
+            <input
+              type="checkbox"
+              [checked]="allDatasetsSelected()"
+              (change)="toggleAllDatasets($any($event.target).checked)"
+            />
+            Select all
+          </label>
+          @for (opt of datasetOptions; track opt.id) {
+            <label class="import-export-panel__check">
+              <input
+                type="checkbox"
+                [checked]="exportDatasets()[opt.id]"
+                (change)="toggleDataset(opt.id, $any($event.target).checked)"
+              />
+              {{ opt.label }}
+            </label>
+          }
+        </fieldset>
+
+        <fieldset class="import-export-panel__fieldset">
+          <legend>Format</legend>
+          <label class="import-export-panel__check">
+            <input
+              type="radio"
+              name="exportFormat"
+              value="csv"
+              [checked]="exportFormat() === 'csv'"
+              (change)="exportFormat.set('csv')"
+            />
+            CSV
+          </label>
+          <label class="import-export-panel__check">
+            <input
+              type="radio"
+              name="exportFormat"
+              value="json"
+              [checked]="exportFormat() === 'json'"
+              (change)="exportFormat.set('json')"
+            />
+            JSON
+          </label>
+        </fieldset>
+
+        <button
+          type="button"
+          class="btn btn--primary"
+          [disabled]="isExporting()"
+          (click)="startExport()"
+        >
+          {{ isExporting() ? 'Exporting…' : 'Start export' }}
+        </button>
+      </section>
+    }
+
+    @if (activeSection() === 'history') {
+      <section class="import-export-panel__section">
+        @if (isLoadingJobs() && jobs().length === 0) {
+          <p class="manage-panel__status">Loading history…</p>
+        } @else {
+          <div class="manage-panel__table-wrap">
+            <table class="manage-panel__table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Format</th>
+                  <th>Counts</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (job of jobs(); track job.id) {
+                  <tr>
+                    <td>{{ job.type }}</td>
+                    <td>{{ statusLabel(job.status) }}</td>
+                    <td>{{ job.format }}</td>
+                    <td>{{ job.successCount }}/{{ job.errorCount }} ({{ job.totalRows }})</td>
+                    <td>{{ job.createdAt | date: 'medium' }}</td>
+                    <td class="import-export-panel__job-actions">
+                      @if (job.hasResult) {
+                        <button type="button" class="btn btn--outline btn--sm" (click)="downloadArtifact(job.id, 'result')">
+                          Result
+                        </button>
+                      }
+                      @if (job.hasErrors) {
+                        <button type="button" class="btn btn--outline btn--sm" (click)="downloadArtifact(job.id, 'errors')">
+                          Errors
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6">No import/export jobs yet.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  </div>
+}

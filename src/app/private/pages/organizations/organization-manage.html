@@ -48,7 +48,7 @@
               @case ('invitations') {
                 <app-org-add-member-panel [organization]="org" [me]="membership" />
               }
-              @case ('organization') {
+              @case ('organization-details') {
                 <app-org-settings-panel
                   [organization]="org"
                   [me]="membership"
@@ -70,6 +70,12 @@
               }
               @case ('audit-log') {
                 <app-org-audit-log-panel [organization]="org" [me]="membership" />
+              }
+              @case ('import-export') {
+                <app-org-import-export-panel [organization]="org" [me]="membership" />
+              }
+              @case ('statistic') {
+                <app-org-statistic-panel [organization]="org" [me]="membership" />
               }
               @default {
                 <p>Content for this section will be added later.</p>

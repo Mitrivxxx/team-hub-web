@@ -34,7 +34,9 @@
 - `authGuard` protects `/app/*`; `guestGuard` redirects logged-in users from `/login`, `/signup`, and `/forgot-password`.
 - Site header logo: `/app` when authenticated, `/` when guest. On manage route, logo is hidden; puzzle logo lives in the sidebar and links to `/app`.
 - Authenticated header uses avatar initials menu with Log out (Escape / outside click closes).
+- Authenticated header shows Notifications link (`/app/notifications`); hidden for guests.
 - `/app` shows organization list for the logged-in user (`OrganizationList`).
+- `/app/notifications` (`Notifications`): mock inbox UI (All / Unread filters, mark as read); frontend-only, no API yet.
 - `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
 - `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (white background; persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page title (no subtitles/borders) pinned at top of the manage content scrollport. Content area uses light gray background (`$color-bg-alt`); panel content on white cards. `.app-layout--org-manage` locks viewport height; `.org-manage__content` scrolls. `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`.
 - Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v0.1.0`).
@@ -48,6 +50,7 @@
   - `OrganizationGraphqlService.listMembers` powers All Members table (name/surname via BFF GraphQL)
   - `OrganizationGraphqlService.listActivity` powers Audit Log tab (actor/target profiles + server pagination)
   - Teams: listTeams, createTeam, deleteTeam, listTeamMembers, addTeamMember, removeTeamMember
+  - Stats: getStats (`memberCount`, `teamCount`)
   - Roles: listRoles, getRole, createRole, updateRole, deleteRole, listRolePermissions, replace/add/remove role permissions (`permissionIds`), list/assign/revoke role members
   - Permissions: listPermissions(`orgId`), getPermission, createPermission, updatePermission, deletePermission (org-scoped)
   - Invitations: listInvitations, getInvitation, createInvitation (`orgRoleIds[]`), cancelInvitation, resendInvitation, getInvitationByToken, acceptInvitation, rejectInvitation
@@ -64,9 +67,10 @@
   - `AddTeamModal` — name (required) + description → `OrganizationService.createTeam`
   - `OrgRolesPanel` — section tabs (Create role, Organization roles, Team roles); create, detail, permission attach by id, delete custom; shared tab styles in `_manage-panel.scss`
   - `OrgPermissionsPanel` — org permission catalog list + detail (roles using permission); create disabled in UI
+  - `OrgStatisticPanel` — Statistic tab: member and team totals from REST `getStats`
 - Create modal: `CreateOrganizationModal` — fields: name, description, nip (10 digits), address (country, city, postal code), photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`). Org `email` is server-generated (`{name}{4digits}@teamhub.local`).
 - Reusable `Sidebar` (`src/app/shared/sidebar/`): tree `items` + `activeId` + `collapsed`; `itemSelect` + `collapsedChange`; collapsed CSS tooltips; chevron row toggles; `aria-current` / `aria-expanded` / `:focus-visible`.
-- Manage nav: Members (All Members, Invitations, Activity, Import / Export), Organization, Teams, Role/Permission (Roles, Permissions), Statistic, Audit Log. Activity, Import / Export and Statistic remain placeholders.
+- Manage nav: Members (All Members, Invitations), Organization (Details, Import / Export), Teams, Role/Permission (Roles, Permissions), Statistic, Audit Log. Statistic panel shows org-wide `memberCount` + `teamCount` via `GET /{orgId}/stats`. Import / Export panel supports CSV member import (preview + async job + error report) and CSV/JSON export with job history (`org.members.manage`).
 - JWT Bearer token is attached by `authInterceptor` on all HTTP calls.
 
 ## Don't

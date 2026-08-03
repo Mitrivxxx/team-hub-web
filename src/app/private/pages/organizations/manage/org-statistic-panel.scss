@@ -1,0 +1,30 @@
+@use 'variables' as *;
+@use 'manage-panel';
+
+.statistic-panel {
+  &__metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: $spacing-md;
+  }
+
+  &__metric {
+    padding: $spacing-md $spacing-lg;
+    background: $color-bg-alt;
+    border-radius: $border-radius-base;
+  }
+
+  &__value {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: $font-weight-semibold;
+    color: $color-text-heading;
+    line-height: 1.2;
+  }
+
+  &__label {
+    margin: $spacing-xs 0 0;
+    font-size: 0.9rem;
+    color: $color-text-muted;
+  }
+}

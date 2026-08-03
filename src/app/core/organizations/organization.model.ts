@@ -17,6 +17,11 @@ export interface Organization {
   updatedAt: string;
 }
 
+export interface OrganizationStats {
+  memberCount: number;
+  teamCount: number;
+}
+
 export interface CreateOrganizationRequest {
   name: string;
   description?: string;
@@ -280,3 +285,59 @@ export interface MeMembership {
 }
 
 export type InvitationStatus = 'Pending' | 'Accepted' | 'Rejected' | 'Expired';
+
+export interface ImportRowError {
+  code: string;
+  message: string;
+}
+
+export interface ImportPreviewRow {
+  rowNumber: number;
+  status: string;
+  email?: string | null;
+  username?: string | null;
+  resolvedUserId?: string | null;
+  orgRoles?: string | null;
+  team?: string | null;
+  teamRole?: string | null;
+  jobTitle?: string | null;
+  errors: ImportRowError[];
+}
+
+export interface ImportPreviewResponse {
+  totalRows: number;
+  validCount: number;
+  errorCount: number;
+  rows: ImportPreviewRow[];
+}
+
+export interface ImportExportJobAccepted {
+  jobId: string;
+}
+
+export interface CreateExportRequest {
+  format: 'csv' | 'json';
+  datasets: string[];
+}
+
+export interface ImportExportJob {
+  id: string;
+  type: string;
+  status: string;
+  format: string;
+  createdByUserId: string;
+  createdAt: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  totalRows: number;
+  successCount: number;
+  errorCount: number;
+  errorMessage?: string | null;
+  hasSource: boolean;
+  hasResult: boolean;
+  hasErrors: boolean;
+}
+
+export interface ImportExportDownload {
+  url: string;
+}

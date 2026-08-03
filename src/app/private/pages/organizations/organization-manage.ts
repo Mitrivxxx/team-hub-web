@@ -9,10 +9,12 @@ import { Sidebar } from '../../../shared/sidebar/sidebar';
 import { SidebarNavItem } from '../../../shared/sidebar/sidebar.model';
 import { OrgAddMemberPanel } from './manage/org-add-member-panel';
 import { OrgAuditLogPanel } from './manage/org-audit-log-panel';
+import { OrgImportExportPanel } from './manage/org-import-export-panel';
 import { OrgMemberListPanel } from './manage/org-member-list-panel';
 import { OrgPermissionsPanel } from './manage/org-permissions-panel';
 import { OrgRolesPanel } from './manage/org-roles-panel';
 import { OrgSettingsPanel } from './manage/org-settings-panel';
+import { OrgStatisticPanel } from './manage/org-statistic-panel';
 import { OrgTeamsPanel } from './manage/org-teams-panel';
 
 interface ManagePageChrome {
@@ -31,10 +33,12 @@ interface ManagePageChrome {
     OrgMemberListPanel,
     OrgAddMemberPanel,
     OrgAuditLogPanel,
+    OrgImportExportPanel,
     OrgSettingsPanel,
     OrgTeamsPanel,
     OrgRolesPanel,
     OrgPermissionsPanel,
+    OrgStatisticPanel,
   ],
   templateUrl: './organization-manage.html',
   styleUrl: './organization-manage.scss',
@@ -64,14 +68,16 @@ export class OrganizationManage implements OnInit {
       children: [
         { id: 'all-members', label: 'All Members' },
         { id: 'invitations', label: 'Invitations' },
-        { id: 'activity', label: 'Activity' },
-        { id: 'import-export', label: 'Import / Export' },
       ],
     },
     {
       id: 'organization',
       label: 'Organization',
       icon: 'organization',
+      children: [
+        { id: 'organization-details', label: 'Details' },
+        { id: 'import-export', label: 'Import / Export' },
+      ],
     },
     {
       id: 'teams',
@@ -107,9 +113,8 @@ export class OrganizationManage implements OnInit {
     invitations: { title: 'Invitations' },
     'member-roles': { title: 'Roles' },
     permissions: { title: 'Permissions' },
-    activity: { title: 'Activity' },
+    'organization-details': { title: 'Organization details' },
     'import-export': { title: 'Import / Export' },
-    organization: { title: 'Organization' },
     teams: {
       title: 'Teams',
       primaryAction: { label: '+ Add Team', action: 'add-team' },

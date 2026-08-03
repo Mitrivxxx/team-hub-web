@@ -1,0 +1,18 @@
+@if (isLoading()) {
+  <p class="manage-panel__status">Loading statistics...</p>
+} @else if (error()) {
+  <p class="manage-panel__error">{{ error() }}</p>
+} @else if (stats(); as data) {
+  <div class="manage-panel statistic-panel">
+    <div class="statistic-panel__metrics">
+      <section class="statistic-panel__metric" aria-label="Members">
+        <p class="statistic-panel__value">{{ data.memberCount }}</p>
+        <p class="statistic-panel__label">Members</p>
+      </section>
+      <section class="statistic-panel__metric" aria-label="Teams">
+        <p class="statistic-panel__value">{{ data.teamCount }}</p>
+        <p class="statistic-panel__label">Teams</p>
+      </section>
+    </div>
+  </div>
+}

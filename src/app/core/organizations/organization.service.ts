@@ -7,16 +7,22 @@ import {
   AddMemberRequest,
   AddTeamMemberRequest,
   AssignRolePermissionsRequest,
+  CreateExportRequest,
   CreateInvitationRequest,
   CreateOrganizationInput,
   CreateOrganizationResult,
   CreatePermissionRequest,
   CreateRoleRequest,
   CreateTeamRequest,
+  ImportExportDownload,
+  ImportExportJob,
+  ImportExportJobAccepted,
+  ImportPreviewResponse,
   Invitation,
   Member,
   MeMembership,
   Organization,
+  OrganizationStats,
   PermissionDetail,
   PermissionListItem,
   PermissionSummary,
@@ -40,6 +46,10 @@ export class OrganizationService {
 
   getBySlug(slug: string): Observable<Organization> {
     return this.http.get<Organization>(`${this.baseUrl}/by-slug/${slug}`);
+  }
+
+  getStats(organizationId: string): Observable<OrganizationStats> {
+    return this.http.get<OrganizationStats>(`${this.baseUrl}/${organizationId}/stats`);
   }
 
   getMe(organizationId: string): Observable<MeMembership> {
@@ -210,6 +220,61 @@ export class OrganizationService {
   cancelInvitation(organizationId: string, invitationId: string): Observable<void> {
     return this.http.delete<void>(
       `${this.baseUrl}/${organizationId}/invitations/${invitationId}`,
+    );
+  }
+
+  previewImport(organizationId: string, file: File): Observable<ImportPreviewResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ImportPreviewResponse>(
+      `${this.baseUrl}/${organizationId}/imports/preview`,
+      formData,
+    );
+  }
+
+  startImport(organizationId: string, file: File): Observable<ImportExportJobAccepted> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ImportExportJobAccepted>(
+      `${this.baseUrl}/${organizationId}/imports`,
+      formData,
+    );
+  }
+
+  startExport(organizationId: string, request: CreateExportRequest): Observable<ImportExportJobAccepted> {
+    return this.http.post<ImportExportJobAccepted>(
+      `${this.baseUrl}/${organizationId}/exports`,
+      request,
+    );
+  }
+
+  listImportExportJobs(
+    organizationId: string,
+    page = 1,
+    pageSize = 20,
+  ): Observable<ImportExportJob[]> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<ImportExportJob[]>(
+      `${this.baseUrl}/${organizationId}/import-export/jobs`,
+      { params },
+    );
+  }
+
+  getImportExportJob(organizationId: string, jobId: string): Observable<ImportExportJob> {
+    return this.http.get<ImportExportJob>(
+      `${this.baseUrl}/${organizationId}/import-export/jobs/${jobId}`,
+    );
+  }
+
+  getImportExportDownload(
+    organizationId: string,
+    jobId: string,
+    artifact: 'result' | 'errors' | 'source',
+  ): Observable<ImportExportDownload> {
+    const params = new HttpParams().set('artifact', artifact);
+    return this.http.get<ImportExportDownload>(
+      `${this.baseUrl}/${organizationId}/import-export/jobs/${jobId}/download`,
+      { params },
     );
   }
 }

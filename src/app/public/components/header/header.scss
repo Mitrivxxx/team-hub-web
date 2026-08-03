@@ -121,6 +121,47 @@
     }
   }
 
+  &__nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: $border-radius-base;
+    color: $color-text-muted;
+    font-size: 0.875rem;
+    font-weight: $font-weight-medium;
+    transition: color 0.2s ease, background-color 0.2s ease;
+
+    span {
+      display: none;
+
+      @media (min-width: 640px) {
+        display: inline;
+      }
+    }
+
+    &:hover {
+      color: var(--color-primary-dark);
+      background: rgba(var(--color-primary-rgb), 0.08);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    &--active {
+      color: var(--color-primary-dark);
+      background: rgba(var(--color-primary-rgb), 0.12);
+    }
+  }
+
+  &__nav-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
   &__user {
     position: relative;
   }
