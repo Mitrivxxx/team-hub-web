@@ -10,6 +10,7 @@ import {
   MeMembership,
   Organization,
   RoleListItem,
+  Team,
 } from '../../../../core/organizations/organization.model';
 import { OrganizationService } from '../../../../core/organizations/organization.service';
 import { createFlashMessage } from '../../../../shared/flash-message';
@@ -32,7 +33,10 @@ export class OrgAddMemberPanel {
   readonly invitationCreated = output<void>();
 
   readonly orgRoles = signal<RoleListItem[]>([]);
+  readonly teamRoles = signal<RoleListItem[]>([]);
+  readonly teams = signal<Team[]>([]);
   readonly invitations = signal<Invitation[]>([]);
+  readonly lastInviteLink = signal<string | null>(null);
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly error = signal<string | null>(null);
@@ -43,6 +47,8 @@ export class OrgAddMemberPanel {
   readonly inviteForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
     orgRoleId: ['', Validators.required],
+    teamId: [''],
+    teamRoleId: [''],
   });
 
   constructor() {
@@ -54,9 +60,56 @@ export class OrgAddMemberPanel {
     });
   }
 
+  onTeamChange(): void {
+    const teamId = this.inviteForm.controls.teamId.value;
+    if (!teamId) {
+      this.inviteForm.patchValue({ teamRoleId: '' });
+      return;
+    }
+    if (!this.inviteForm.controls.teamRoleId.value) {
+      this.inviteForm.patchValue({ teamRoleId: this.defaultTeamRoleId() });
+    }
+  }
+
   roleNamesForInvitation(invitation: Invitation): string {
     const byId = new Map(this.orgRoles().map((r) => [r.id, r.name]));
     return invitation.orgRoleIds.map((id) => byId.get(id) ?? id).join(', ') || '—';
+  }
+
+  inviteLinkFor(invitation: Invitation): string | null {
+    if (!invitation.token) {
+      return null;
+    }
+    return `${window.location.origin}/app/invitations/accept?token=${encodeURIComponent(invitation.token)}`;
+  }
+
+  async copyLastInviteLink(): Promise<void> {
+    const link = this.lastInviteLink();
+    if (!link) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(link);
+      this.successFlash.show('Invite link copied. No email delivery — share this link.');
+    } catch {
+      this.error.set('Failed to copy invite link.');
+    }
+  }
+
+  async copyInviteLink(invitation: Invitation): Promise<void> {
+    const link = this.inviteLinkFor(invitation) ?? this.lastInviteLink();
+    if (!link) {
+      this.error.set('No invite link available. Use Resend to get a fresh link.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(link);
+      this.successFlash.show('Invite link copied. No email delivery — share this link.');
+    } catch {
+      this.error.set('Failed to copy invite link.');
+    }
   }
 
   submitInvite(): void {
@@ -66,19 +119,27 @@ export class OrgAddMemberPanel {
 
     this.error.set(null);
     this.successFlash.clear();
+    this.lastInviteLink.set(null);
 
     if (this.inviteForm.invalid) {
       this.inviteForm.markAllAsTouched();
       return;
     }
 
+    const { email, orgRoleId, teamId, teamRoleId } = this.inviteForm.getRawValue();
+    if (teamId && !teamRoleId) {
+      this.error.set('Select a team role when inviting into a team.');
+      return;
+    }
+
     this.isSubmitting.set(true);
-    const { email, orgRoleId } = this.inviteForm.getRawValue();
 
     this.organizationService
       .createInvitation(this.organization().id, {
         email: email.trim().toLowerCase(),
         orgRoleIds: [orgRoleId],
+        teamId: teamId || undefined,
+        teamRoleId: teamId ? teamRoleId || undefined : undefined,
       })
       .pipe(
         finalize(() => this.isSubmitting.set(false)),
@@ -87,11 +148,44 @@ export class OrgAddMemberPanel {
       .subscribe({
         next: (invitation) => {
           this.invitations.update((items) => [invitation, ...items]);
-          this.inviteForm.reset({ email: '', orgRoleId: this.defaultRoleId() });
-          this.successFlash.show(`Invitation sent to ${invitation.email}.`);
+          this.inviteForm.reset({
+            email: '',
+            orgRoleId: this.defaultRoleId(),
+            teamId: '',
+            teamRoleId: '',
+          });
+          const link = this.inviteLinkFor(invitation);
+          this.lastInviteLink.set(link);
+          this.successFlash.show(
+            link
+              ? `Invitation created for ${invitation.email}. Copy and share the link (no email delivery).`
+              : `Invitation created for ${invitation.email}.`,
+          );
           this.invitationCreated.emit();
         },
         error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to create invitation.')),
+      });
+  }
+
+  resendInvitation(invitation: Invitation): void {
+    if (!this.canManage()) {
+      return;
+    }
+
+    this.error.set(null);
+    this.organizationService
+      .resendInvitation(this.organization().id, invitation.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.invitations.update((items) =>
+            items.map((item) => (item.id === updated.id ? updated : item)),
+          );
+          const link = this.inviteLinkFor(updated);
+          this.lastInviteLink.set(link);
+          this.successFlash.show('Invitation resent. Copy and share the new link (no email delivery).');
+        },
+        error: (err) => this.error.set(organizationApiErrorMessage(err, 'Failed to resend invitation.')),
       });
   }
 
@@ -127,6 +221,22 @@ export class OrgAddMemberPanel {
         error: () => this.orgRoles.set([]),
       });
 
+    this.organizationService
+      .listRoles(organizationId, 'TEAM')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (roles) => this.teamRoles.set(roles),
+        error: () => this.teamRoles.set([]),
+      });
+
+    this.organizationService
+      .listTeams(organizationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (teams) => this.teams.set(teams),
+        error: () => this.teams.set([]),
+      });
+
     if (this.canManage()) {
       this.organizationService
         .listInvitations(organizationId, 'Pending')
@@ -148,5 +258,9 @@ export class OrgAddMemberPanel {
 
   private defaultRoleId(): string {
     return this.orgRoles().find((r) => r.name === 'Member')?.id ?? this.orgRoles()[0]?.id ?? '';
+  }
+
+  private defaultTeamRoleId(): string {
+    return this.teamRoles().find((r) => r.name === 'Member')?.id ?? this.teamRoles()[0]?.id ?? '';
   }
 }

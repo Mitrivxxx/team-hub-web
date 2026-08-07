@@ -55,7 +55,7 @@ export class OrgMemberListPanel {
   readonly sortDirection = signal<SortDirection>('asc');
   readonly currentPage = signal(1);
 
-  readonly roleDrafts = signal<Record<string, string>>({});
+  readonly roleDrafts = signal<Record<string, string[]>>({});
 
   readonly detailsUserId = signal<string | null>(null);
   readonly detailsMember = signal<Member | null>(null);
@@ -65,6 +65,10 @@ export class OrgMemberListPanel {
   readonly editingRoleInDetails = signal(false);
 
   readonly canManage = () => this.me().permissions.includes('org.members.manage');
+
+  readonly assignableOrgRoles = computed(() =>
+    this.orgRoles().filter((role) => !(role.name === 'Owner' && role.isSystem)),
+  );
 
   readonly filteredMembers = computed(() => {
     const search = this.searchQuery().trim().toLowerCase();
@@ -157,8 +161,12 @@ export class OrgMemberListPanel {
     return member.roles.map((r) => r.name).join(', ') || '—';
   }
 
-  primaryRoleId(member: Member): string {
-    return member.roles[0]?.id ?? '';
+  memberRoleIds(member: Member): string[] {
+    return member.roles.map((r) => r.id);
+  }
+
+  isRoleDraftSelected(userId: string, roleId: string): boolean {
+    return (this.roleDrafts()[userId] ?? []).includes(roleId);
   }
 
   sortIndicator(column: SortColumn): string {
@@ -180,7 +188,7 @@ export class OrgMemberListPanel {
   menuItems(member: Member): OverflowMenuItem[] {
     const items: OverflowMenuItem[] = [{ id: 'details', label: 'Details' }];
     if (this.canManage()) {
-      items.push({ id: 'edit-role', label: 'Edit role' });
+      items.push({ id: 'edit-role', label: 'Edit roles' });
       items.push({
         id: 'remove',
         label: 'Remove',
@@ -215,8 +223,16 @@ export class OrgMemberListPanel {
     this.load(this.organization().id);
   }
 
-  onRoleDraftChange(userId: string, roleId: string): void {
-    this.roleDrafts.update((drafts) => ({ ...drafts, [userId]: roleId }));
+  onRoleDraftToggle(userId: string, roleId: string, checked: boolean): void {
+    this.roleDrafts.update((drafts) => {
+      const current = drafts[userId] ?? [];
+      const next = checked
+        ? current.includes(roleId)
+          ? current
+          : [...current, roleId]
+        : current.filter((id) => id !== roleId);
+      return { ...drafts, [userId]: next };
+    });
   }
 
   applyRole(member: Member): void {
@@ -224,9 +240,16 @@ export class OrgMemberListPanel {
       return;
     }
 
-    const roleId = (this.roleDrafts()[member.userId] ?? this.primaryRoleId(member)).trim();
-    const currentIds = member.roles.map((r) => r.id).sort().join(',');
-    if (!roleId || currentIds === roleId) {
+    const roleIds = [...(this.roleDrafts()[member.userId] ?? this.memberRoleIds(member))];
+    if (roleIds.length === 0) {
+      this.actionError.set('Select at least one organization role.');
+      return;
+    }
+
+    const currentIds = this.memberRoleIds(member).slice().sort().join(',');
+    const nextIds = roleIds.slice().sort().join(',');
+    if (currentIds === nextIds) {
+      this.editingRoleInDetails.set(false);
       return;
     }
 
@@ -235,7 +258,7 @@ export class OrgMemberListPanel {
     this.busyUserId.set(member.userId);
 
     this.organizationService
-      .updateMember(this.organization().id, member.userId, { roleIds: [roleId] })
+      .updateMember(this.organization().id, member.userId, { roleIds })
       .pipe(
         finalize(() => this.busyUserId.set(null)),
         takeUntilDestroyed(this.destroyRef),
@@ -245,7 +268,7 @@ export class OrgMemberListPanel {
           this.members.update((items) => items.map((m) => (m.userId === updated.userId ? updated : m)));
           this.roleDrafts.update((drafts) => ({
             ...drafts,
-            [updated.userId]: updated.roles[0]?.id ?? '',
+            [updated.userId]: updated.roles.map((r) => r.id),
           }));
           if (this.detailsMember()?.userId === updated.userId) {
             this.detailsMember.set({ ...updated, user: member.user ?? updated.user });
@@ -291,6 +314,10 @@ export class OrgMemberListPanel {
   openDetails(member: Member, editRole = false): void {
     if (this.detailsUserId() === member.userId) {
       if (editRole) {
+        this.roleDrafts.update((drafts) => ({
+          ...drafts,
+          [member.userId]: this.detailsMember()?.roles.map((r) => r.id) ?? this.memberRoleIds(member),
+        }));
         this.editingRoleInDetails.set(true);
       }
       return;
@@ -319,7 +346,7 @@ export class OrgMemberListPanel {
           this.detailsTeams.set(teams);
           this.roleDrafts.update((drafts) => ({
             ...drafts,
-            [merged.userId]: merged.roles[0]?.id ?? '',
+            [merged.userId]: merged.roles.map((r) => r.id),
           }));
         },
         error: (err) => this.detailsError.set(organizationApiErrorMessage(err, 'Failed to load member details.')),
@@ -333,6 +360,14 @@ export class OrgMemberListPanel {
     this.detailsError.set(null);
     this.detailsLoading.set(false);
     this.editingRoleInDetails.set(false);
+  }
+
+  startEditRoles(member: Member): void {
+    this.roleDrafts.update((drafts) => ({
+      ...drafts,
+      [member.userId]: this.memberRoleIds(member),
+    }));
+    this.editingRoleInDetails.set(true);
   }
 
   onPageChange(page: number): void {
@@ -360,7 +395,7 @@ export class OrgMemberListPanel {
         next: (members) => {
           this.members.set(members);
           this.roleDrafts.set(
-            Object.fromEntries(members.map((m) => [m.userId, m.roles[0]?.id ?? ''])),
+            Object.fromEntries(members.map((m) => [m.userId, m.roles.map((r) => r.id)])),
           );
           this.isLoading.set(false);
         },

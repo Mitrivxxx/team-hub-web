@@ -7,6 +7,11 @@ export const privateRoutes: Routes = [
       import('./pages/organizations/organization-list').then((m) => m.OrganizationList),
   },
   {
+    path: 'invitations/accept',
+    loadComponent: () =>
+      import('./pages/invitations/invitation-accept').then((m) => m.InvitationAccept),
+  },
+  {
     path: 'notifications',
     loadComponent: () =>
       import('./pages/notifications/notifications').then((m) => m.Notifications),

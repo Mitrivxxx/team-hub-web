@@ -11,6 +11,47 @@
       <p class="manage-panel__success">{{ actionSuccess() }}</p>
     }
 
+    @if (canManage()) {
+      <section class="manage-panel__card">
+        <h3 class="manage-panel__card-title">Create permission</h3>
+        <div class="manage-panel__filters">
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="create-permission-name">Name</label>
+            <input
+              id="create-permission-name"
+              class="manage-panel__input"
+              [ngModel]="createName()"
+              (ngModelChange)="createName.set($event)"
+            />
+          </div>
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="create-permission-code">Code</label>
+            <input
+              id="create-permission-code"
+              class="manage-panel__input"
+              [ngModel]="createCode()"
+              (ngModelChange)="createCode.set($event)"
+              placeholder="e.g. org.custom.action"
+            />
+          </div>
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="create-permission-description">Description</label>
+            <input
+              id="create-permission-description"
+              class="manage-panel__input"
+              [ngModel]="createDescription()"
+              (ngModelChange)="createDescription.set($event)"
+            />
+          </div>
+          <div class="manage-panel__actions">
+            <button type="button" class="btn btn--primary" [disabled]="isCreating()" (click)="createPermission()">
+              {{ isCreating() ? 'Creating...' : 'Create' }}
+            </button>
+          </div>
+        </div>
+      </section>
+    }
+
     <section class="manage-panel__card">
       <div class="manage-panel__table-wrap">
         <table class="manage-panel__table">
@@ -69,9 +110,38 @@
           <p class="manage-panel__status">Loading permission...</p>
         } @else if (selected(); as permission) {
           <p class="manage-panel__card-meta manage-panel__mono">{{ permission.code }}</p>
-          <p class="manage-panel__card-meta">{{ permission.name }}</p>
-          <p class="manage-panel__card-meta">{{ permission.description || 'No description' }}</p>
           <p class="manage-panel__card-meta">Created: {{ permission.createdAt | date: 'medium' }}</p>
+
+          @if (canManage() && !permission.isSystem) {
+            <div class="manage-panel__filters">
+              <div class="manage-panel__field">
+                <label class="manage-panel__label" for="edit-permission-name">Name</label>
+                <input
+                  id="edit-permission-name"
+                  class="manage-panel__input"
+                  [ngModel]="editName()"
+                  (ngModelChange)="editName.set($event)"
+                />
+              </div>
+              <div class="manage-panel__field">
+                <label class="manage-panel__label" for="edit-permission-description">Description</label>
+                <input
+                  id="edit-permission-description"
+                  class="manage-panel__input"
+                  [ngModel]="editDescription()"
+                  (ngModelChange)="editDescription.set($event)"
+                />
+              </div>
+              <div class="manage-panel__actions">
+                <button type="button" class="btn btn--outline" [disabled]="isSaving()" (click)="savePermission()">
+                  {{ isSaving() ? 'Saving...' : 'Save permission' }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <p class="manage-panel__card-meta">{{ permission.name }}</p>
+            <p class="manage-panel__card-meta">{{ permission.description || 'No description' }}</p>
+          }
 
           <h4 class="manage-panel__card-title">Used by roles ({{ permission.roleCount }})</h4>
           @if (permission.roles.length === 0) {
@@ -88,7 +158,7 @@
     }
 
     @if (!canManage()) {
-      <p class="manage-panel__hint">Permission deletion requires organization role management permission.</p>
+      <p class="manage-panel__hint">Permission management requires organization role management permission.</p>
     }
   </div>
 }

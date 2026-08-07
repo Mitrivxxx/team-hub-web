@@ -31,8 +31,14 @@ import {
   Team,
   TeamMember,
   TeamMembership,
+  TransferOwnershipRequest,
   UpdateMemberRequest,
   UpdateOrganizationRequest,
+  UpdateOrganizationStatusRequest,
+  UpdatePermissionRequest,
+  UpdateRoleRequest,
+  UpdateTeamMemberRequest,
+  UpdateTeamRequest,
 } from './organization.model';
 
 @Injectable({ providedIn: 'root' })
@@ -42,6 +48,10 @@ export class OrganizationService {
 
   list(): Observable<Organization[]> {
     return this.http.get<Organization[]>(`${this.baseUrl}`);
+  }
+
+  getById(organizationId: string): Observable<Organization> {
+    return this.http.get<Organization>(`${this.baseUrl}/${organizationId}`);
   }
 
   getBySlug(slug: string): Observable<Organization> {
@@ -54,6 +64,10 @@ export class OrganizationService {
 
   getMe(organizationId: string): Observable<MeMembership> {
     return this.http.get<MeMembership>(`${this.baseUrl}/${organizationId}/me`);
+  }
+
+  listMyInvitations(): Observable<Invitation[]> {
+    return this.http.get<Invitation[]>(`${this.baseUrl}/me/invitations`);
   }
 
   createWithDetails(input: CreateOrganizationInput): Observable<CreateOrganizationResult> {
@@ -85,8 +99,26 @@ export class OrganizationService {
     return this.http.patch<Organization>(`${this.baseUrl}/${organizationId}`, request);
   }
 
+  updateStatus(
+    organizationId: string,
+    request: UpdateOrganizationStatusRequest,
+  ): Observable<Organization> {
+    return this.http.patch<Organization>(`${this.baseUrl}/${organizationId}/status`, request);
+  }
+
   delete(organizationId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${organizationId}`);
+  }
+
+  restore(organizationId: string): Observable<Organization> {
+    return this.http.post<Organization>(`${this.baseUrl}/${organizationId}/restore`, {});
+  }
+
+  transferOwnership(
+    organizationId: string,
+    request: TransferOwnershipRequest,
+  ): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${organizationId}/transfer-ownership`, request);
   }
 
   leave(organizationId: string): Observable<void> {
@@ -119,6 +151,14 @@ export class OrganizationService {
     return this.http.get<RoleDetail>(`${this.baseUrl}/${organizationId}/roles/${roleId}`);
   }
 
+  updateRole(
+    organizationId: string,
+    roleId: string,
+    request: UpdateRoleRequest,
+  ): Observable<RoleDetail> {
+    return this.http.patch<RoleDetail>(`${this.baseUrl}/${organizationId}/roles/${roleId}`, request);
+  }
+
   replaceRolePermissions(
     organizationId: string,
     roleId: string,
@@ -145,6 +185,17 @@ export class OrganizationService {
   getPermission(organizationId: string, permissionId: string): Observable<PermissionDetail> {
     return this.http.get<PermissionDetail>(
       `${this.baseUrl}/${organizationId}/permissions/${permissionId}`,
+    );
+  }
+
+  updatePermission(
+    organizationId: string,
+    permissionId: string,
+    request: UpdatePermissionRequest,
+  ): Observable<PermissionDetail> {
+    return this.http.patch<PermissionDetail>(
+      `${this.baseUrl}/${organizationId}/permissions/${permissionId}`,
+      request,
     );
   }
 
@@ -180,12 +231,34 @@ export class OrganizationService {
     return this.http.get<Team[]>(`${this.baseUrl}/${organizationId}/teams`);
   }
 
+  getTeam(organizationId: string, teamId: string): Observable<Team> {
+    return this.http.get<Team>(`${this.baseUrl}/${organizationId}/teams/${teamId}`);
+  }
+
   createTeam(organizationId: string, request: CreateTeamRequest): Observable<Team> {
     return this.http.post<Team>(`${this.baseUrl}/${organizationId}/teams`, request);
   }
 
+  updateTeam(
+    organizationId: string,
+    teamId: string,
+    request: UpdateTeamRequest,
+  ): Observable<Team> {
+    return this.http.patch<Team>(`${this.baseUrl}/${organizationId}/teams/${teamId}`, request);
+  }
+
   deleteTeam(organizationId: string, teamId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${organizationId}/teams/${teamId}`);
+  }
+
+  uploadTeamAvatar(organizationId: string, teamId: string, file: File): Observable<Team> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.put<Team>(`${this.baseUrl}/${organizationId}/teams/${teamId}/avatar`, formData);
+  }
+
+  deleteTeamAvatar(organizationId: string, teamId: string): Observable<Team> {
+    return this.http.delete<Team>(`${this.baseUrl}/${organizationId}/teams/${teamId}/avatar`);
   }
 
   listTeamMembers(organizationId: string, teamId: string): Observable<TeamMember[]> {
@@ -195,6 +268,18 @@ export class OrganizationService {
   addTeamMember(organizationId: string, teamId: string, request: AddTeamMemberRequest): Observable<TeamMember> {
     return this.http.post<TeamMember>(
       `${this.baseUrl}/${organizationId}/teams/${teamId}/members`,
+      request,
+    );
+  }
+
+  updateTeamMember(
+    organizationId: string,
+    teamId: string,
+    userId: string,
+    request: UpdateTeamMemberRequest,
+  ): Observable<TeamMember> {
+    return this.http.patch<TeamMember>(
+      `${this.baseUrl}/${organizationId}/teams/${teamId}/members/${userId}`,
       request,
     );
   }
@@ -213,8 +298,39 @@ export class OrganizationService {
     return this.http.get<Invitation[]>(`${this.baseUrl}/${organizationId}/invitations`, { params });
   }
 
+  getInvitation(organizationId: string, invitationId: string): Observable<Invitation> {
+    return this.http.get<Invitation>(
+      `${this.baseUrl}/${organizationId}/invitations/${invitationId}`,
+    );
+  }
+
   createInvitation(organizationId: string, request: CreateInvitationRequest): Observable<Invitation> {
     return this.http.post<Invitation>(`${this.baseUrl}/${organizationId}/invitations`, request);
+  }
+
+  resendInvitation(organizationId: string, invitationId: string): Observable<Invitation> {
+    return this.http.post<Invitation>(
+      `${this.baseUrl}/${organizationId}/invitations/${invitationId}/resend`,
+      {},
+    );
+  }
+
+  getInvitationByToken(token: string): Observable<Invitation> {
+    return this.http.get<Invitation>(`${this.baseUrl}/invitations/by-token/${encodeURIComponent(token)}`);
+  }
+
+  acceptInvitationByToken(token: string): Observable<Member> {
+    return this.http.post<Member>(
+      `${this.baseUrl}/invitations/by-token/${encodeURIComponent(token)}/accept`,
+      {},
+    );
+  }
+
+  rejectInvitationByToken(token: string): Observable<Invitation> {
+    return this.http.post<Invitation>(
+      `${this.baseUrl}/invitations/by-token/${encodeURIComponent(token)}/reject`,
+      {},
+    );
   }
 
   cancelInvitation(organizationId: string, invitationId: string): Observable<void> {

@@ -79,6 +79,11 @@ export class OrgTeamsPanel {
   readonly detailsLoading = signal(false);
   readonly detailsError = signal<string | null>(null);
   readonly isAddingMember = signal(false);
+  readonly isSavingTeam = signal(false);
+  readonly isUploadingAvatar = signal(false);
+  readonly editingMemberUserId = signal<string | null>(null);
+  readonly isSavingMember = signal(false);
+  readonly avatarError = signal<string | null>(null);
 
   readonly memberSearchQuery = signal('');
   readonly selectedUser = signal<UserResponse | null>(null);
@@ -90,6 +95,16 @@ export class OrgTeamsPanel {
   readonly canManage = () => this.me().permissions.includes('org.teams.manage');
 
   readonly addMemberForm = this.formBuilder.nonNullable.group({
+    roleId: ['', Validators.required],
+    jobTitle: ['', Validators.maxLength(100)],
+  });
+
+  readonly editTeamForm = this.formBuilder.nonNullable.group({
+    name: ['', [Validators.required, Validators.maxLength(100)]],
+    description: ['', Validators.maxLength(500)],
+  });
+
+  readonly editMemberForm = this.formBuilder.nonNullable.group({
     roleId: ['', Validators.required],
     jobTitle: ['', Validators.maxLength(100)],
   });
@@ -243,7 +258,14 @@ export class OrgTeamsPanel {
     this.detailsMembers.set([]);
     this.detailsError.set(null);
     this.detailsLoading.set(true);
+    this.avatarError.set(null);
+    this.editingMemberUserId.set(null);
     this.resetAddMemberForm();
+    this.editTeamForm.patchValue({
+      name: team.name,
+      description: team.description ?? '',
+    });
+    this.editTeamForm.markAsPristine();
 
     this.organizationService
       .listTeamMembers(this.organization().id, team.id)
@@ -263,7 +285,161 @@ export class OrgTeamsPanel {
     this.detailsMembers.set([]);
     this.detailsError.set(null);
     this.detailsLoading.set(false);
+    this.avatarError.set(null);
+    this.editingMemberUserId.set(null);
     this.resetAddMemberForm();
+  }
+
+  saveTeamDetails(): void {
+    const teamId = this.detailsTeamId();
+    if (!teamId || !this.canManage() || this.isSavingTeam()) {
+      return;
+    }
+
+    if (this.editTeamForm.invalid) {
+      this.editTeamForm.markAllAsTouched();
+      return;
+    }
+
+    const { name, description } = this.editTeamForm.getRawValue();
+    this.actionError.set(null);
+    this.successFlash.clear();
+    this.isSavingTeam.set(true);
+
+    this.organizationService
+      .updateTeam(this.organization().id, teamId, {
+        name: name.trim(),
+        description: description.trim() || null,
+      })
+      .pipe(
+        finalize(() => this.isSavingTeam.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (updated) => {
+          this.teams.update((items) => items.map((t) => (t.id === updated.id ? updated : t)));
+          this.editTeamForm.markAsPristine();
+          this.successFlash.show('Team updated.');
+        },
+        error: (err: unknown) =>
+          this.actionError.set(organizationApiErrorMessage(err, 'Failed to update team.')),
+      });
+  }
+
+  onTeamAvatarSelected(event: Event): void {
+    const teamId = this.detailsTeamId();
+    if (!teamId || !this.canManage() || this.isUploadingAvatar()) {
+      return;
+    }
+
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    this.avatarError.set(null);
+
+    if (!file) {
+      return;
+    }
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      this.avatarError.set('Only JPEG, PNG, or WebP images are allowed.');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      this.avatarError.set('Image must be 2 MB or smaller.');
+      return;
+    }
+
+    this.isUploadingAvatar.set(true);
+    this.organizationService
+      .uploadTeamAvatar(this.organization().id, teamId, file)
+      .pipe(
+        finalize(() => this.isUploadingAvatar.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (updated) => {
+          this.teams.update((items) => items.map((t) => (t.id === updated.id ? updated : t)));
+          this.successFlash.show('Team photo updated.');
+        },
+        error: (err: unknown) =>
+          this.avatarError.set(organizationApiErrorMessage(err, 'Failed to upload team avatar.')),
+      });
+  }
+
+  removeTeamAvatar(): void {
+    const teamId = this.detailsTeamId();
+    if (!teamId || !this.canManage() || this.isUploadingAvatar()) {
+      return;
+    }
+
+    this.avatarError.set(null);
+    this.isUploadingAvatar.set(true);
+    this.organizationService
+      .deleteTeamAvatar(this.organization().id, teamId)
+      .pipe(
+        finalize(() => this.isUploadingAvatar.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (updated) => {
+          this.teams.update((items) => items.map((t) => (t.id === updated.id ? updated : t)));
+          this.successFlash.show('Team photo removed.');
+        },
+        error: (err: unknown) =>
+          this.avatarError.set(organizationApiErrorMessage(err, 'Failed to remove team avatar.')),
+      });
+  }
+
+  startEditMember(member: TeamMember): void {
+    this.editingMemberUserId.set(member.userId);
+    this.editMemberForm.patchValue({
+      roleId: member.roleId,
+      jobTitle: member.jobTitle ?? '',
+    });
+  }
+
+  cancelEditMember(): void {
+    this.editingMemberUserId.set(null);
+  }
+
+  saveTeamMember(member: TeamMember): void {
+    const teamId = this.detailsTeamId();
+    if (!teamId || !this.canManage() || this.isSavingMember()) {
+      return;
+    }
+
+    if (this.editMemberForm.invalid) {
+      this.editMemberForm.markAllAsTouched();
+      return;
+    }
+
+    const { roleId, jobTitle } = this.editMemberForm.getRawValue();
+    this.actionError.set(null);
+    this.successFlash.clear();
+    this.isSavingMember.set(true);
+
+    this.organizationService
+      .updateTeamMember(this.organization().id, teamId, member.userId, {
+        roleId,
+        jobTitle: jobTitle.trim() || null,
+      })
+      .pipe(
+        finalize(() => this.isSavingMember.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (updated) => {
+          this.detailsMembers.update((items) =>
+            items.map((m) => (m.userId === updated.userId ? updated : m)),
+          );
+          this.editingMemberUserId.set(null);
+          this.successFlash.show('Team member updated.');
+        },
+        error: (err: unknown) =>
+          this.actionError.set(organizationApiErrorMessage(err, 'Failed to update team member.')),
+      });
   }
 
   deleteTeam(team: Team): void {

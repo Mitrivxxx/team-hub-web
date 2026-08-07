@@ -6,6 +6,67 @@
       <p class="org-list__description">Choose an organization to work with.</p>
     </header>
 
+    @if (recentlyDeleted(); as deleted) {
+      <section class="org-list__banner" aria-label="Recently deleted organization">
+        <div class="org-list__banner-body">
+          <p>
+            <strong>{{ deleted.name }}</strong> was soft-deleted.
+            You can restore it within the retention window.
+          </p>
+          @if (restoreError()) {
+            <p class="org-list__banner-error">{{ restoreError() }}</p>
+          }
+        </div>
+        <div class="org-list__banner-actions">
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="isRestoring()"
+            (click)="restoreOrganization()"
+          >
+            {{ isRestoring() ? 'Restoring...' : 'Restore' }}
+          </button>
+          <button type="button" class="btn btn--ghost" (click)="dismissRecentlyDeleted()">
+            Dismiss
+          </button>
+        </div>
+      </section>
+    }
+
+    @if (invitationsLoading()) {
+      <p class="org-list__status">Loading invitations...</p>
+    } @else if (invitationsError()) {
+      <p class="org-list__status org-list__status--inline-error">{{ invitationsError() }}</p>
+    } @else if (pendingInvitations().length > 0) {
+      <section class="org-list__invites" aria-label="Pending invitations">
+        <h2 class="org-list__section-title">Pending invitations</h2>
+        <p class="org-list__section-desc">
+          Open the invite link you received to accept or reject. Tokens are not shown on this list.
+        </p>
+        <ul class="org-list__invite-list">
+          @for (invite of pendingInvitations(); track invite.id) {
+            <li class="org-list__invite-item">
+              <div>
+                <p class="org-list__invite-email">{{ invite.email }}</p>
+                <p class="org-list__invite-meta">
+                  Org {{ invite.organizationId }} · expires {{ invite.expiresAt | date: 'medium' }}
+                </p>
+              </div>
+              @if (invite.token) {
+                <a
+                  class="btn btn--outline"
+                  [routerLink]="['/app/invitations/accept']"
+                  [queryParams]="{ token: invite.token }"
+                >
+                  Open invite
+                </a>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     @if (isLoading()) {
       <p class="org-list__status" aria-live="polite">Loading organizations...</p>
     } @else if (loadError()) {
@@ -30,6 +91,9 @@
               }
             </div>
             <h2 class="org-card__title">{{ org.name }}</h2>
+            @if (org.status && org.status !== 'active') {
+              <span class="org-card__status">{{ org.status }}</span>
+            }
             <span class="org-card__link">Open</span>
           </a>
         }

@@ -48,6 +48,9 @@ export class OrgRolesPanel {
   readonly selectedRole = signal<RoleDetail | null>(null);
   readonly detailLoading = signal(false);
   readonly permissionDraftIds = signal<string[]>([]);
+  readonly editName = signal('');
+  readonly editDescription = signal('');
+  readonly isSavingRole = signal(false);
 
   readonly canManage = () => this.me().permissions.includes('org.roles.manage');
 
@@ -130,6 +133,8 @@ export class OrgRolesPanel {
         next: (detail) => {
           this.selectedRole.set(detail);
           this.permissionDraftIds.set(detail.permissions.map((p) => p.id));
+          this.editName.set(detail.name);
+          this.editDescription.set(detail.description ?? '');
         },
         error: (err) => this.actionError.set(organizationApiErrorMessage(err, 'Failed to load role.')),
       });
@@ -139,6 +144,45 @@ export class OrgRolesPanel {
     this.selectedRoleId.set(null);
     this.selectedRole.set(null);
     this.permissionDraftIds.set([]);
+    this.editName.set('');
+    this.editDescription.set('');
+  }
+
+  saveRoleDetails(): void {
+    const role = this.selectedRole();
+    if (!role || !this.canManage() || role.isSystem || this.isSavingRole()) {
+      return;
+    }
+
+    const name = this.editName().trim();
+    if (!name) {
+      this.actionError.set('Role name is required.');
+      return;
+    }
+
+    this.actionError.set(null);
+    this.successFlash.clear();
+    this.isSavingRole.set(true);
+
+    this.organizationService
+      .updateRole(this.organization().id, role.id, {
+        name,
+        description: this.editDescription().trim() || null,
+      })
+      .pipe(
+        finalize(() => this.isSavingRole.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (updated) => {
+          this.selectedRole.set(updated);
+          this.editName.set(updated.name);
+          this.editDescription.set(updated.description ?? '');
+          this.successFlash.show('Role updated.');
+          this.load(this.organization().id);
+        },
+        error: (err) => this.actionError.set(organizationApiErrorMessage(err, 'Failed to update role.')),
+      });
   }
 
   togglePermissionDraft(permissionId: string, checked: boolean): void {

@@ -81,6 +81,18 @@
     color: $color-text-heading;
   }
 
+  &__status {
+    display: inline-block;
+    margin-bottom: $spacing-sm;
+    padding: 2px 8px;
+    border-radius: $border-radius-base;
+    background: $color-bg-alt;
+    color: $color-text-muted;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
   &__link {
     font-weight: $font-weight-semibold;
     color: $color-primary;

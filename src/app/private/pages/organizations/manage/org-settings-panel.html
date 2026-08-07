@@ -59,6 +59,10 @@
             <a class="org-settings__email" [href]="'mailto:' + organization().email">{{ organization().email }}</a>
           </dd>
         </div>
+        <div class="org-settings__meta-row">
+          <dt>Status</dt>
+          <dd><code>{{ organization().status || 'active' }}</code></dd>
+        </div>
       </dl>
       <p class="org-settings__email-hint">
         Organization email is assigned automatically and cannot be changed.
@@ -201,10 +205,95 @@
     </form>
   </section>
 
+  @if (canManage()) {
+    <section class="org-settings__section" aria-labelledby="org-status-heading">
+      <div class="org-settings__section-head">
+        <h3 id="org-status-heading" class="org-settings__section-title">Lifecycle status</h3>
+        <p class="org-settings__section-desc">
+          Suspended and archived organizations are read-only except for status changes and delete.
+        </p>
+      </div>
+      @if (statusError()) {
+        <p class="manage-panel__error">{{ statusError() }}</p>
+      }
+      <div class="org-settings__status-row">
+        <div class="manage-panel__field">
+          <label class="manage-panel__label" for="org-settings-status">Status</label>
+          <select
+            id="org-settings-status"
+            class="manage-panel__select"
+            [ngModel]="statusDraft()"
+            (ngModelChange)="statusDraft.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+          >
+            <option value="active">active</option>
+            <option value="suspended">suspended</option>
+            <option value="archived">archived</option>
+          </select>
+        </div>
+        <button
+          type="button"
+          class="btn btn--primary"
+          [disabled]="
+            isSavingStatus() || statusDraft() === (organization().status || 'active').toLowerCase()
+          "
+          (click)="saveStatus()"
+        >
+          {{ isSavingStatus() ? 'Saving...' : 'Update status' }}
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (isOwner()) {
+    <section class="org-settings__section" aria-labelledby="org-transfer-heading">
+      <div class="org-settings__section-head">
+        <h3 id="org-transfer-heading" class="org-settings__section-title">Transfer ownership</h3>
+        <p class="org-settings__section-desc">
+          Transfer the Owner role to another organization member.
+        </p>
+      </div>
+      @if (transferError()) {
+        <p class="manage-panel__error">{{ transferError() }}</p>
+      }
+      @if (isLoadingMembers()) {
+        <p class="manage-panel__status">Loading members...</p>
+      } @else if (transferCandidates().length === 0) {
+        <p class="manage-panel__status">No other members available for transfer.</p>
+      } @else {
+        <div class="org-settings__status-row">
+          <div class="manage-panel__field">
+            <label class="manage-panel__label" for="org-transfer-member">New owner</label>
+            <select
+              id="org-transfer-member"
+              class="manage-panel__select"
+              [ngModel]="transferUserId()"
+              (ngModelChange)="transferUserId.set($event)"
+              [ngModelOptions]="{ standalone: true }"
+            >
+              <option value="">Select member...</option>
+              @for (member of transferCandidates(); track member.userId) {
+                <option [value]="member.userId">{{ memberLabel(member) }}</option>
+              }
+            </select>
+          </div>
+          <button
+            type="button"
+            class="btn btn--outline"
+            [disabled]="isTransferring() || !transferUserId()"
+            (click)="transferOwnership()"
+          >
+            {{ isTransferring() ? 'Transferring...' : 'Transfer ownership' }}
+          </button>
+        </div>
+      }
+    </section>
+  }
+
   <section class="org-settings__danger" aria-labelledby="org-danger-heading">
     <h3 id="org-danger-heading" class="org-settings__section-title">Danger zone</h3>
     <p class="org-settings__section-desc">
-      Leave this organization or permanently delete it if you are the owner.
+      Leave this organization or soft-delete it. Soft-deleted organizations can be restored within the retention window.
     </p>
     <div class="manage-panel__actions">
       <button type="button" class="btn btn--outline" [disabled]="isLeaving()" (click)="leaveOrganization()">

@@ -4,6 +4,8 @@ export interface OrganizationAddress {
   postalCode: string;
 }
 
+export type OrganizationStatus = 'active' | 'suspended' | 'archived' | string;
+
 export interface Organization {
   id: string;
   name: string;
@@ -13,8 +15,19 @@ export interface Organization {
   email: string;
   address: OrganizationAddress;
   avatarUrl: string | null;
+  status: OrganizationStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UpdateOrganizationStatusRequest {
+  status: 'active' | 'suspended' | 'archived';
+}
+
+export interface RecentlyDeletedOrganization {
+  orgId: string;
+  name: string;
+  deletedAt: string;
 }
 
 export interface OrganizationStats {

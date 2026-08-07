@@ -8,6 +8,10 @@
     <p class="manage-panel__success">{{ success() }}</p>
   }
 
+  <p class="manage-panel__status">
+    Invitations are link-only for MVP — no email is sent. Share the invite link with the recipient.
+  </p>
+
   <form class="manage-panel__form" [formGroup]="inviteForm" (ngSubmit)="submitInvite()" novalidate>
     <div class="manage-panel__field">
       <label class="manage-panel__label" for="invite-email">Email</label>
@@ -23,12 +27,49 @@
       </select>
     </div>
 
+    <div class="manage-panel__field">
+      <label class="manage-panel__label" for="invite-team">Team (optional)</label>
+      <select
+        id="invite-team"
+        class="manage-panel__select"
+        formControlName="teamId"
+        (change)="onTeamChange()"
+      >
+        <option value="">No team</option>
+        @for (team of teams(); track team.id) {
+          <option [value]="team.id">{{ team.name }}</option>
+        }
+      </select>
+    </div>
+
+    @if (inviteForm.controls.teamId.value) {
+      <div class="manage-panel__field">
+        <label class="manage-panel__label" for="invite-team-role">Team role</label>
+        <select id="invite-team-role" class="manage-panel__select" formControlName="teamRoleId">
+          <option value="">Select team role...</option>
+          @for (role of teamRoles(); track role.id) {
+            <option [value]="role.id">{{ role.name }}</option>
+          }
+        </select>
+      </div>
+    }
+
     <div class="manage-panel__actions">
       <button type="submit" class="btn btn--primary" [disabled]="isSubmitting()">
-        {{ isSubmitting() ? 'Sending...' : 'Send invitation' }}
+        {{ isSubmitting() ? 'Creating...' : 'Create invitation' }}
       </button>
     </div>
   </form>
+
+  @if (lastInviteLink()) {
+    <section class="manage-panel__card">
+      <p class="manage-panel__label">Latest invite link</p>
+      <code class="manage-panel__status">{{ lastInviteLink() }}</code>
+      <div class="manage-panel__actions">
+        <button type="button" class="btn btn--ghost" (click)="copyLastInviteLink()">Copy link</button>
+      </div>
+    </section>
+  }
 
   <section class="manage-panel__card">
     @if (isLoading()) {
@@ -53,6 +94,15 @@
                 <td>{{ roleNamesForInvitation(invitation) }}</td>
                 <td>{{ invitation.expiresAt | date: 'medium' }}</td>
                 <td>
+                  @if (inviteLinkFor(invitation); as link) {
+                    <button type="button" class="btn btn--ghost" (click)="copyInviteLink(invitation)">
+                      Copy link
+                    </button>
+                  } @else {
+                    <button type="button" class="btn btn--ghost" (click)="resendInvitation(invitation)">
+                      Resend
+                    </button>
+                  }
                   <button type="button" class="btn btn--ghost" (click)="cancelInvitation(invitation)">
                     Cancel
                   </button>

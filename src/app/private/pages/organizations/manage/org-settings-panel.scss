@@ -196,6 +196,18 @@
     border-top: 1px solid $color-border;
   }
 
+  &__status-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: $spacing-md;
+
+    .manage-panel__field {
+      flex: 1 1 16rem;
+      min-width: 12rem;
+    }
+  }
+
   &__danger {
     margin-top: $spacing-sm;
     padding-top: $spacing-lg;

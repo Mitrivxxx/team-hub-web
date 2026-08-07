@@ -39,38 +39,44 @@
 - `/app/notifications` (`Notifications`): mock inbox UI (All / Unread filters, mark as read); frontend-only, no API yet.
 - `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
 - `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (white background; persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page title (no subtitles/borders) pinned at top of the manage content scrollport. Content area uses light gray background (`$color-bg-alt`); panel content on white cards. `.app-layout--org-manage` locks viewport height; `.org-manage__content` scrolls. `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`.
-- Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v0.1.0`).
+- Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v1`).
 - GraphQL: `environment.graphqlUrl` (`/api/graphql`) for composed reads (All Members table, Audit Log).
 
 ## Organizations
 - `OrganizationService` (`src/app/core/organizations/organization.service.ts`):
-  - Organization: list, getBySlug, create, update, delete, transferOwnership, leave, uploadAvatar, deleteAvatar, createWithDetails
-  - Me: getMe (`roles[]` + permission codes), listMyInvitations
-  - Members: listMembers (REST), getMember, addMember (`roleIds[]`), updateMember (`roleIds[]` replace), removeMember, listMemberTeams
+  - Organization: list, getById, getBySlug, createWithDetails, update, updateStatus, delete, restore, transferOwnership, leave, uploadAvatar, deleteAvatar
+  - Model: `Organization.status` (`active` | `suspended` | `archived`); recently-deleted restore helper in `organization-api.utils.ts` (`sessionStorage` key `teamhub.org.recentlyDeleted`)
+  - Me: getMe (`roles[]` + permission codes), listMyInvitations (`GET /me/invitations`; tokens not returned)
+  - Members: getMember, addMember (`roleIds[]`), updateMember (`roleIds[]` replace), removeMember, listMemberTeams
   - `OrganizationGraphqlService.listMembers` powers All Members table (name/surname via BFF GraphQL)
   - `OrganizationGraphqlService.listActivity` powers Audit Log tab (actor/target profiles + server pagination)
-  - Teams: listTeams, createTeam, deleteTeam, listTeamMembers, addTeamMember, removeTeamMember
+  - Teams: listTeams, getTeam, createTeam, updateTeam, deleteTeam, uploadTeamAvatar, deleteTeamAvatar, listTeamMembers, addTeamMember, updateTeamMember, removeTeamMember
   - Stats: getStats (`memberCount`, `teamCount`)
-  - Roles: listRoles, getRole, createRole, updateRole, deleteRole, listRolePermissions, replace/add/remove role permissions (`permissionIds`), list/assign/revoke role members
+  - Roles: listRoles, getRole, createRole, updateRole, deleteRole, replaceRolePermissions (`permissionIds`)
   - Permissions: listPermissions(`orgId`), getPermission, createPermission, updatePermission, deletePermission (org-scoped)
-  - Invitations: listInvitations, getInvitation, createInvitation (`orgRoleIds[]`), cancelInvitation, resendInvitation, getInvitationByToken, acceptInvitation, rejectInvitation
+  - Invitations: listInvitations, getInvitation, createInvitation (`orgRoleIds[]`, optional `teamId`/`teamRoleId`), cancelInvitation, resendInvitation, getInvitationByToken, acceptInvitationByToken, rejectInvitationByToken
+  - Import/Export: previewImport, startImport, startExport, listImportExportJobs, getImportExportJob, getImportExportDownload
+  - Link-only invites (MVP): create/resend returns token; UI shows copyable `/app/invitations/accept?token=...` (no email delivery)
+- Org list (`OrganizationList`): pending invitations section (`listMyInvitations`); restore banner after soft-delete
+- Invitation accept (`/app/invitations/accept?token=`): Accept + Reject
 - Manage UI panels (`src/app/private/pages/organizations/manage/`):
   - All Members table columns: Name, Surname, Roles, Teams, Joined (user profiles from GraphQL)
-  - `OrgMemberListPanel` — All Members: client-side search (name/surname/username), column sort/filter (name, surname, joined), pagination (10/page), overflow row menu (`Details`, `Edit role`, `Remove`), role edit in details panel, `+ Add Member` header action opens `AddMemberModal`
+  - `OrgMemberListPanel` — All Members: client-side search (name/surname/username), column sort/filter (name, surname, joined), pagination (10/page), overflow row menu (`Details`, `Edit roles`, `Remove`), multi-select ORG roles in details (`roleIds[]`), `+ Add Member` header action opens `AddMemberModal`
   - `AddMemberModal` — search users via `AuthService.searchUsers` (`GET /api/auth/v0.0/users?q=`), dropdown excludes current org members; select user then **Add to organization** assigns fixed org **Member** role via `OrganizationService.addMember`; ArrowUp/ArrowDown + Enter select from list; search after 300ms idle (debounce)
   - `AuthService.searchUsers(q, pageSize?)` — authenticated user search for Add Member / Add to team pickers
   - Shared: `OverflowMenu` (`src/app/shared/overflow-menu/`), `TablePagination` (`src/app/shared/table-pagination/`)
-  - `OrgAddMemberPanel` — email invitations + pending list (`orgRoleIds`)
+  - `OrgAddMemberPanel` — email invitations + optional team/team role + pending list (`orgRoleIds`)
   - `OrgAuditLogPanel` — chronological audit feed: type filter, search, server pagination (20/page); columns Type, User, Actor, When, Details
-  - `OrgSettingsPanel` — Organization tab: identity (avatar, slug, read-only email), editable details (name, description, nip, address), save/discard, leave/delete; requires `org.manage` to edit
-  - `OrgTeamsPanel` — Teams: client-side search (name/description), column sort (name, members, created), pagination (10/page), overflow (`Details`, `Delete`), details card with team members + add/remove; `+ Add Team` header action (gated by `org.teams.manage`) opens `AddTeamModal`
+  - `OrgSettingsPanel` — identity (avatar, slug, read-only email, status), editable details, lifecycle status PATCH, owner transfer ownership, leave/soft-delete (restore via org list banner); requires `org.manage` / `org.delete` / Owner as gated
+  - `OrgTeamsPanel` — Teams: search/sort/pagination, details with edit name/description, team avatar upload/remove, team member add/edit/remove; `+ Add Team` (`org.teams.manage`)
   - `AddTeamModal` — name (required) + description → `OrganizationService.createTeam`
-  - `OrgRolesPanel` — section tabs (Create role, Organization roles, Team roles); create, detail, permission attach by id, delete custom; shared tab styles in `_manage-panel.scss`
-  - `OrgPermissionsPanel` — org permission catalog list + detail (roles using permission); create disabled in UI
+  - `OrgRolesPanel` — section tabs (Create role, Organization roles, Team roles); create, detail, custom role name/description update, permission replace, delete custom
+  - `OrgPermissionsPanel` — create custom permission, catalog list + detail, custom name/description update, delete non-system
   - `OrgStatisticPanel` — Statistic tab: member and team totals from REST `getStats`
+  - `OrgImportExportPanel` — CSV import (preview + async) + CSV/JSON export + job history (`org.members.manage`)
 - Create modal: `CreateOrganizationModal` — fields: name, description, nip (10 digits), address (country, city, postal code), photo (optional); calls `createWithDetails()` (`POST` + optional `PUT .../avatar`). Org `email` is server-generated (`{name}{4digits}@teamhub.local`).
 - Reusable `Sidebar` (`src/app/shared/sidebar/`): tree `items` + `activeId` + `collapsed`; `itemSelect` + `collapsedChange`; collapsed CSS tooltips; chevron row toggles; `aria-current` / `aria-expanded` / `:focus-visible`.
-- Manage nav: Members (All Members, Invitations), Organization (Details, Import / Export), Teams, Role/Permission (Roles, Permissions), Statistic, Audit Log. Statistic panel shows org-wide `memberCount` + `teamCount` via `GET /{orgId}/stats`. Import / Export panel supports CSV member import (preview + async job + error report) and CSV/JSON export with job history (`org.members.manage`).
+- Manage nav: Members (All Members, Invitations), Organization (Details, Import / Export), Teams, Role/Permission (Roles, Permissions), Statistic, Audit Log.
 - JWT Bearer token is attached by `authInterceptor` on all HTTP calls.
 
 ## Don't

@@ -150,6 +150,39 @@
               } @else if (selectedRole(); as role) {
                 <p class="manage-panel__card-meta">{{ role.name }} · {{ role.scope }} · {{ role.memberCount }} members</p>
 
+                @if (canManage() && !role.isSystem) {
+                  <div class="manage-panel__filters">
+                    <div class="manage-panel__field">
+                      <label class="manage-panel__label" for="edit-org-role-name">Name</label>
+                      <input
+                        id="edit-org-role-name"
+                        class="manage-panel__input"
+                        [ngModel]="editName()"
+                        (ngModelChange)="editName.set($event)"
+                      />
+                    </div>
+                    <div class="manage-panel__field">
+                      <label class="manage-panel__label" for="edit-org-role-description">Description</label>
+                      <input
+                        id="edit-org-role-description"
+                        class="manage-panel__input"
+                        [ngModel]="editDescription()"
+                        (ngModelChange)="editDescription.set($event)"
+                      />
+                    </div>
+                    <div class="manage-panel__actions">
+                      <button
+                        type="button"
+                        class="btn btn--outline"
+                        [disabled]="isSavingRole()"
+                        (click)="saveRoleDetails()"
+                      >
+                        {{ isSavingRole() ? 'Saving...' : 'Save role' }}
+                      </button>
+                    </div>
+                  </div>
+                }
+
                 <h4 class="manage-panel__card-title">Permissions</h4>
                 @if (canManage() && role.name !== 'Owner') {
                   <div class="manage-panel__permission-list">
@@ -234,6 +267,39 @@
                 <p class="manage-panel__status">Loading role...</p>
               } @else if (selectedRole(); as role) {
                 <p class="manage-panel__card-meta">{{ role.name }} · {{ role.scope }} · {{ role.memberCount }} members</p>
+
+                @if (canManage() && !role.isSystem) {
+                  <div class="manage-panel__filters">
+                    <div class="manage-panel__field">
+                      <label class="manage-panel__label" for="edit-org-role-name">Name</label>
+                      <input
+                        id="edit-org-role-name"
+                        class="manage-panel__input"
+                        [ngModel]="editName()"
+                        (ngModelChange)="editName.set($event)"
+                      />
+                    </div>
+                    <div class="manage-panel__field">
+                      <label class="manage-panel__label" for="edit-org-role-description">Description</label>
+                      <input
+                        id="edit-org-role-description"
+                        class="manage-panel__input"
+                        [ngModel]="editDescription()"
+                        (ngModelChange)="editDescription.set($event)"
+                      />
+                    </div>
+                    <div class="manage-panel__actions">
+                      <button
+                        type="button"
+                        class="btn btn--outline"
+                        [disabled]="isSavingRole()"
+                        (click)="saveRoleDetails()"
+                      >
+                        {{ isSavingRole() ? 'Saving...' : 'Save role' }}
+                      </button>
+                    </div>
+                  </div>
+                }
 
                 <h4 class="manage-panel__card-title">Permissions</h4>
                 @if (canManage() && role.name !== 'Owner') {

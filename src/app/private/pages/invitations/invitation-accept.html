@@ -1,0 +1,22 @@
+<section class="invite-accept">
+  <h1>Organization invitation</h1>
+
+  @if (isLoading()) {
+    <p>Loading invitation...</p>
+  } @else if (error()) {
+    <p class="invite-accept__error">{{ error() }}</p>
+    <a routerLink="/app">Back to organizations</a>
+  } @else if (invitation(); as invite) {
+    <p>You were invited to join an organization as a member.</p>
+    <p><strong>Email:</strong> {{ invite.email }}</p>
+    <p class="invite-accept__hint">Link-only invite — accept or reject with your signed-in account.</p>
+    <div class="invite-accept__actions">
+      <button type="button" class="btn btn--primary" [disabled]="isAccepting() || isRejecting()" (click)="accept()">
+        {{ isAccepting() ? 'Accepting...' : 'Accept invitation' }}
+      </button>
+      <button type="button" class="btn btn--outline" [disabled]="isAccepting() || isRejecting()" (click)="reject()">
+        {{ isRejecting() ? 'Rejecting...' : 'Reject' }}
+      </button>
+    </div>
+  }
+</section>

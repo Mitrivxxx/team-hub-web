@@ -1,0 +1,20 @@
+.invite-accept {
+  max-width: 40rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+}
+
+.invite-accept__error {
+  color: #b42318;
+}
+
+.invite-accept__hint {
+  opacity: 0.8;
+}
+
+.invite-accept__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}

@@ -107,20 +107,22 @@
           <p class="manage-panel__card-meta">Username: {{ detail.user?.username || '—' }}</p>
           <p class="manage-panel__card-meta manage-panel__mono">User ID: {{ detail.userId }}</p>
 
-          <h3 class="manage-panel__card-title">Role</h3>
+          <h3 class="manage-panel__card-title">Roles</h3>
           @if (canManage() && editingRoleInDetails()) {
             <div class="member-panel__role-edit">
-              <select
-                class="manage-panel__select"
-                [ngModel]="roleDrafts()[detail.userId]"
-                (ngModelChange)="onRoleDraftChange(detail.userId, $event)"
-                [disabled]="busyUserId() === detail.userId"
-                aria-label="Role for member"
-              >
-                @for (role of orgRoles(); track role.id) {
-                  <option [value]="role.id">{{ role.name }}</option>
+              <div class="manage-panel__permission-list">
+                @for (role of assignableOrgRoles(); track role.id) {
+                  <label class="manage-panel__check">
+                    <input
+                      type="checkbox"
+                      [checked]="isRoleDraftSelected(detail.userId, role.id)"
+                      [disabled]="busyUserId() === detail.userId"
+                      (change)="onRoleDraftToggle(detail.userId, role.id, $any($event.target).checked)"
+                    />
+                    <span>{{ role.name }}</span>
+                  </label>
                 }
-              </select>
+              </div>
               <div class="manage-panel__actions">
                 <button
                   type="button"
@@ -128,7 +130,7 @@
                   [disabled]="busyUserId() === detail.userId"
                   (click)="applyRole(detail)"
                 >
-                  Save role
+                  Save roles
                 </button>
                 <button type="button" class="btn btn--ghost" (click)="editingRoleInDetails.set(false)">
                   Cancel
@@ -143,8 +145,8 @@
                 }
               </span>
               @if (canManage()) {
-                <button type="button" class="btn btn--ghost" (click)="editingRoleInDetails.set(true)">
-                  Edit role
+                <button type="button" class="btn btn--ghost" (click)="startEditRoles(detail)">
+                  Edit roles
                 </button>
               }
             </p>

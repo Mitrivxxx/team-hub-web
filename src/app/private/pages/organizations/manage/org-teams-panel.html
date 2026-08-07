@@ -86,8 +86,72 @@
           <button type="button" class="btn btn--ghost" (click)="closeDetails()">Close</button>
         </div>
 
-        <p class="manage-panel__card-meta">Name: {{ team.name }}</p>
-        <p class="manage-panel__card-meta">Description: {{ team.description || '—' }}</p>
+        @if (canManage()) {
+          <form class="manage-panel__form" [formGroup]="editTeamForm" (ngSubmit)="saveTeamDetails()" novalidate>
+            <div class="manage-panel__field">
+              <label class="manage-panel__label" for="edit-team-name">Name</label>
+              <input id="edit-team-name" type="text" class="manage-panel__input" formControlName="name" />
+            </div>
+            <div class="manage-panel__field">
+              <label class="manage-panel__label" for="edit-team-description">Description</label>
+              <input
+                id="edit-team-description"
+                type="text"
+                class="manage-panel__input"
+                formControlName="description"
+              />
+            </div>
+            <div class="manage-panel__actions">
+              <button
+                type="submit"
+                class="btn btn--primary"
+                [disabled]="editTeamForm.pristine || isSavingTeam()"
+              >
+                {{ isSavingTeam() ? 'Saving...' : 'Save team' }}
+              </button>
+            </div>
+          </form>
+
+          <div class="team-panel__avatar-block">
+            <div class="team-panel__avatar-preview">
+              @if (team.avatarUrl) {
+                <img [src]="team.avatarUrl" [alt]="team.name + ' avatar'" />
+              } @else {
+                <span aria-hidden="true">{{ team.name.slice(0, 2).toUpperCase() }}</span>
+              }
+            </div>
+            <div class="manage-panel__actions">
+              <label class="btn btn--outline" [class.btn--disabled]="isUploadingAvatar()">
+                {{ isUploadingAvatar() ? 'Uploading...' : team.avatarUrl ? 'Change photo' : 'Upload photo' }}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  [disabled]="isUploadingAvatar()"
+                  (change)="onTeamAvatarSelected($event)"
+                />
+              </label>
+              @if (team.avatarUrl) {
+                <button
+                  type="button"
+                  class="btn btn--ghost"
+                  [disabled]="isUploadingAvatar()"
+                  (click)="removeTeamAvatar()"
+                >
+                  Remove
+                </button>
+              }
+            </div>
+            <p class="manage-panel__hint">JPEG, PNG, or WebP. Max 2 MB.</p>
+            @if (avatarError()) {
+              <p class="manage-panel__error">{{ avatarError() }}</p>
+            }
+          </div>
+        } @else {
+          <p class="manage-panel__card-meta">Name: {{ team.name }}</p>
+          <p class="manage-panel__card-meta">Description: {{ team.description || '—' }}</p>
+        }
+
         <p class="manage-panel__card-meta">Created: {{ team.createdAt | date: 'medium' }}</p>
         <p class="manage-panel__card-meta">Members: {{ team.memberCount }}</p>
 
@@ -115,14 +179,48 @@
                 @for (member of detailsMembers(); track member.userId) {
                   <tr>
                     <td class="manage-panel__mono">{{ member.userId }}</td>
-                    <td>{{ member.roleName }}</td>
-                    <td>{{ member.jobTitle || '—' }}</td>
+                    @if (editingMemberUserId() === member.userId) {
+                      <td colspan="2">
+                        <div class="team-panel__member-edit" [formGroup]="editMemberForm">
+                          <select class="manage-panel__select" formControlName="roleId">
+                            @for (role of teamRoles(); track role.id) {
+                              <option [value]="role.id">{{ role.name }}</option>
+                            }
+                          </select>
+                          <input
+                            class="manage-panel__input"
+                            formControlName="jobTitle"
+                            placeholder="Job title"
+                          />
+                        </div>
+                      </td>
+                    } @else {
+                      <td>{{ member.roleName }}</td>
+                      <td>{{ member.jobTitle || '—' }}</td>
+                    }
                     <td>{{ member.joinedAt | date: 'mediumDate' }}</td>
                     @if (canManage()) {
                       <td>
-                        <button type="button" class="btn btn--ghost" (click)="removeTeamMember(member)">
-                          Remove
-                        </button>
+                        @if (editingMemberUserId() === member.userId) {
+                          <button
+                            type="button"
+                            class="btn btn--ghost"
+                            [disabled]="isSavingMember()"
+                            (click)="saveTeamMember(member)"
+                          >
+                            {{ isSavingMember() ? 'Saving...' : 'Save' }}
+                          </button>
+                          <button type="button" class="btn btn--ghost" (click)="cancelEditMember()">
+                            Cancel
+                          </button>
+                        } @else {
+                          <button type="button" class="btn btn--ghost" (click)="startEditMember(member)">
+                            Edit
+                          </button>
+                          <button type="button" class="btn btn--ghost" (click)="removeTeamMember(member)">
+                            Remove
+                          </button>
+                        }
                       </td>
                     }
                   </tr>
