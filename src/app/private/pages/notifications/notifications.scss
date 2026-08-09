@@ -36,6 +36,12 @@
     max-width: 36rem;
   }
 
+  &__error {
+    margin: 0 0 $spacing-md;
+    color: #b42318;
+    font-size: 0.9rem;
+  }
+
   &__toolbar {
     display: flex;
     gap: $spacing-sm;
@@ -156,6 +162,11 @@
     &[data-kind='team'] {
       background: rgba(94, 170, 168, 0.15);
       color: $color-primary-dark;
+    }
+
+    &[data-kind='member'] {
+      background: rgba(34, 184, 212, 0.12);
+      color: #0e9bb8;
     }
 
     &[data-kind='system'] {

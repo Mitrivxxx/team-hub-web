@@ -18,7 +18,7 @@ chmod 644 "$CERT_FILE" "$KEY_FILE" 2>/dev/null || true
 if ! openssl x509 -in "$CERT_FILE" -noout -issuer 2>/dev/null | grep -qi mkcert; then
   echo "Using self-signed TLS certs. For a trusted browser certificate run on the host:"
   echo "  ./scripts/setup-certs.sh"
-  echo "Then restart: docker compose up --build nginx web"
+  echo "Then restart: docker compose up --build gw-nginx ui-web"
 fi
 
 nginx -t

@@ -1,7 +1,13 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-export type NotificationKind = 'invite' | 'mention' | 'system' | 'team';
+import {
+  NotificationDto,
+  NotificationService,
+} from '../../../core/notifications/notification.service';
+
+export type NotificationKind = 'invite' | 'mention' | 'system' | 'team' | 'member';
 
 export interface AppNotification {
   id: string;
@@ -13,62 +19,20 @@ export interface AppNotification {
   read: boolean;
 }
 
-const MOCK_NOTIFICATIONS: AppNotification[] = [
-  {
-    id: '1',
-    kind: 'invite',
-    title: 'Organization invitation',
-    body: 'You were invited to join Acme Labs as a Member.',
-    organization: 'Acme Labs',
-    createdAt: '2026-08-01T16:42:00.000Z',
-    read: false,
-  },
-  {
-    id: '2',
-    kind: 'mention',
-    title: 'You were mentioned',
-    body: 'Anna mentioned you in “Q3 planning” in Team Chat.',
-    organization: 'Acme Labs',
-    createdAt: '2026-08-01T14:10:00.000Z',
-    read: false,
-  },
-  {
-    id: '3',
-    kind: 'team',
-    title: 'Added to a team',
-    body: 'You were added to Design System by Marek.',
-    organization: 'Northwind',
-    createdAt: '2026-07-31T09:25:00.000Z',
-    read: true,
-  },
-  {
-    id: '4',
-    kind: 'system',
-    title: 'Security notice',
-    body: 'A new login was detected from Warsaw. If this was not you, change your password.',
-    createdAt: '2026-07-30T18:03:00.000Z',
-    read: true,
-  },
-  {
-    id: '5',
-    kind: 'invite',
-    title: 'Invitation accepted',
-    body: 'Kasia accepted your invitation to Contoso Hub.',
-    organization: 'Contoso Hub',
-    createdAt: '2026-07-29T11:48:00.000Z',
-    read: true,
-  },
-];
-
 @Component({
   selector: 'app-notifications',
   imports: [DatePipe],
   templateUrl: './notifications.html',
   styleUrl: './notifications.scss',
 })
-export class Notifications {
+export class Notifications implements OnInit {
+  private readonly notificationService = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
+
   readonly filter = signal<'all' | 'unread'>('all');
-  readonly items = signal<AppNotification[]>(MOCK_NOTIFICATIONS);
+  readonly items = signal<AppNotification[]>([]);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
 
   readonly unreadCount = computed(() => this.items().filter((n) => !n.read).length);
 
@@ -77,18 +41,38 @@ export class Notifications {
     return this.filter() === 'unread' ? items.filter((n) => !n.read) : items;
   });
 
+  ngOnInit(): void {
+    this.reload();
+  }
+
   setFilter(value: 'all' | 'unread'): void {
     this.filter.set(value);
   }
 
   markAsRead(id: string): void {
-    this.items.update((list) =>
-      list.map((item) => (item.id === id ? { ...item, read: true } : item)),
-    );
+    this.notificationService
+      .markAsRead(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.items.update((list) =>
+            list.map((item) => (item.id === id ? { ...item, read: true } : item)),
+          );
+        },
+        error: () => this.error.set('Could not mark notification as read.'),
+      });
   }
 
   markAllAsRead(): void {
-    this.items.update((list) => list.map((item) => ({ ...item, read: true })));
+    this.notificationService
+      .markAllAsRead()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.items.update((list) => list.map((item) => ({ ...item, read: true })));
+        },
+        error: () => this.error.set('Could not mark notifications as read.'),
+      });
   }
 
   kindLabel(kind: NotificationKind): string {
@@ -99,8 +83,53 @@ export class Notifications {
         return 'Mention';
       case 'team':
         return 'Team';
+      case 'member':
+        return 'Member';
       case 'system':
         return 'System';
     }
+  }
+
+  private reload(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.notificationService
+      .listMine()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (items) => {
+          this.items.set(items.map((item) => this.mapDto(item)));
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('Could not load notifications.');
+          this.loading.set(false);
+        },
+      });
+  }
+
+  private mapDto(dto: NotificationDto): AppNotification {
+    return {
+      id: dto.id,
+      kind: this.mapKind(dto.type),
+      title: dto.title,
+      body: dto.body,
+      organization: dto.organizationId ?? undefined,
+      createdAt: dto.createdAt,
+      read: dto.isRead,
+    };
+  }
+
+  private mapKind(type: string): NotificationKind {
+    if (type.includes('member')) {
+      return 'member';
+    }
+    if (type.includes('invite')) {
+      return 'invite';
+    }
+    if (type.includes('team')) {
+      return 'team';
+    }
+    return 'system';
   }
 }

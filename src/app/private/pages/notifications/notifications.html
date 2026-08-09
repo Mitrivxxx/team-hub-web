@@ -41,7 +41,16 @@
       </button>
     </div>
 
-    @if (visibleItems().length === 0) {
+    @if (error()) {
+      <p class="notifications__error" role="alert">{{ error() }}</p>
+    }
+
+    @if (loading()) {
+      <div class="notifications__empty shadow-soft">
+        <p class="notifications__empty-title">Loading</p>
+        <p class="notifications__empty-text">Fetching your inbox…</p>
+      </div>
+    } @else if (visibleItems().length === 0) {
       <div class="notifications__empty shadow-soft">
         <p class="notifications__empty-title">You're all caught up</p>
         <p class="notifications__empty-text">No notifications match this filter.</p>

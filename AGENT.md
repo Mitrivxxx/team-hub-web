@@ -19,7 +19,7 @@
   - `username`: trim, `^[a-zA-Z0-9._-]{3,30}$`.
   - `password`: length 8-128.
 - In dev, keep proxy `/api` on `https://localhost:8080` (infrastructure nginx HTTPS).
-- In docker (Production), serve frontend on `https://localhost:4200` (`team-hub-web-prod`); frontend nginx proxies `/api` to `http://nginx:80`.
+- In docker (Production), serve frontend on `https://localhost:4200` (`ui-web-prod`); frontend nginx proxies `/api` to `http://gw-nginx:80`.
 - Set `X-Correlation-ID` on every API request via `src/app/core/http/correlation-id.interceptor.ts` (new UUID per request).
 - Set `X-Session-ID` on every API request via `src/app/core/http/session-id.interceptor.ts` (one ID per visit in `sessionStorage`).
 - Sync `X-Session-ID` from response header when auth returns a fallback value (`SessionContextService.syncFromResponse`).
@@ -36,7 +36,7 @@
 - Authenticated header uses avatar initials menu with Log out (Escape / outside click closes).
 - Authenticated header shows Notifications link (`/app/notifications`); hidden for guests.
 - `/app` shows organization list for the logged-in user (`OrganizationList`).
-- `/app/notifications` (`Notifications`): mock inbox UI (All / Unread filters, mark as read); frontend-only, no API yet.
+- `/app/notifications` (`Notifications`): inbox via `NotificationService` (`GET /api/notifications/v1/me`); All/Unread filters; mark as read / mark all as read (`POST .../read`, `POST .../read-all`). `environment.notificationsApiUrl` = `/api/notifications/v1`.
 - `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
 - `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (white background; persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page title (no subtitles/borders) pinned at top of the manage content scrollport. Content area uses light gray background (`$color-bg-alt`); panel content on white cards. `.app-layout--org-manage` locks viewport height; `.org-manage__content` scrolls. `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`.
 - Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v1`).
