@@ -73,11 +73,26 @@
             [attr.aria-label]="'Account menu for ' + userDisplayName()"
             (click)="toggleUserMenu($event)"
           >
-            {{ userInitials() }}
+            @if (authService.currentUser()?.avatarUrl; as avatarUrl) {
+              <img [src]="avatarUrl" alt="" class="site-header__avatar-image" />
+            } @else {
+              {{ userInitials() }}
+            }
           </button>
           @if (userMenuOpen()) {
             <div class="site-header__menu" role="menu">
               <p class="site-header__menu-label">{{ userDisplayName() }}</p>
+              @if (authService.currentUser()?.username; as username) {
+                <p class="site-header__menu-username">{{ username }}</p>
+              }
+              <a
+                routerLink="/app/profile"
+                class="site-header__menu-item"
+                role="menuitem"
+                (click)="closeUserMenu()"
+              >
+                Profile
+              </a>
               <button type="button" class="site-header__menu-item" role="menuitem" (click)="onLogout()">
                 Log out
               </button>

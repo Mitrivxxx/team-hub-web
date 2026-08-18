@@ -1,0 +1,38 @@
+# team-hub-web
+
+## Purpose
+- Angular frontend for Team Hub.
+
+## Scope
+- Authentication, profile, organizations management UI, invitations, and notifications inbox.
+- Uses gateway-backed API paths and GraphQL BFF for selected composed reads.
+
+## Runtime and ports
+- Local dev app: Angular dev server (standard project scripts).
+- Dev API proxy: `/api` -> `https://localhost:8080` (infrastructure nginx).
+- Docker/runtime: frontend exposed on `https://localhost:4200` (`ui-web`).
+
+## API integration
+- Auth API base: `/api/auth/v1`.
+- Organization API base: `/api/organizations/v1`.
+- Notification API base: `/api/notifications/v1`.
+- Chat API base: `/api/chat/v1` (reserved/integration-ready).
+- GraphQL BFF: `/api/graphql`.
+
+## Runtime flow
+- Browser -> `ui-web` -> nginx/gateway path `/api/...` -> backend services.
+- Frontend does not call backend services directly by container URL.
+
+## Security and request context
+- Uses JWT bearer for protected calls.
+- Sends `X-Correlation-ID` and `X-Session-ID` via HTTP interceptors.
+- Uses `withCredentials` where auth/session flow requires cookies.
+
+## Configuration
+- Environment files: `src/environments/environment.ts`.
+- Dev proxy config: `proxy.conf.json`.
+- Main app code: `src/app/**`.
+
+## Related docs
+- `AGENT.md`
+- `docs/frontend.mb`

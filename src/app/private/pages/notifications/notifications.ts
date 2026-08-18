@@ -14,7 +14,6 @@ export interface AppNotification {
   kind: NotificationKind;
   title: string;
   body: string;
-  organization?: string;
   createdAt: string;
   read: boolean;
 }
@@ -114,7 +113,6 @@ export class Notifications implements OnInit {
       kind: this.mapKind(dto.type),
       title: dto.title,
       body: dto.body,
-      organization: dto.organizationId ?? undefined,
       createdAt: dto.createdAt,
       read: dto.isRead,
     };

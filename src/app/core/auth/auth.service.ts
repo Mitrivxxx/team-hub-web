@@ -18,6 +18,7 @@ export interface UserResponse {
   email: string;
   name: string;
   surname: string;
+  avatarUrl?: string | null;
 }
 
 export type { FieldValidationErrors };
@@ -115,23 +116,109 @@ export class AuthService {
     return this.http
       .post<void>(`${this.baseUrl}/logout`, null, { withCredentials: true })
       .pipe(
-        tap(() => {
-          this._currentUser.set(null);
-          this._accessToken.set(null);
+        tap(() => this.clearLocalSession()),
+        catchError(() => {
+          this.clearLocalSession();
+          return of(void 0);
         }),
       );
   }
 
+  /** Clears in-memory auth state after server-side session revoke (password/email change). */
+  clearLocalSession(): void {
+    this._currentUser.set(null);
+    this._accessToken.set(null);
+  }
+
   searchUsers(q: string, pageSize = 20): Observable<UserResponse[]> {
+    const term = q.trim();
+    if (term.length < 2) {
+      return of([]);
+    }
     const params: Record<string, string> = {
       page: '1',
       pageSize: String(pageSize),
+      q: term,
     };
-    const term = q.trim();
-    if (term) {
-      params['q'] = term;
-    }
     return this.http.get<UserResponse[]>(`${this.baseUrl}/users`, { params });
+  }
+
+  getMe(): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`${this.baseUrl}/me`).pipe(tap((user) => this._currentUser.set(user)));
+  }
+
+  updateMe(data: { name?: string; surname?: string; email?: string }): Observable<UserResponse> {
+    const payload: { name?: string; surname?: string; email?: string } = {};
+    if (data.name !== undefined) {
+      payload.name = data.name.trim();
+    }
+    if (data.surname !== undefined) {
+      payload.surname = data.surname.trim();
+    }
+    if (data.email !== undefined) {
+      payload.email = data.email.trim();
+    }
+
+    const fieldErrors = this.validateUpdateMePayload(payload);
+    if (fieldErrors) {
+      return throwError(() => new AuthValidationError('Profile update validation failed.', fieldErrors, 400));
+    }
+
+    return this.http.patch<UserResponse>(`${this.baseUrl}/me`, payload).pipe(
+      tap((user) => this._currentUser.set(user)),
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse) {
+          const apiFieldErrors = parseApiFieldErrors(error);
+          if (apiFieldErrors) {
+            return throwError(
+              () => new AuthValidationError('Profile update validation failed.', apiFieldErrors, error.status),
+            );
+          }
+        }
+
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  changeMyPassword(currentPassword: string, newPassword: string): Observable<void> {
+    if (newPassword.length < 8 || newPassword.length > 128) {
+      return throwError(
+        () =>
+          new AuthValidationError(
+            'Password change validation failed.',
+            { newPassword: ['Password must be 8-128 characters long.'] },
+            400,
+          ),
+      );
+    }
+
+    return this.http.post<void>(`${this.baseUrl}/me/change-password`, { currentPassword, newPassword }).pipe(
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse) {
+          const apiFieldErrors = parseApiFieldErrors(error);
+          if (apiFieldErrors) {
+            return throwError(
+              () => new AuthValidationError('Password change validation failed.', apiFieldErrors, error.status),
+            );
+          }
+        }
+
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  uploadAvatar(file: File): Observable<UserResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.put<UserResponse>(`${this.baseUrl}/me/avatar`, formData).pipe(tap((user) => this._currentUser.set(user)));
+  }
+
+  deleteAvatar(): Observable<UserResponse> {
+    return this.http
+      .delete<UserResponse>(`${this.baseUrl}/me/avatar`)
+      .pipe(tap((user) => this._currentUser.set(user)));
   }
 
   changePassword(data: {
@@ -216,6 +303,34 @@ export class AuthService {
 
     if (data.password.length < 8 || data.password.length > 128) {
       fieldErrors['password'] = ['Password must be 8-128 characters long.'];
+    }
+
+    return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
+  }
+
+  private validateUpdateMePayload(data: {
+    name?: string;
+    surname?: string;
+    email?: string;
+  }): FieldValidationErrors | null {
+    const fieldErrors: FieldValidationErrors = {};
+
+    if (data.name !== undefined && (data.name.length < 2 || data.name.length > 50 || !AuthService.humanNameRegex.test(data.name))) {
+      fieldErrors['name'] = ['First name is invalid.'];
+    }
+
+    if (
+      data.surname !== undefined &&
+      (data.surname.length < 2 || data.surname.length > 80 || !AuthService.humanNameRegex.test(data.surname))
+    ) {
+      fieldErrors['surname'] = ['Last name is invalid.'];
+    }
+
+    if (data.email !== undefined) {
+      const email = data.email.trim();
+      if (email.length < 3 || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        fieldErrors['email'] = ['Email is invalid.'];
+      }
     }
 
     return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;

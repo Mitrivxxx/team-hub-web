@@ -195,7 +195,7 @@ export class OrgTeamsPanel {
       .pipe(
         debounceTime(SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
-        filter((q) => q.trim().length > 0),
+        filter((q) => q.trim().length >= 2),
         switchMap((q) => {
           this.isSearchingMembers.set(true);
           this.memberSearchError.set(null);

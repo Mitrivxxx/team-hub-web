@@ -84,7 +84,7 @@ export class AddMemberModal {
       .pipe(
         debounceTime(SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
-        filter((q) => q.trim().length > 0),
+        filter((q) => q.trim().length >= 2),
         switchMap((q) => {
           const term = q.trim();
           this.isSearching.set(true);
@@ -114,7 +114,7 @@ export class AddMemberModal {
     this.selectedUser.set(null);
 
     const trimmed = value.trim();
-    if (!trimmed) {
+    if (trimmed.length < 2) {
       this.clearResults();
       return;
     }

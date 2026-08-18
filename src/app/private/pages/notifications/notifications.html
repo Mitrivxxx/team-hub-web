@@ -70,9 +70,6 @@
                 >
                   {{ kindLabel(item.kind) }}
                 </span>
-                @if (item.organization) {
-                  <span class="notifications__org">{{ item.organization }}</span>
-                }
                 <time class="notifications__time" [attr.datetime]="item.createdAt">
                   {{ item.createdAt | date: 'medium' }}
                 </time>

@@ -17,6 +17,10 @@ export const privateRoutes: Routes = [
       import('./pages/notifications/notifications').then((m) => m.Notifications),
   },
   {
+    path: 'profile',
+    loadComponent: () => import('./pages/profile/profile').then((m) => m.Profile),
+  },
+  {
     path: 'organizations/:slug/manage',
     loadComponent: () =>
       import('./pages/organizations/organization-manage').then((m) => m.OrganizationManage),

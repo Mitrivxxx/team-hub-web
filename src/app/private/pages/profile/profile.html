@@ -1,0 +1,216 @@
+<main class="profile section">
+  <div class="container profile__container">
+    <header class="profile__header">
+      <div>
+        <p class="profile__eyebrow">Account</p>
+        <h1 class="profile__title">Profile</h1>
+        <p class="profile__description">Update your photo, name, email, and password.</p>
+      </div>
+    </header>
+
+    @if (loading()) {
+      <p class="profile__status">Loading profile...</p>
+    } @else if (loadError()) {
+      <p class="profile__error">{{ loadError() }}</p>
+    } @else {
+      @if (success()) {
+        <p class="profile__success">{{ success() }}</p>
+      }
+
+      <section class="profile__card" aria-labelledby="profile-identity-heading">
+        <h2 id="profile-identity-heading" class="profile__card-title">Identity</h2>
+        <div class="profile__identity">
+          <div class="profile__avatar-block">
+            <div class="profile__avatar" [class.profile__avatar--empty]="!user()?.avatarUrl">
+              @if (user()?.avatarUrl; as avatarUrl) {
+                <img [src]="avatarUrl" [alt]="user()!.name + ' photo'" />
+              } @else {
+                <span aria-hidden="true">{{ initials() }}</span>
+              }
+            </div>
+            <div class="profile__avatar-actions">
+                <label class="btn btn--outline">
+                {{ isUploadingAvatar() ? 'Uploading...' : user()?.avatarUrl ? 'Change photo' : 'Upload photo' }}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  [disabled]="isUploadingAvatar()"
+                  (change)="onAvatarSelected($event)"
+                />
+              </label>
+              @if (user()?.avatarUrl) {
+                <button
+                  type="button"
+                  class="btn btn--outline"
+                  [disabled]="isUploadingAvatar()"
+                  (click)="removeAvatar()"
+                >
+                  Remove
+                </button>
+              }
+            </div>
+            @if (avatarError()) {
+              <p class="profile__field-error">{{ avatarError() }}</p>
+            }
+          </div>
+
+          <div class="profile__field">
+            <label class="profile__label" for="profile-username">Username</label>
+            <input
+              id="profile-username"
+              type="text"
+              class="profile__input"
+              [value]="user()?.username ?? ''"
+              readonly
+            />
+            <p class="profile__hint">Username cannot be changed.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="profile__card" aria-labelledby="profile-details-heading">
+        <h2 id="profile-details-heading" class="profile__card-title">Profile</h2>
+        <form class="profile__form" [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate>
+          <div class="profile__row">
+            <div class="profile__field">
+              <label class="profile__label" for="profile-first-name">First name</label>
+              <input
+                id="profile-first-name"
+                type="text"
+                class="profile__input"
+                formControlName="firstName"
+                autocomplete="given-name"
+                [class.profile__input--invalid]="
+                  profileForm.controls.firstName.touched && profileForm.controls.firstName.invalid
+                "
+              />
+              @if (profileForm.controls.firstName.touched && profileForm.controls.firstName.hasError('required')) {
+                <span class="profile__field-error">First name is required.</span>
+              }
+              @if (profileForm.controls.firstName.touched && profileForm.controls.firstName.hasError('humanName')) {
+                <span class="profile__field-error">
+                  First name must be 2-50 characters and contain only letters, spaces, apostrophes, or hyphens.
+                </span>
+              }
+              @if (profileForm.controls.firstName.touched && profileForm.controls.firstName.hasError('server')) {
+                <span class="profile__field-error">{{ profileForm.controls.firstName.getError('server') }}</span>
+              }
+            </div>
+
+            <div class="profile__field">
+              <label class="profile__label" for="profile-last-name">Last name</label>
+              <input
+                id="profile-last-name"
+                type="text"
+                class="profile__input"
+                formControlName="lastName"
+                autocomplete="family-name"
+                [class.profile__input--invalid]="
+                  profileForm.controls.lastName.touched && profileForm.controls.lastName.invalid
+                "
+              />
+              @if (profileForm.controls.lastName.touched && profileForm.controls.lastName.hasError('required')) {
+                <span class="profile__field-error">Last name is required.</span>
+              }
+              @if (profileForm.controls.lastName.touched && profileForm.controls.lastName.hasError('humanName')) {
+                <span class="profile__field-error">
+                  Last name must be 2-80 characters and contain only letters, spaces, apostrophes, or hyphens.
+                </span>
+              }
+              @if (profileForm.controls.lastName.touched && profileForm.controls.lastName.hasError('server')) {
+                <span class="profile__field-error">{{ profileForm.controls.lastName.getError('server') }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="profile__field">
+            <label class="profile__label" for="profile-email">Email</label>
+            <input
+              id="profile-email"
+              type="email"
+              class="profile__input"
+              formControlName="email"
+              autocomplete="email"
+              [class.profile__input--invalid]="profileForm.controls.email.touched && profileForm.controls.email.invalid"
+            />
+            @if (profileForm.controls.email.touched && profileForm.controls.email.hasError('required')) {
+              <span class="profile__field-error">Email is required.</span>
+            }
+            @if (profileForm.controls.email.touched && profileForm.controls.email.hasError('emailFormat')) {
+              <span class="profile__field-error">Email is invalid.</span>
+            }
+            @if (profileForm.controls.email.touched && profileForm.controls.email.hasError('server')) {
+              <span class="profile__field-error">{{ profileForm.controls.email.getError('server') }}</span>
+            }
+          </div>
+
+          @if (profileError()) {
+            <p class="profile__error">{{ profileError() }}</p>
+          }
+
+          <button type="submit" class="btn btn--primary" [disabled]="isSavingProfile()">
+            {{ isSavingProfile() ? 'Saving...' : 'Save profile' }}
+          </button>
+        </form>
+      </section>
+
+      <section class="profile__card" aria-labelledby="profile-security-heading">
+        <h2 id="profile-security-heading" class="profile__card-title">Security</h2>
+        <form class="profile__form" [formGroup]="passwordForm" (ngSubmit)="savePassword()" novalidate>
+          <div class="profile__field">
+            <label class="profile__label" for="profile-current-password">Current password</label>
+            <input
+              id="profile-current-password"
+              type="password"
+              class="profile__input"
+              formControlName="currentPassword"
+              autocomplete="current-password"
+              [class.profile__input--invalid]="
+                passwordForm.controls.currentPassword.touched && passwordForm.controls.currentPassword.invalid
+              "
+            />
+            @if (
+              passwordForm.controls.currentPassword.touched &&
+              passwordForm.controls.currentPassword.hasError('required')
+            ) {
+              <span class="profile__field-error">Current password is required.</span>
+            }
+          </div>
+
+          <div class="profile__field">
+            <label class="profile__label" for="profile-new-password">New password</label>
+            <input
+              id="profile-new-password"
+              type="password"
+              class="profile__input"
+              formControlName="newPassword"
+              autocomplete="new-password"
+              [class.profile__input--invalid]="
+                passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.invalid
+              "
+            />
+            @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('required')) {
+              <span class="profile__field-error">New password is required.</span>
+            }
+            @if (
+              passwordForm.controls.newPassword.touched &&
+              (passwordForm.controls.newPassword.hasError('minlength') ||
+                passwordForm.controls.newPassword.hasError('maxlength'))
+            ) {
+              <span class="profile__field-error">Password must be 8-128 characters long.</span>
+            }
+          </div>
+
+          @if (passwordError()) {
+            <p class="profile__error">{{ passwordError() }}</p>
+          }
+
+          <button type="submit" class="btn btn--primary" [disabled]="isSavingPassword()">
+            {{ isSavingPassword() ? 'Updating...' : 'Change password' }}
+          </button>
+        </form>
+      </section>
+    }
+  </div>
+</main>

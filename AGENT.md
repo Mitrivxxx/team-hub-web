@@ -33,9 +33,10 @@
 - Until `sessionReady`, show `AppLoader`.
 - `authGuard` protects `/app/*`; `guestGuard` redirects logged-in users from `/login`, `/signup`, and `/forgot-password`.
 - Site header logo: `/app` when authenticated, `/` when guest. On manage route, logo is hidden; puzzle logo lives in the sidebar and links to `/app`.
-- Authenticated header uses avatar initials menu with Log out (Escape / outside click closes).
+- Authenticated header uses avatar photo or initials menu with Profile (`/app/profile`) and Log out (Escape / outside click closes).
 - Authenticated header shows Notifications link (`/app/notifications`); hidden for guests.
 - `/app` shows organization list for the logged-in user (`OrganizationList`).
+- `/app/profile` (`Profile`): GET/PATCH `/api/auth/v1/me` (name, surname, email; username read-only), avatar upload/remove (`PUT|DELETE /me/avatar`), authenticated password change (`POST /me/change-password`). After password change or email change, clear local session (`AuthService.clearLocalSession`) and redirect to `/login` (server revokes refresh sessions).
 - `/app/notifications` (`Notifications`): inbox via `NotificationService` (`GET /api/notifications/v1/me`); All/Unread filters; mark as read / mark all as read (`POST .../read`, `POST .../read-all`). `environment.notificationsApiUrl` = `/api/notifications/v1`.
 - `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
 - `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (white background; persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page title (no subtitles/borders) pinned at top of the manage content scrollport. Content area uses light gray background (`$color-bg-alt`); panel content on white cards. `.app-layout--org-manage` locks viewport height; `.org-manage__content` scrolls. `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`.
@@ -62,8 +63,9 @@
 - Manage UI panels (`src/app/private/pages/organizations/manage/`):
   - All Members table columns: Name, Surname, Roles, Teams, Joined (user profiles from GraphQL)
   - `OrgMemberListPanel` — All Members: client-side search (name/surname/username), column sort/filter (name, surname, joined), pagination (10/page), overflow row menu (`Details`, `Edit roles`, `Remove`), multi-select ORG roles in details (`roleIds[]`), `+ Add Member` header action opens `AddMemberModal`
-  - `AddMemberModal` — search users via `AuthService.searchUsers` (`GET /api/auth/v0.0/users?q=`), dropdown excludes current org members; select user then **Add to organization** assigns fixed org **Member** role via `OrganizationService.addMember`; ArrowUp/ArrowDown + Enter select from list; search after 300ms idle (debounce)
-  - `AuthService.searchUsers(q, pageSize?)` — authenticated user search for Add Member / Add to team pickers
+  - `AddMemberModal` — search users via `AuthService.searchUsers` (`GET /api/auth/v1/users?q=`; `q` min 2 chars), dropdown excludes current org members; select user then **Add to organization** assigns fixed org **Member** role via `OrganizationService.addMember`; ArrowUp/ArrowDown + Enter select from list; search after 300ms idle (debounce)
+  - `AuthService.searchUsers(q, pageSize?)` — authenticated user search for Add Member / Add to team pickers (`q` length < 2 → empty client-side)
+  - `AuthService.getMe` / `updateMe` / `changeMyPassword` / `uploadAvatar` / `deleteAvatar` / `clearLocalSession` — profile page (`/app/profile`)
   - Shared: `OverflowMenu` (`src/app/shared/overflow-menu/`), `TablePagination` (`src/app/shared/table-pagination/`)
   - `OrgAddMemberPanel` — email invitations + optional team/team role + pending list (`orgRoleIds`)
   - `OrgAuditLogPanel` — chronological audit feed: type filter, search, server pagination (20/page); columns Type, User, Actor, When, Details
