@@ -8,6 +8,19 @@
     max-width: 800px;
   }
 
+  &__status {
+    margin: 4rem auto;
+    max-width: 32rem;
+    text-align: center;
+    display: grid;
+    gap: 1rem;
+    justify-items: center;
+
+    &--error h1 {
+      margin: 0;
+    }
+  }
+
   &__header {
     display: flex;
     flex-wrap: wrap;
@@ -15,6 +28,12 @@
     justify-content: space-between;
     gap: $spacing-md;
     margin-bottom: $spacing-lg;
+  }
+
+  &__header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-sm;
   }
 
   &__eyebrow {
@@ -173,12 +192,6 @@
       background: rgba(100, 116, 139, 0.14);
       color: $color-text-muted;
     }
-  }
-
-  &__org {
-    font-size: 0.8rem;
-    font-weight: $font-weight-medium;
-    color: $color-text-dark;
   }
 
   &__time {

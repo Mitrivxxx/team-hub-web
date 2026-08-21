@@ -5,8 +5,9 @@ const SESSION_STORAGE_KEY = 'team-hub-session-id';
 @Injectable({ providedIn: 'root' })
 export class SessionContextService {
   getOrCreate(): string {
-    const existing = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    const existing = firstHeaderValue(sessionStorage.getItem(SESSION_STORAGE_KEY));
     if (existing) {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, existing);
       return existing;
     }
 
@@ -16,10 +17,20 @@ export class SessionContextService {
   }
 
   syncFromResponse(header: string | null): void {
-    if (!header) {
+    const sessionId = firstHeaderValue(header);
+    if (!sessionId) {
       return;
     }
 
-    sessionStorage.setItem(SESSION_STORAGE_KEY, header);
+    sessionStorage.setItem(SESSION_STORAGE_KEY, sessionId);
   }
+}
+
+export function firstHeaderValue(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const token = value.split(',')[0].trim();
+  return token.length > 0 ? token : null;
 }

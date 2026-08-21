@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, finalize, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
+import { Router } from '@angular/router';
+import { catchError, finalize, map, Observable, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { CorrelationContextService } from '../http/correlation-context.service';
@@ -30,11 +31,14 @@ export class AuthService {
   private static readonly usernameRegex = /^[a-zA-Z0-9._-]{3,30}$/;
 
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   private readonly correlationContext = inject(CorrelationContextService);
   private readonly baseUrl = environment.apiUrl;
   private readonly _currentUser = signal<UserResponse | null>(null);
   private readonly _sessionReady = signal(false);
   private readonly _accessToken = signal<string | null>(null);
+  private initInFlight$: Observable<void> | null = null;
+  private refreshInFlight$: Observable<AuthResponse> | null = null;
 
   readonly currentUser = this._currentUser.asReadonly();
   readonly sessionReady = this._sessionReady.asReadonly();
@@ -42,30 +46,29 @@ export class AuthService {
   readonly accessToken = this._accessToken.asReadonly();
 
   initialize(): Observable<void> {
-    return this.refresh().pipe(
-      tap((response) => {
-        this._currentUser.set(response.user);
-        this._accessToken.set(response.accessToken);
-      }),
-      catchError(() => {
-        this._currentUser.set(null);
-        this._accessToken.set(null);
-        return of(void 0);
-      }),
-      map(() => void 0),
-      finalize(() => this._sessionReady.set(true)),
-    );
+    if (this._sessionReady()) {
+      return of(void 0);
+    }
+
+    if (!this.initInFlight$) {
+      this.initInFlight$ = this.refresh().pipe(
+        catchError(() => of(void 0)),
+        map(() => void 0),
+        finalize(() => {
+          this._sessionReady.set(true);
+          this.initInFlight$ = null;
+        }),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+    }
+
+    return this.initInFlight$;
   }
 
   login(username: string, password: string, rememberMe: boolean): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.baseUrl}/login`, { username, password, rememberMe }, { withCredentials: true })
-      .pipe(
-        tap((response) => {
-          this._currentUser.set(response.user);
-          this._accessToken.set(response.accessToken);
-        }),
-      );
+      .pipe(tap((response) => this.applyAuth(response)));
   }
 
   register(data: {
@@ -109,19 +112,35 @@ export class AuthService {
   }
 
   refresh(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/refresh`, null, { withCredentials: true });
+    if (!this.refreshInFlight$) {
+      this.refreshInFlight$ = this.http
+        .post<AuthResponse>(`${this.baseUrl}/refresh`, null, { withCredentials: true })
+        .pipe(
+          tap((response) => this.applyAuth(response)),
+          catchError((error: unknown) => {
+            if (error instanceof HttpErrorResponse && error.status === 401) {
+              this.handleLostSession();
+            }
+            return throwError(() => error);
+          }),
+          finalize(() => {
+            this.refreshInFlight$ = null;
+          }),
+          shareReplay({ bufferSize: 1, refCount: false }),
+        );
+    }
+
+    return this.refreshInFlight$;
   }
 
   logout(): Observable<void> {
-    return this.http
-      .post<void>(`${this.baseUrl}/logout`, null, { withCredentials: true })
-      .pipe(
-        tap(() => this.clearLocalSession()),
-        catchError(() => {
-          this.clearLocalSession();
-          return of(void 0);
-        }),
-      );
+    return this.http.post<void>(`${this.baseUrl}/logout`, null, { withCredentials: true }).pipe(
+      tap(() => this.clearLocalSession()),
+      catchError(() => {
+        this.clearLocalSession();
+        return of(void 0);
+      }),
+    );
   }
 
   /** Clears in-memory auth state after server-side session revoke (password/email change). */
@@ -334,5 +353,26 @@ export class AuthService {
     }
 
     return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
+  }
+
+  private applyAuth(response: AuthResponse): void {
+    this._currentUser.set(response.user);
+    this._accessToken.set(response.accessToken);
+    this._sessionReady.set(true);
+  }
+
+  private handleLostSession(): void {
+    const wasAuthenticated = this._currentUser() !== null || this._accessToken() !== null;
+    this.clearLocalSession();
+    if (!wasAuthenticated) {
+      return;
+    }
+
+    const url = this.router.url;
+    if (!url.startsWith('/app')) {
+      return;
+    }
+
+    void this.router.navigate(['/login'], { queryParams: { returnUrl: url } });
   }
 }

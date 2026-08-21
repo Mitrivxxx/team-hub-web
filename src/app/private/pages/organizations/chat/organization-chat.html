@@ -1,0 +1,194 @@
+<main class="org-chat section">
+  <div class="container org-chat__container">
+    @if (accessLoading()) {
+      <p class="org-chat__status" aria-live="polite">Loading chat…</p>
+    } @else if (loadError()) {
+      <div class="org-chat__status org-chat__status--error">
+        <p>{{ loadError() }}</p>
+        <a routerLink="/app" class="btn btn--outline">Back to organizations</a>
+      </div>
+    } @else if (accessDenied()) {
+      <div class="org-chat__status org-chat__status--error">
+        <h1>Access denied</h1>
+        <p>Only organization members can access this chat.</p>
+        <a [routerLink]="['/app/organizations', slug]" class="btn btn--outline">Back to organization</a>
+      </div>
+    } @else {
+      <header class="org-chat__top">
+        <div>
+          <p class="org-chat__eyebrow">Team Chat</p>
+          <h1 class="org-chat__title">{{ displayOrgName() }}</h1>
+        </div>
+        <a [routerLink]="['/app/organizations', slug]" class="btn btn--outline">Back</a>
+      </header>
+
+      <div class="org-chat__shell">
+        <aside class="org-chat__sidebar">
+          <div class="org-chat__sidebar-head">
+            <h2>Conversations</h2>
+            <button type="button" class="btn btn--chat btn--sm" (click)="showNewModal.set(true)">New</button>
+          </div>
+
+          @if (listLoading()) {
+            <p class="org-chat__muted">Loading…</p>
+          } @else if (listError()) {
+            <p class="org-chat__error">{{ listError() }}</p>
+          } @else if (conversations().length === 0) {
+            <p class="org-chat__muted">No conversations yet. Start one.</p>
+          } @else {
+            <ul class="org-chat__list">
+              @for (conversation of conversations(); track conversation.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="org-chat__list-item"
+                    [class.org-chat__list-item--active]="selectedId() === conversation.id"
+                    (click)="selectConversation(conversation.id)"
+                  >
+                    <span class="org-chat__list-title">{{ conversationTitle(conversation) }}</span>
+                    <span class="org-chat__list-meta">
+                      {{ conversation.type }} · {{ conversation.memberCount }} members
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </aside>
+
+        <section class="org-chat__thread">
+          @if (!selected()) {
+            <div class="org-chat__empty-thread">
+              <p>Select a conversation or create a new one.</p>
+            </div>
+          } @else {
+            <header class="org-chat__thread-head">
+              <div>
+                <h2>{{ conversationTitle(selected()!) }}</h2>
+                <p class="org-chat__muted">{{ members().length }} members · your role {{ selected()!.myRole }}</p>
+              </div>
+              <div class="org-chat__thread-actions">
+                <button type="button" class="btn btn--ghost btn--sm" (click)="menuOpen.set(!menuOpen())">
+                  More
+                </button>
+                @if (menuOpen()) {
+                  <div class="org-chat__menu">
+                    <button type="button" (click)="toggleMute(); menuOpen.set(false)">
+                      {{ settings()?.notificationsEnabled === false ? 'Unmute' : 'Mute 24h' }}
+                    </button>
+                    <button type="button" (click)="leaveConversation()">Leave</button>
+                  </div>
+                }
+              </div>
+            </header>
+
+            @if (pin(); as pinned) {
+              <div class="org-chat__pin">
+                <span>Pinned: {{ pinnedMessageContent() }}</span>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="clearPin()">Unpin</button>
+              </div>
+            }
+
+            <div class="org-chat__messages">
+              @if (messages().length) {
+                <button type="button" class="btn btn--ghost btn--sm" (click)="loadOlder()">Load older</button>
+              }
+              @if (threadLoading()) {
+                <p class="org-chat__muted">Loading messages…</p>
+              }
+              @for (message of messages(); track message.id) {
+                <article
+                  class="org-chat__bubble"
+                  [class.org-chat__bubble--mine]="isMine(message)"
+                  [class.org-chat__bubble--deleted]="!!message.deletedAt"
+                >
+                  <header class="org-chat__bubble-meta">
+                    <span>{{ isMine(message) ? 'You' : message.senderId.slice(0, 8) }}</span>
+                    <time [attr.datetime]="message.createdAt">{{ message.createdAt | date: 'short' }}</time>
+                  </header>
+                  <p class="org-chat__bubble-body">
+                    {{ message.deletedAt ? 'Message deleted' : message.content }}
+                  </p>
+                  @if (message.attachments.length) {
+                    <ul class="org-chat__attachments">
+                      @for (file of message.attachments; track file.id) {
+                        <li>
+                          @if (file.url) {
+                            <a [href]="file.url" target="_blank" rel="noopener">{{ file.fileName }}</a>
+                          } @else {
+                            {{ file.fileName }}
+                          }
+                        </li>
+                      }
+                    </ul>
+                  }
+                  @if (!message.deletedAt) {
+                    <footer class="org-chat__bubble-actions">
+                      @for (reaction of quickReactions; track reaction) {
+                        <button
+                          type="button"
+                          class="org-chat__reaction"
+                          [class.org-chat__reaction--active]="myReaction(message) === reaction"
+                          (click)="toggleReaction(message, reaction)"
+                        >
+                          {{ reaction }}
+                        </button>
+                      }
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="pinMessage(message)">Pin</button>
+                    </footer>
+                  }
+                  @if (message.reactions.length) {
+                    <p class="org-chat__reaction-summary">
+                      @for (r of message.reactions; track r.userId) {
+                        <span>{{ r.reaction }}</span>
+                      }
+                    </p>
+                  }
+                </article>
+              }
+            </div>
+
+            @if (threadError()) {
+              <p class="org-chat__error">{{ threadError() }}</p>
+            }
+
+            <footer class="org-chat__composer">
+              @if (pendingFile(); as file) {
+                <div class="org-chat__pending-file">
+                  <span>{{ file.name }}</span>
+                  <button type="button" (click)="clearPendingFile()">Remove</button>
+                </div>
+              }
+              <div class="org-chat__composer-row">
+                <button type="button" class="btn btn--ghost" (click)="openFilePicker()" aria-label="Attach file">
+                  Attach
+                </button>
+                <input #fileInput type="file" hidden (change)="onFilePicked($event)" />
+                <input
+                  type="text"
+                  class="org-chat__composer-input"
+                  [ngModel]="composerText()"
+                  (ngModelChange)="composerText.set($event)"
+                  (keydown.enter)="$event.preventDefault(); sendMessage()"
+                  placeholder="Write a message…"
+                />
+                <button type="button" class="btn btn--chat" (click)="sendMessage()" [disabled]="sending()">
+                  {{ sending() ? 'Sending…' : 'Send' }}
+                </button>
+              </div>
+            </footer>
+          }
+        </section>
+      </div>
+    }
+  </div>
+</main>
+
+@if (showNewModal() && organization(); as org) {
+  <app-new-conversation-modal
+    [organizationId]="org.id"
+    [currentUserId]="currentUserId()"
+    (closed)="showNewModal.set(false)"
+    (created)="onConversationCreated($event)"
+  />
+}

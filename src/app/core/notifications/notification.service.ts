@@ -19,15 +19,19 @@ export class NotificationService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.notificationsApiUrl;
 
-  listMine(): Observable<NotificationDto[]> {
-    return this.http.get<NotificationDto[]>(`${this.baseUrl}/me`);
+  private orgBase(organizationId: string): string {
+    return `${this.baseUrl}/organizations/${organizationId}`;
   }
 
-  markAsRead(id: string): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/me/${id}/read`, {});
+  listForOrganization(organizationId: string): Observable<NotificationDto[]> {
+    return this.http.get<NotificationDto[]>(this.orgBase(organizationId));
   }
 
-  markAllAsRead(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/me/read-all`, {});
+  markAsRead(organizationId: string, id: string): Observable<void> {
+    return this.http.post<void>(`${this.orgBase(organizationId)}/${id}/read`, {});
+  }
+
+  markAllAsRead(organizationId: string): Observable<void> {
+    return this.http.post<void>(`${this.orgBase(organizationId)}/read-all`, {});
   }
 }

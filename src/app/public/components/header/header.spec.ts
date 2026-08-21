@@ -38,4 +38,44 @@ describe('Header', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.site-header__avatar')?.textContent?.trim()).toBe('AS');
   });
+
+  it('opens the apps launcher with account and services', async () => {
+    const currentUser = signal<UserResponse | null>({
+      id: '1',
+      username: 'alice',
+      email: 'alice@example.com',
+      name: 'Alice',
+      surname: 'Smith',
+      avatarUrl: null,
+    });
+
+    await TestBed.configureTestingModule({
+      imports: [Header],
+      providers: [
+        provideRouter([]),
+        {
+          provide: AuthService,
+          useValue: {
+            currentUser: currentUser.asReadonly(),
+            isAuthenticated: () => true,
+            sessionReady: () => true,
+            logout: () => ({ subscribe: () => undefined }),
+          },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(Header);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const toggle = compiled.querySelector('.site-header__apps-toggle') as HTMLButtonElement;
+    toggle.click();
+    fixture.detectChanges();
+
+    const labels = [...compiled.querySelectorAll('.site-header__apps-label')].map((el) =>
+      el.textContent?.trim(),
+    );
+    expect(labels).toEqual(['Account', 'Organization', 'Chat', 'Notifications']);
+  });
 });

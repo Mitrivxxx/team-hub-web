@@ -4,7 +4,8 @@
 - Angular frontend for Team Hub.
 
 ## Scope
-- Authentication, profile, organizations management UI, invitations, and notifications inbox.
+- Authentication, profile, organizations management UI, invitations, and org-scoped Team Chat plus Notifications.
+- Organization hub includes chat (`/app/organizations/:slug/chat`) and notifications (`/app/organizations/:slug/notifications`) with member-based access (all organization members allowed).
 - Uses gateway-backed API paths and GraphQL BFF for selected composed reads.
 
 ## Runtime and ports
@@ -16,7 +17,7 @@
 - Auth API base: `/api/auth/v1`.
 - Organization API base: `/api/organizations/v1`.
 - Notification API base: `/api/notifications/v1`.
-- Chat API base: `/api/chat/v1` (reserved/integration-ready).
+- Chat API base: `/api/chat/v1` (`environment.chatApiUrl`).
 - GraphQL BFF: `/api/graphql`.
 
 ## Runtime flow

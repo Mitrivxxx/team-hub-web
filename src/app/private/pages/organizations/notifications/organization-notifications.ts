@@ -1,11 +1,14 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import {
   NotificationDto,
   NotificationService,
-} from '../../../core/notifications/notification.service';
+} from '../../../../core/notifications/notification.service';
+import { Organization } from '../../../../core/organizations/organization.model';
+import { OrganizationService } from '../../../../core/organizations/organization.service';
 
 export type NotificationKind = 'invite' | 'mention' | 'system' | 'team' | 'member';
 
@@ -19,18 +22,27 @@ export interface AppNotification {
 }
 
 @Component({
-  selector: 'app-notifications',
-  imports: [DatePipe],
-  templateUrl: './notifications.html',
-  styleUrl: './notifications.scss',
+  selector: 'app-organization-notifications',
+  imports: [DatePipe, RouterLink],
+  templateUrl: './organization-notifications.html',
+  styleUrl: './organization-notifications.scss',
 })
-export class Notifications implements OnInit {
+export class OrganizationNotifications implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly organizationService = inject(OrganizationService);
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
+  readonly slug = this.route.snapshot.paramMap.get('slug') ?? '';
+  readonly organization = signal<Organization | null>(null);
+
+  readonly accessLoading = signal(true);
+  readonly accessDenied = signal(false);
+  readonly loadError = signal<string | null>(null);
+
   readonly filter = signal<'all' | 'unread'>('all');
   readonly items = signal<AppNotification[]>([]);
-  readonly loading = signal(true);
+  readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
   readonly unreadCount = computed(() => this.items().filter((n) => !n.read).length);
@@ -41,7 +53,29 @@ export class Notifications implements OnInit {
   });
 
   ngOnInit(): void {
-    this.reload();
+    if (!this.slug) {
+      this.accessLoading.set(false);
+      this.loadError.set('Organization not found.');
+      return;
+    }
+
+    this.organizationService
+      .getBySlug(this.slug)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (organization) => {
+          this.organization.set(organization);
+          this.validateMembership(organization.id);
+        },
+        error: () => {
+          this.loadError.set('Failed to load organization.');
+          this.accessLoading.set(false);
+        },
+      });
+  }
+
+  displayOrgName(): string {
+    return this.organization()?.name ?? this.slug;
   }
 
   setFilter(value: 'all' | 'unread'): void {
@@ -49,8 +83,13 @@ export class Notifications implements OnInit {
   }
 
   markAsRead(id: string): void {
+    const organizationId = this.organization()?.id;
+    if (!organizationId) {
+      return;
+    }
+
     this.notificationService
-      .markAsRead(id)
+      .markAsRead(organizationId, id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -63,8 +102,13 @@ export class Notifications implements OnInit {
   }
 
   markAllAsRead(): void {
+    const organizationId = this.organization()?.id;
+    if (!organizationId) {
+      return;
+    }
+
     this.notificationService
-      .markAllAsRead()
+      .markAllAsRead(organizationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -89,11 +133,33 @@ export class Notifications implements OnInit {
     }
   }
 
+  private validateMembership(organizationId: string): void {
+    this.organizationService
+      .getMe(organizationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.accessDenied.set(false);
+          this.accessLoading.set(false);
+          this.reload();
+        },
+        error: () => {
+          this.accessDenied.set(true);
+          this.accessLoading.set(false);
+        },
+      });
+  }
+
   private reload(): void {
+    const organizationId = this.organization()?.id;
+    if (!organizationId) {
+      return;
+    }
+
     this.loading.set(true);
     this.error.set(null);
     this.notificationService
-      .listMine()
+      .listForOrganization(organizationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (items) => {

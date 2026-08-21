@@ -13,8 +13,8 @@ export const privateRoutes: Routes = [
   },
   {
     path: 'notifications',
-    loadComponent: () =>
-      import('./pages/notifications/notifications').then((m) => m.Notifications),
+    redirectTo: '/app',
+    pathMatch: 'full',
   },
   {
     path: 'profile',
@@ -24,6 +24,18 @@ export const privateRoutes: Routes = [
     path: 'organizations/:slug/manage',
     loadComponent: () =>
       import('./pages/organizations/organization-manage').then((m) => m.OrganizationManage),
+  },
+  {
+    path: 'organizations/:slug/chat',
+    loadComponent: () =>
+      import('./pages/organizations/chat/organization-chat').then((m) => m.OrganizationChat),
+  },
+  {
+    path: 'organizations/:slug/notifications',
+    loadComponent: () =>
+      import('./pages/organizations/notifications/organization-notifications').then(
+        (m) => m.OrganizationNotifications,
+      ),
   },
   {
     path: 'organizations/:slug',

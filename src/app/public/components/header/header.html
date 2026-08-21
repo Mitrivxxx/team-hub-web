@@ -43,27 +43,94 @@
 
     <nav class="site-header__actions" aria-label="Account">
       @if (authService.isAuthenticated()) {
-        <a
-          routerLink="/app/notifications"
-          routerLinkActive="site-header__nav-link--active"
-          class="site-header__nav-link"
-        >
-          <svg
-            class="site-header__nav-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.75"
-            aria-hidden="true"
+        <div class="site-header__apps">
+          <button
+            type="button"
+            class="site-header__apps-toggle"
+            [attr.aria-expanded]="appsOpen()"
+            aria-haspopup="menu"
+            aria-label="Open apps"
+            (click)="toggleApps($event)"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"
-            />
-          </svg>
-          <span>Notifications</span>
-        </a>
+            <svg
+              class="site-header__apps-waffle"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <circle cx="5" cy="5" r="1.75" />
+              <circle cx="12" cy="5" r="1.75" />
+              <circle cx="19" cy="5" r="1.75" />
+              <circle cx="5" cy="12" r="1.75" />
+              <circle cx="12" cy="12" r="1.75" />
+              <circle cx="19" cy="12" r="1.75" />
+              <circle cx="5" cy="19" r="1.75" />
+              <circle cx="12" cy="19" r="1.75" />
+              <circle cx="19" cy="19" r="1.75" />
+            </svg>
+          </button>
+          @if (appsOpen()) {
+            <div class="site-header__apps-panel" role="menu" aria-label="Apps">
+              <div class="site-header__apps-grid">
+                <a
+                  routerLink="/app/profile"
+                  class="site-header__apps-item"
+                  role="menuitem"
+                  (click)="closeApps()"
+                >
+                  <span class="site-header__apps-icon site-header__apps-icon--account">
+                    @if (authService.currentUser()?.avatarUrl; as avatarUrl) {
+                      <img [src]="avatarUrl" alt="" />
+                    } @else {
+                      {{ userInitials() }}
+                    }
+                  </span>
+                  <span class="site-header__apps-label">Account</span>
+                </a>
+                <a
+                  [routerLink]="organizationLink()"
+                  class="site-header__apps-item"
+                  role="menuitem"
+                  (click)="closeApps()"
+                >
+                  <span class="site-header__apps-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />
+                    </svg>
+                  </span>
+                  <span class="site-header__apps-label">Organization</span>
+                </a>
+                <a
+                  [routerLink]="chatLink()"
+                  class="site-header__apps-item"
+                  role="menuitem"
+                  (click)="closeApps()"
+                >
+                  <span class="site-header__apps-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M6 10h12M6 14h8" />
+                      <path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-5 3v-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+                    </svg>
+                  </span>
+                  <span class="site-header__apps-label">Chat</span>
+                </a>
+                <a
+                  [routerLink]="notificationsLink()"
+                  class="site-header__apps-item"
+                  role="menuitem"
+                  (click)="closeApps()"
+                >
+                  <span class="site-header__apps-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
+                    </svg>
+                  </span>
+                  <span class="site-header__apps-label">Notifications</span>
+                </a>
+              </div>
+            </div>
+          }
+        </div>
         <div class="site-header__user">
           <button
             type="button"

@@ -47,6 +47,31 @@
           <h2 class="org-card__title">Manage organization</h2>
           <span class="org-card__link">Open</span>
         </a>
+        <a
+          [routerLink]="['/app/organizations', slug, 'chat']"
+          class="org-card org-card--interactive shadow-soft"
+        >
+          <div class="org-card__icon" aria-hidden="true">
+            <svg class="org-card__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M6 10h12M6 14h8" />
+              <path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-5 3v-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+            </svg>
+          </div>
+          <h2 class="org-card__title">Team chat</h2>
+          <span class="org-card__link">Open</span>
+        </a>
+        <a
+          [routerLink]="['/app/organizations', slug, 'notifications']"
+          class="org-card org-card--interactive shadow-soft"
+        >
+          <div class="org-card__icon" aria-hidden="true">
+            <svg class="org-card__icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" />
+            </svg>
+          </div>
+          <h2 class="org-card__title">Notifications</h2>
+          <span class="org-card__link">Open</span>
+        </a>
       </section>
 
       <div class="org-hub__footer">

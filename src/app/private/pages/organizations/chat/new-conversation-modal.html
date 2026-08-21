@@ -1,0 +1,102 @@
+<div class="new-chat-modal" role="dialog" aria-modal="true" aria-labelledby="new-chat-title">
+  <div class="new-chat-modal__panel">
+    <header class="new-chat-modal__header">
+      <div>
+        <h2 id="new-chat-title" class="new-chat-modal__title">New conversation</h2>
+        <p class="new-chat-modal__subtitle">Start a direct message or a group chat.</p>
+      </div>
+      <button type="button" class="new-chat-modal__close" (click)="close()" [disabled]="isSubmitting()" aria-label="Close">
+        &times;
+      </button>
+    </header>
+
+    <div class="new-chat-modal__tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        class="new-chat-modal__tab"
+        [class.new-chat-modal__tab--active]="type() === 'GROUP'"
+        (click)="setType('GROUP')"
+      >
+        Group
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="new-chat-modal__tab"
+        [class.new-chat-modal__tab--active]="type() === 'DIRECT'"
+        (click)="setType('DIRECT')"
+      >
+        Direct
+      </button>
+    </div>
+
+    @if (type() === 'GROUP') {
+      <label class="new-chat-modal__field">
+        <span>Name</span>
+        <input
+          type="text"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          maxlength="255"
+          placeholder="Engineering"
+        />
+      </label>
+    }
+
+    <label class="new-chat-modal__field">
+      <span>{{ type() === 'DIRECT' ? 'User' : 'Members (optional)' }}</span>
+      <input
+        #searchInput
+        type="search"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchInput($event)"
+        placeholder="Search by name or username"
+        autocomplete="off"
+      />
+    </label>
+
+    @if (dropdownOpen() && (filteredResults().length || isSearching() || searchError())) {
+      <ul class="new-chat-modal__results" role="listbox">
+        @if (isSearching()) {
+          <li class="new-chat-modal__hint">Searching…</li>
+        } @else if (searchError()) {
+          <li class="new-chat-modal__hint new-chat-modal__hint--error">{{ searchError() }}</li>
+        } @else if (filteredResults().length === 0) {
+          <li class="new-chat-modal__hint">No users found.</li>
+        } @else {
+          @for (user of filteredResults(); track user.id) {
+            <li>
+              <button type="button" class="new-chat-modal__result" (click)="pickUser(user)">
+                <strong>{{ displayName(user) }}</strong>
+                <span>@{{ user.username }}</span>
+              </button>
+            </li>
+          }
+        }
+      </ul>
+    }
+
+    @if (selected().length) {
+      <ul class="new-chat-modal__chips">
+        @for (user of selected(); track user.id) {
+          <li>
+            <span>{{ displayName(user) }}</span>
+            <button type="button" (click)="removeUser(user.id)" aria-label="Remove">×</button>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (error()) {
+      <p class="new-chat-modal__error" role="alert">{{ error() }}</p>
+    }
+
+    <footer class="new-chat-modal__footer">
+      <button type="button" class="btn btn--outline" (click)="close()" [disabled]="isSubmitting()">Cancel</button>
+      <button type="button" class="btn btn--chat" (click)="submit()" [disabled]="!canSubmit()">
+        {{ isSubmitting() ? 'Creating…' : 'Create' }}
+      </button>
+    </footer>
+  </div>
+</div>

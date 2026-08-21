@@ -27,10 +27,26 @@ describe('SessionContextService', () => {
     expect(sessionStorage.getItem('team-hub-session-id')).toBe('server-session-id');
   });
 
-  it('should ignore empty response header', () => {
+    it('should ignore empty response header', () => {
     service.getOrCreate();
     service.syncFromResponse(null);
 
     expect(sessionStorage.getItem('team-hub-session-id')).toBeTruthy();
+  });
+
+  it('should keep only the first session id when the header is duplicated', () => {
+    const sessionId = '11111111-1111-4111-8111-111111111111';
+    service.syncFromResponse(`${sessionId}, ${sessionId}, ${sessionId}`);
+
+    expect(service.getOrCreate()).toBe(sessionId);
+    expect(sessionStorage.getItem('team-hub-session-id')).toBe(sessionId);
+  });
+
+  it('should compact a bloated value already stored in sessionStorage', () => {
+    const sessionId = '22222222-2222-4222-8222-222222222222';
+    sessionStorage.setItem('team-hub-session-id', `${sessionId}, ${sessionId}`);
+
+    expect(service.getOrCreate()).toBe(sessionId);
+    expect(sessionStorage.getItem('team-hub-session-id')).toBe(sessionId);
   });
 });

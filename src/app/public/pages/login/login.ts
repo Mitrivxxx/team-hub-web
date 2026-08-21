@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 
@@ -16,6 +16,7 @@ export class Login {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   showPassword = false;
   isSubmitting = false;
@@ -74,7 +75,7 @@ export class Login {
       .pipe(finalize(() => (this.isSubmitting = false)))
       .subscribe({
         next: () => {
-          void this.router.navigate(['/app']);
+          void this.router.navigateByUrl(this.postLoginUrl());
         },
         error: (error: unknown) => {
           this.applyServerError(error);
@@ -114,5 +115,14 @@ export class Login {
     }
 
     this.submitError = 'Login failed. Please try again.';
+  }
+
+  private postLoginUrl(): string {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl?.startsWith('/app') && !returnUrl.startsWith('//') && !returnUrl.includes('\\')) {
+      return returnUrl;
+    }
+
+    return '/app';
   }
 }

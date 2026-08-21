@@ -22,26 +22,37 @@
 - In docker (Production), serve frontend on `https://localhost:4200` (`ui-web-prod`); frontend nginx proxies `/api` to `http://gw-nginx:80`.
 - Set `X-Correlation-ID` on every API request via `src/app/core/http/correlation-id.interceptor.ts` (new UUID per request).
 - Set `X-Session-ID` on every API request via `src/app/core/http/session-id.interceptor.ts` (one ID per visit in `sessionStorage`).
+- Persist only the first `X-Session-ID` token (`SessionContextService`); duplicated response headers must not accumulate.
 - Sync `X-Session-ID` from response header when auth returns a fallback value (`SessionContextService.syncFromResponse`).
 - For register flow (`register` + auto-login), reuse one ID via `CorrelationContextService.beginFlow()` / `endFlow()` in `AuthService.register()`.
-- Register interceptors in `app.config.ts` with `withInterceptors([sessionIdInterceptor, correlationIdInterceptor])`.
+- Register interceptors in `app.config.ts` with `withInterceptors([authInterceptor, sessionIdInterceptor, correlationIdInterceptor])`.
 - Update this file after routing, auth flow, env, or proxy changes.
 
 ## Routing and auth
 - `app.routes.ts` lazy-loads `public.routes` and `private.routes`.
-- `AuthService.initialize()` checks session via `/refresh` on app start.
+- `AuthService.initialize()` checks session via `/refresh` on app start (`provideAppInitializer` + App constructor; single-flight).
 - Until `sessionReady`, show `AppLoader`.
-- `authGuard` protects `/app/*`; `guestGuard` redirects logged-in users from `/login`, `/signup`, and `/forgot-password`.
+- `authGuard` protects `/app/*` and waits for `initialize()`; `guestGuard` waits then redirects logged-in users from `/login`, `/signup`, and `/forgot-password`. Login honors `returnUrl` under `/app`.
 - Site header logo: `/app` when authenticated, `/` when guest. On manage route, logo is hidden; puzzle logo lives in the sidebar and links to `/app`.
 - Authenticated header uses avatar photo or initials menu with Profile (`/app/profile`) and Log out (Escape / outside click closes).
-- Authenticated header shows Notifications link (`/app/notifications`); hidden for guests.
+- Authenticated header shows an apps waffle (former Notifications slot). The panel is icon + label only: Account (`/app/profile`), Organization, Chat, Notifications. Org-scoped links use the current `/app/organizations/:slug`; otherwise they go to `/app`. Escape / outside click closes; opening one menu closes the other.
 - `/app` shows organization list for the logged-in user (`OrganizationList`).
 - `/app/profile` (`Profile`): GET/PATCH `/api/auth/v1/me` (name, surname, email; username read-only), avatar upload/remove (`PUT|DELETE /me/avatar`), authenticated password change (`POST /me/change-password`). After password change or email change, clear local session (`AuthService.clearLocalSession`) and redirect to `/login` (server revokes refresh sessions).
-- `/app/notifications` (`Notifications`): inbox via `NotificationService` (`GET /api/notifications/v1/me`); All/Unread filters; mark as read / mark all as read (`POST .../read`, `POST .../read-all`). `environment.notificationsApiUrl` = `/api/notifications/v1`.
-- `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`).
+- `/app/organizations/:slug` shows organization hub with action tiles (`OrganizationPlaceholder`): Manage, Team chat, Notifications.
+- `/app/organizations/:slug/notifications` (`OrganizationNotifications`): org-scoped inbox via `NotificationService`. Access for every organization member via `OrganizationService.getMe`. All/Unread filters; mark as read / mark all as read. `environment.notificationsApiUrl` = `/api/notifications/v1`. Legacy `/app/notifications` redirects to `/app`.
+- `/app/organizations/:slug/chat` (`OrganizationChat`): org-scoped Team Chat UI (conversation list + thread). Access for every organization member via `OrganizationService.getMe`. Accent `#ffa142` scoped to the chat page. Uses `ChatService` (`environment.chatApiUrl` = `/api/chat/v1`) for conversations, messages, reactions, read receipts, pin, mute settings, and attachments.
 - `/app/organizations/:slug/manage` (`OrganizationManage`): compact header (56px) with breadcrumb `Organizations / {name} / Manage`, fixed collapsible sidebar (white background; persisted in `localStorage` key `teamhub.orgManage.sidebarCollapsed`, default collapsed), sticky page title (no subtitles/borders) pinned at top of the manage content scrollport. Content area uses light gray background (`$color-bg-alt`); panel content on white cards. `.app-layout--org-manage` locks viewport height; `.org-manage__content` scrolls. `OrgManageLayoutService` syncs shell offset and org context. Accent color is cyan (`$color-org-primary` / CSS vars on `.app-layout--org-manage`); main app keeps mint `$color-primary`.
 - Organization API base: `environment.organizationsApiUrl` (`/api/organizations/v1`).
+- Chat API base: `environment.chatApiUrl` (`/api/chat/v1`).
 - GraphQL: `environment.graphqlUrl` (`/api/graphql`) for composed reads (All Members table, Audit Log).
+
+## Chat
+- `ChatService` (`src/app/core/chat/chat.service.ts`): conversations, members, messages, reactions, read, pin, settings, multipart attachments.
+- UI: `src/app/private/pages/organizations/chat/` — list + thread + new conversation modal (group/DM via `AuthService.searchUsers`). No WebSocket; refresh on send/select.
+
+## Notifications
+- `NotificationService` (`src/app/core/notifications/notification.service.ts`): org-scoped list / mark read / mark all read under `/api/notifications/v1/organizations/{organizationId}`.
+- UI: `src/app/private/pages/organizations/notifications/` — member-only inbox (same `getMe` gate as chat).
 
 ## Organizations
 - `OrganizationService` (`src/app/core/organizations/organization.service.ts`):
@@ -80,6 +91,9 @@
 - Reusable `Sidebar` (`src/app/shared/sidebar/`): tree `items` + `activeId` + `collapsed`; `itemSelect` + `collapsedChange`; collapsed CSS tooltips; chevron row toggles; `aria-current` / `aria-expanded` / `:focus-visible`.
 - Manage nav: Members (All Members, Invitations), Organization (Details, Import / Export), Teams, Role/Permission (Roles, Permissions), Statistic, Audit Log.
 - JWT Bearer token is attached by `authInterceptor` on all HTTP calls.
+- `authInterceptor` retries once after `POST /refresh` when an API call returns `401` (except cookie auth endpoints). Concurrent refreshes share one in-flight request.
+- `authGuard` / `guestGuard` wait for `AuthService.initialize()` so routing does not run before the refresh cookie is restored.
+- App start restores the session via `provideAppInitializer` and `AuthService.initialize()` (`POST /refresh` with credentials).
 
 ## Don't
 - Do not point frontend directly at gateway or auth service URL when traffic should go through infrastructure nginx.
